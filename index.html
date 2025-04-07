@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style/reset.css">
+    <link rel="stylesheet" href="style/style.css">
+    <title>Moon</title>
+</head>
+<body>
+    <div id="blurDiv"></div>
+    <header>
+    <ul class="header-menu">
+        <li class="nav-item" id="buildingPageBtn" onclick="goBuilding()" >Режим строительства</li>
+        <li class="nav-item" id="authBtn">Вход/Регистрация</li>
+    </ul>
+    </header>
+    <main class="main-page">
+        <h1>
+            Откройте новые горизонты: 
+        </h1>
+        <br>
+        <h2>
+            колонизация Луны начинается здесь!
+        </h2>
+    </main>
+    <dialog class="sign-in-dialog" id="signInDialog">
+        <div class="content-sign-in-dialog">
+            <div class="header-form">
+                <button class="close-modal-button">
+                    &#x2715;
+                </button>
+                <p class="dialog-title">Вход</p>
+            </div>
+            <form action="">
+                <input type="text" id="loginSignIn" class="input-sign-in-dialog" placeholder="Введите логин">
+                <span class="error-message" id="loginSignInError" style="color: red; display: none;">error message</span>
+                <input type="password" id="passwordSignIn" class="input-sign-in-dialog" placeholder="Введите пароль">
+                <span class="error-message" id="passwordSignInError" style="color: red; display: none;">error message</span>
+                <button id="signInBtn" class="submitBtn">Войти</button>
+            </form>
+            <div class="btns">
+                <button id="registrateBtnForm">Регистрация</button>
+                <button id="forgetPassBtn">Забыли пароль</button>
+            </div>
+        </div>
+    </dialog>
+    <dialog class="sign-in-dialog" id="registrationDialog">
+        <div class="content-sign-in-dialog">
+            <div class="header-form">
+                <button class="close-modal-button">
+                    &#x2715;
+                </button>
+                <p class="dialog-title">Регистрация</p>
+            </div>
+            <form action="">
+                <input type="text" id="loginRegistration" class="input-sign-in-dialog" placeholder="Введите логин">
+                <span class="error-message" id="loginRegistrationError" style="color: red; display: none;">error message</span>
+                <input type="email" id="emailRegistration" class="input-sign-in-dialog" placeholder="Введите почту">
+                <span class="error-message" id="emailRegistrationError" style="color: red; display: none;">error message</span>
+                <input type="password" id="passRegistration" class="input-sign-in-dialog" placeholder="Введите пароль">
+                <span class="error-message" id="passRegistrationError" style="color: red; display: none;">error message</span>
+                <input type="password" id="repeatPassRegistration" class="input-sign-in-dialog" placeholder="Повторите пароль">
+                <span class="error-message" id="repeatPassRegistrationError" style="color: red; display: none;">error message</span> 
+                <button id="registrateBtn" class="submitBtn">Зарегистрироваться</button>
+            </form>
+            <div class="btns">
+                <button id="signInBtnForm">Войти</button>
+            </div>
+        </div>
+    </dialog>
+    <dialog class="sign-in-dialog" id="forgetPassDialog">
+        <div class="content-sign-in-dialog">
+            <div class="header-form">
+                <button class="close-modal-button">
+                    &#x2715;
+                </button>
+                <p class="dialog-title">Забыли пароль</p>
+            </div>
+            <form action="">
+                <input type="text" id="loginForgetPass" class="input-sign-in-dialog" placeholder="Введите логин или почту">
+                <span class="error-message" id="forgetPassError" style="color: red; display: none;">error message</span> 
+                <button id="recoverPassBtn" class="submitBtn">Восстановить</button>
+            </form>
+            <div class="btns">
+                <button id="signInBtnForm2">Войти</button>
+            </div>
+        </div>
+    </dialog>
+    <script src="script/index.js"></script>
+</body>
+</html>
