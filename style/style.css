@@ -177,7 +177,10 @@ body{
     font-size: 60px;
     text-align: center;
 }
-
+#map {
+    width: 100%;
+    height: 100%;
+}
 h1, h2, h3{
     text-align: center;
     line-height: 0.8;
@@ -226,10 +229,13 @@ h3{
 .close-modal-button:hover{
     filter: drop-shadow(0 0 5px white);
 }
-.building-body{
+
+.building-body, html{
+    margin: 0;
+    padding: 0;
     width: 100%;
-    background: black;
-    overflow-y: hidden;
+    height: 100%;
+    overflow: hidden;
 }
 .building-header{
     padding-top: 15px;
