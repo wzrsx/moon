@@ -1,3 +1,155 @@
+// кнопки
+const placeModulesBtn = document.getElementById("placeModulesBtn");
+const notificationsBtn = document.getElementById("notificationsBtn");
+const saveProjectBtn = document.getElementById("saveProjectBtn");
+const blurDiv = document.getElementById("blurDiv");
+const exitToMainBtn = document.getElementById("exitToMainBtn");
+const confirmBtn = document.getElementById("confirmBtn");
+//диалог
+const dialog = document.getElementById("confirmDialog");
+//боковая панель
+const sidebar = document.getElementById("modulesSidebar");
+
+const modulesChoiceType = document.getElementById("modulesChoiceType");
+const modulesContainer = document.getElementById('modulesContainer');
+const modulesList = document.getElementById("modulesList");
+const modules = modulesList.querySelectorAll('.item-module');
+const typeModulesTitle = document.getElementById("typeModulesTitle");
+const notificationsContainer = document.getElementById("notificationsContainer");
+//уведы всплывающие
+const notification = document.getElementById("customNotification");
+
+//обработчики
+placeModulesBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    modulesChoiceType.style.display = 'grid';
+    typeModulesTitle.innerText = "Выбор модулей";
+    sidebar.classList.add('visible');
+});
+notificationsBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    modulesChoiceType.style.display = 'none';
+    typeModulesTitle.innerText = "Уведомления";
+    notificationsContainer.style.display = 'block';
+    sidebar.classList.add('visible');
+});
+saveProjectBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    /*to do ОТВЕТ ОТ СЕРВЕРА*/
+    //sendNotification("Изменения успешно сохранены", 1);
+    code = 404;//пример
+    sendNotification(`Возникла ошибка: ${code}`, 0);
+});
+exitToMainBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    blurDiv.classList.add("blur"); 
+    dialog.showModal();
+});
+function closeconfirmDialog(){
+    blurDiv.classList.remove("blur"); 
+    dialog.close();
+}
+confirmBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    blurDiv.classList.remove("blur"); 
+    window.location.href = "../index.html"
+});
+dialog.addEventListener("close", () => {
+    blurDiv.classList.remove("blur"); 
+});
+/*to do ПРИМЕНИТЬ НА ВСЕ БОКОВЫЕ ПО КЛАССУ*/
+document.addEventListener('keydown', event => {
+  if (event.key === "Escape" || event.keyCode === 27) {
+    closeAside();
+  }
+});
+function closeAside(){
+  sidebar.classList.remove('visible');
+}
+function sendNotification(text, success){
+  if(!success){
+    notification.style.backgroundColor = "#ff0000";
+  }else{
+    notification.style.backgroundColor = "#4CAF50";
+  }
+  notification.innerText=`${text}`;
+  notification.classList.add('show');
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 1250);
+}
+/*можно будет с бд подтянуть модули*/
+function openInhabitedModules() {
+  typeModulesTitle.innerText = "Обитаемые модули";
+  modulesChoiceType.style.opacity = '0';
+  modulesChoiceType.style.transform = 'translateY(20px)';
+  modulesChoiceType.style.transition = 'all 0.3s ease-out';
+  
+  setTimeout(() => {
+      modulesChoiceType.style.display = 'none';
+      modulesContainer.style.display = 'block';
+      
+      modules.forEach(module => {
+          module.style.opacity = '0';
+          module.style.transform = 'translateY(20px)';
+      });
+
+      setTimeout(() => {
+          modules.forEach((module, index) => {
+              setTimeout(() => {
+                  module.style.opacity = '1';
+                  module.style.transform = 'translateY(0)';
+                  module.style.transition = 'all 0.3s ease-out';
+              }, index * 100);
+          });
+      }, 50);
+  }, 300); 
+}
+function openTechnologicalModules() {
+  typeModulesTitle.innerText = "Технологические объекты";
+  modulesChoiceType.style.opacity = '0';
+  modulesChoiceType.style.transform = 'translateY(20px)';
+  modulesChoiceType.style.transition = 'all 0.3s ease-out';
+  
+  setTimeout(() => {
+      modulesChoiceType.style.display = 'none';
+      modulesContainer.style.display = 'block';
+      
+      modules.forEach(module => {
+          module.style.opacity = '0';
+          module.style.transform = 'translateY(20px)';
+      });
+
+      setTimeout(() => {
+          modules.forEach((module, index) => {
+              setTimeout(() => {
+                  module.style.opacity = '1';
+                  module.style.transform = 'translateY(0)';
+                  module.style.transition = 'all 0.3s ease-out';
+              }, index * 100);
+          });
+      }, 50);
+  }, 300); 
+}
+function backToTypes() {  
+  typeModulesTitle.innerText = "Выбор модулей";
+  modules.forEach(module => {
+      module.style.opacity = '0';
+      module.style.transform = 'translateY(20px)';
+      module.style.transition = 'all 0.2s ease-out';
+  });
+  
+  setTimeout(() => {
+      modulesContainer.style.display = 'none';
+      modulesChoiceType.style.display = 'grid';
+      
+      setTimeout(() => {
+          modulesChoiceType.style.opacity = '1';
+          modulesChoiceType.style.transform = 'translateY(0)';
+          modulesChoiceType.style.transition = 'all 0.3s ease-out 0.1s';
+      }, 50);
+  }, 200);
+}
 // 1. Регистрация проекции
 proj4.defs("EPSG:100000",
     'PROJCS["Moon_2015_South_Polar_Stereographic",' +
