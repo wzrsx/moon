@@ -1,0 +1,14 @@
+gmail_login: "your@gmail.com"
+gmail_password: "your-password"
+smtp_port: "587"
+smtp_host: "smtp.gmail.com"
+
+db_host: "moon-db"
+db_port: "5432"
+db_user: "postgres"
+db_password: "admin"
+db_name: "moon-db"
+db_ssl: "disable"
+
+http_host: "localhost"
+http_port: "8080"
