@@ -12,3 +12,7 @@ db_ssl: "disable"
 
 http_host: "localhost"
 http_port: "8080"
+
+geoserver_url: "http://localhost:8080/geoserver"
+geoserver_username: "admin"
+geoserver_password: "geoserver"

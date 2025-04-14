@@ -1,4 +1,4 @@
-package queries
+package queries_auth
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func RegistrationQuery(username string, email string, password string, pool *pgx
 	return nil, user_id
 }
 
-func hashPassword (password string) string{
+func hashPassword(password string) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(password))
 	hash := hasher.Sum(nil)

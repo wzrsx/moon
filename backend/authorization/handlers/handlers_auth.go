@@ -8,7 +8,7 @@ import (
 	"io"
 	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/authorization/config_auth"
-	"loonar_mod/backend/repository/queries"
+	"loonar_mod/backend/repository/queries_auth"
 	"net/http"
 	"net/smtp"
 	"sync"
@@ -193,7 +193,7 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	}
 
 	// Проверяем есть ли email в БД
-	if err = queries.ExistsEmail(creds.Email, a.Pool); err != nil {
+	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
 		if err.Error() == "email exists" {
 			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
 				"message": "email exists",
@@ -205,7 +205,7 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	}
 
 	// добавляем пользователя в БД
-	err, user_id := queries.RegistrationQuery(code_info.Username, creds.Email, code_info.Password, a.Pool)
+	err, user_id := queries_auth.RegistrationQuery(code_info.Username, creds.Email, code_info.Password, a.Pool)
 	if err != nil {
 		a.Logger.Sugar().Errorf("Error create new user in DB: %v", err)
 		return
@@ -244,7 +244,7 @@ func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	check_auth_err, data := queries.AuthorizeQuery(creds.Email, creds.Password, a.Pool)
+	check_auth_err, data := queries_auth.AuthorizeQuery(creds.Email, creds.Password, a.Pool)
 	if check_auth_err != nil {
 		if check_auth_err.Error() == "email not found" {
 			respondWithJSON(rw, http.StatusNotFound, map[string]string{
