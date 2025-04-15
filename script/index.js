@@ -2,6 +2,7 @@ const signInDialog = document.getElementById("signInDialog");
 const registrationDialog = document.getElementById("registrationDialog");
 const forgetPassDialog = document.getElementById("forgetPassDialog");
 const blurDiv = document.getElementById("blurDiv");
+const EMAIL_REGEXP = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 
 const buildingPageBtn = document.getElementById("buildingPageBtn");
 const authBtn = document.getElementById("authBtn");
@@ -14,8 +15,27 @@ const signInBtnForm = document.getElementById("signInBtnForm");
 //кнопки отправки формы
 const signInBtn = document.getElementById("signInBtn");
 const registrateBtn = document.getElementById("registrateBtn");
+const recoverPassBtn = document.getElementById("recoverPassBtn");
 
 const closeButtons = document.querySelectorAll('.close-modal-button');
+
+//инпуты
+const loginSignIn = document.getElementById("loginSignIn");
+const passwordSignIn = document.getElementById("passwordSignIn");
+
+const loginRegistration = document.getElementById("loginRegistration");
+const emailRegistration = document.getElementById("emailRegistration");
+const passRegistration = document.getElementById("passRegistration");
+const repeatPassRegistration = document.getElementById("repeatPassRegistration");
+
+//errors
+const loginSignInError = document.getElementById("loginSignInError");
+const passwordSignInError = document.getElementById("passwordSignInError");
+
+const loginRegistrationError = document.getElementById("loginRegistrationError");
+const emailRegistrationError = document.getElementById("emailRegistrationError");
+const passRegistrationError = document.getElementById("passRegistrationError");
+const repeatPassRegistrationError = document.getElementById("repeatPassRegistrationError");
 
 closeButtons.forEach(button => {
   button.addEventListener('click', (e) => {
@@ -87,11 +107,113 @@ signInBtnForm2.addEventListener('click', (e) => {
 //отправка формы
 signInBtn.addEventListener('click', (e) => {
     e.preventDefault();
+    resetSignInErrors(); 
+    const loginValue = loginSignIn.value.trim(); 
+    const passwordValue = passwordSignIn.value.trim(); 
+
+    if (!loginValue) {
+        showError(loginSignIn, loginSignInError, "Пожалуйста, введите логин.");
+        return;
+      }
+    
+    if (!passwordValue) {
+        showError(passwordSignIn, passwordSignInError, "Пожалуйста, введите пароль.");
+        return;
+    }
+    //отправка на сервер
 });
 registrateBtn.addEventListener('click', (e) => {
     e.preventDefault();
-});
+    resetRegErrors();
+    const login = loginRegistration.value.trim();
+    const email = emailRegistration.value.trim();
+    const password = passRegistration.value;
+    const repeat_password = repeatPassRegistration.value;
 
+    if (!login) {
+        showError(loginRegistration, loginRegistrationError, "Пожалуйста, введите логин.");
+        return;
+    }
+    if (!email) {
+        showError(emailRegistration, emailRegistrationError , "Пожалуйста, введите почту.");
+        return;
+    }
+
+    if (!isEmailValid(email)) {
+        showError(emailRegistration, emailRegistrationError, "Неккоректный формат почты.");
+        return;
+    }
+    if (!isPassValid(password, passRegistrationError, passRegistration)) {
+        return;
+    }
+    if (!repeat_password) {
+        showError(repeatPassRegistration, repeatPassRegistrationError, "Пожалуйста, повторите пароль.");
+        return;
+    }
+    if (password !== repeat_password) {
+        showError(repeatPassRegistration, repeatPassRegistrationError, "Пароли не совпадают.");
+        return;
+    }
+    //отправка на сервер
+});
+recoverPassBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    resetRecoverErrors();
+    
+});
 function goBuilding(){
     window.location.href = "/pages/building.html"
 }
+
+function showError(input, field, text) {
+    field.innerText = text;
+    field.style.display = "block";
+    input.style.borderColor = 'red';
+}
+function resetSignInErrors() {
+    loginSignInError.style.display = "none";
+    passwordSignInError.style.display = "none";
+    loginSignIn.style.borderColor = 'transparent';
+    passwordSignIn.style.borderColor = 'transparent';
+}
+function resetRegErrors(){
+    loginRegistrationError.style.display = "none";
+    emailRegistrationError.style.display = "none";
+    passRegistrationError.style.display = "none";
+    repeatPassRegistrationError.style.display = "none";
+    loginRegistration.style.borderColor = 'transparent';
+    emailRegistration.style.borderColor = 'transparent';
+    passRegistration.style.borderColor = 'transparent';
+    repeatPassRegistration.style.borderColor = 'transparent';
+}
+function isEmailValid(value) {
+    return EMAIL_REGEXP.test(value);
+}
+
+//проверка пароля
+function isPassValid(value, field, input) {
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (!value) {
+      showError(input, field, "Пожалуйста, введите пароль.");
+      input.style.borderColor = "red";
+      return false;
+    }
+    // Проверка длины пароля
+    if (value.length < 5) {
+      showError(input, field, "Пароль должен содержать не менее 5 символов.");
+      input.style.borderColor = "red";
+      return false;
+    }
+  
+    // Проверка наличия специального символа в пароле
+    if (!specialCharRegex.test(value)) {
+      showError(
+        input,
+        field,
+        "Пароль должен содержать хотя бы один специальный символ."
+      );
+      input.style.borderColor = "red";
+      return false;
+    }
+    return true;
+  }

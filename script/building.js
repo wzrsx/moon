@@ -18,20 +18,27 @@ const typeModulesTitle = document.getElementById("typeModulesTitle");
 const notificationsContainer = document.getElementById("notificationsContainer");
 //уведы всплывающие
 const notification = document.getElementById("customNotification");
-
+let currentModuleType = null;
 //обработчики
 placeModulesBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    modulesChoiceType.style.display = 'grid';
-    typeModulesTitle.innerText = "Выбор модулей";
-    sidebar.classList.add('visible');
+  e.preventDefault();
+  modulesChoiceType.style.display = 'grid';
+  modulesContainer.style.display = 'none'; // Добавляем скрытие контейнера модулей
+  notificationsContainer.style.display = 'none'; // Скрываем уведомления
+  typeModulesTitle.innerText = "Выбор модулей";
+  if(currentModuleType){
+    showModules();
+  }
+  sidebar.classList.add('visible');
 });
+
 notificationsBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    modulesChoiceType.style.display = 'none';
-    typeModulesTitle.innerText = "Уведомления";
-    notificationsContainer.style.display = 'block';
-    sidebar.classList.add('visible');
+  e.preventDefault();
+  modulesChoiceType.style.display = 'none';
+  modulesContainer.style.display = 'none'; // Добавляем скрытие контейнера модулей
+  typeModulesTitle.innerText = "Уведомления";
+  notificationsContainer.style.display = 'block';
+  sidebar.classList.add('visible');
 });
 saveProjectBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -80,33 +87,20 @@ function sendNotification(text, success){
 }
 /*можно будет с бд подтянуть модули*/
 function openInhabitedModules() {
-  typeModulesTitle.innerText = "Обитаемые модули";
-  modulesChoiceType.style.opacity = '0';
-  modulesChoiceType.style.transform = 'translateY(20px)';
-  modulesChoiceType.style.transition = 'all 0.3s ease-out';
-  
-  setTimeout(() => {
-      modulesChoiceType.style.display = 'none';
-      modulesContainer.style.display = 'block';
-      
-      modules.forEach(module => {
-          module.style.opacity = '0';
-          module.style.transform = 'translateY(20px)';
-      });
-
-      setTimeout(() => {
-          modules.forEach((module, index) => {
-              setTimeout(() => {
-                  module.style.opacity = '1';
-                  module.style.transform = 'translateY(0)';
-                  module.style.transition = 'all 0.3s ease-out';
-              }, index * 100);
-          });
-      }, 50);
-  }, 300); 
+  // Сохраняем тип выбранных модулей
+  currentModuleType = 'inhabited';
+  showModules();
 }
 function openTechnologicalModules() {
-  typeModulesTitle.innerText = "Технологические объекты";
+  // Сохраняем тип выбранных модулей
+  currentModuleType = 'technological';
+  showModules();
+}
+function showModules() {
+  typeModulesTitle.innerText = currentModuleType === 'inhabited' 
+      ? "Обитаемые модули" 
+      : "Технологические объекты";
+      
   modulesChoiceType.style.opacity = '0';
   modulesChoiceType.style.transform = 'translateY(20px)';
   modulesChoiceType.style.transition = 'all 0.3s ease-out';
@@ -114,6 +108,7 @@ function openTechnologicalModules() {
   setTimeout(() => {
       modulesChoiceType.style.display = 'none';
       modulesContainer.style.display = 'block';
+      notificationsContainer.style.display = 'none'; // Скрываем уведомления
       
       modules.forEach(module => {
           module.style.opacity = '0';
@@ -129,8 +124,9 @@ function openTechnologicalModules() {
               }, index * 100);
           });
       }, 50);
-  }, 300); 
+  }, 300);
 }
+
 function backToTypes() {  
   typeModulesTitle.innerText = "Выбор модулей";
   modules.forEach(module => {
@@ -141,6 +137,7 @@ function backToTypes() {
   
   setTimeout(() => {
       modulesContainer.style.display = 'none';
+      notificationsContainer.style.display = 'none'; // Скрываем уведомления
       modulesChoiceType.style.display = 'grid';
       
       setTimeout(() => {
@@ -149,7 +146,84 @@ function backToTypes() {
           modulesChoiceType.style.transition = 'all 0.3s ease-out 0.1s';
       }, 50);
   }, 200);
+  currentModuleType = null;
 }
+
+//перетаскивание фотки на карту
+let draggedItem = null;
+let clone = null;
+let startX, startY;
+modules.forEach(module => {
+  module.addEventListener('mousedown', function(e) {
+    sidebar.classList.remove('visible');
+    // Закрываем выпадающее меню
+    document.getElementById('burger-checkbox').checked = false;
+    const originalImg = this.querySelector('.photo-item-module');
+    
+    clone = originalImg.cloneNode(true);
+    
+    clone.style.transform = 'scale(0.3)';
+    clone.style.transition = 'transform 0.2s';
+    
+    // Стили для клона (только изображение)
+    clone.style.position = 'absolute';
+    clone.style.zIndex = '1000';
+    clone.style.pointerEvents = 'none';
+    clone.style.width = originalImg.offsetWidth + 'px';
+    clone.style.height = originalImg.offsetHeight + 'px';
+    clone.style.objectFit = 'cover'; // Сохраняем пропорции
+    
+    // Запоминаем оригинальный элемент
+    draggedItem = this;
+    
+    // Позиция курсора при зажатии
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    // Позиция клона (рассчитываем относительно изображения)
+    const rect = originalImg.getBoundingClientRect();
+    clone.style.left = rect.left + 'px';
+    clone.style.top = rect.top + 'px';
+    
+    document.body.appendChild(clone);
+    
+    // Смещаем клон относительно курсора
+    const shiftX = e.clientX - rect.left;
+    const shiftY = e.clientY - rect.top;
+    
+    function moveAt(pageX, pageY) {
+      clone.style.left = pageX - shiftX + 'px';
+      clone.style.top = pageY - shiftY + 'px';
+    }
+    
+    function onMouseMove(e) {
+      moveAt(e.clientX, e.clientY);
+    }
+    
+    // Перемещаем клон при движении мыши
+    document.addEventListener('mousemove', onMouseMove);
+    
+    // Очистка при отпускании кнопки мыши
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      
+      if (clone) {
+        clone.remove();
+        clone = null;
+        draggedItem = null;
+      }
+    }
+    
+    document.addEventListener('mouseup', onMouseUp);
+  });
+  
+  // Отмена стандартного drag'n'drop
+  module.ondragstart = function() {
+    return false;
+  };
+});
+
 // 1. Регистрация проекции
 proj4.defs("EPSG:100000",
     'PROJCS["Moon_2015_South_Polar_Stereographic",' +
@@ -214,19 +288,44 @@ proj4.defs("EPSG:100000",
   map.addLayer(ldsm);
   map.addLayer(hillshade);
 
-  // 5. Применяем blend modes через postcompose
-  hillshade.on('postrender', function(event) {
-    event.context.globalCompositeOperation = 'multiply';
-  });
+  // Для базового слоя (яркость)
+ldem.on(['precompose', 'postcompose'], function(event) {
+  const context = event.context;
+  const canvas = context.canvas;
+  
+  if (event.type === 'precompose') {
+    // Сохраняем оригинальное состояние
+    context.save();
+    context.filter = 'brightness(1.2)';
+  } else {
+    // Восстанавливаем после отрисовки
+    context.restore();
+  }
+});
 
-  ldsm.on('postrender', function(event) {
-    event.context.globalCompositeOperation = 'screen';
-  });
+// Для hillshade (multiply)
+hillshade.on(['precompose', 'postcompose'], function(event) {
+  const context = event.context;
+  
+  if (event.type === 'precompose') {
+    context.save();
+    context.globalCompositeOperation = 'multiply';
+  } else {
+    context.restore();
+  }
+});
 
-  // 6. Яркость для базового слоя
-  ldem.on('postrender', function(event) {
-    event.context.filter = 'brightness(1.2)';
-  });
+// Для ldsm (screen)
+ldsm.on(['precompose', 'postcompose'], function(event) {
+  const context = event.context;
+  
+  if (event.type === 'precompose') {
+    context.save();
+    context.globalCompositeOperation = 'screen';
+  } else {
+    context.restore();
+  }
+});
 
   // 6. Автоматическая подстройка под размер окна
   function updateMapSize() {
