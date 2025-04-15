@@ -36,8 +36,9 @@ const loginRegistrationError = document.getElementById("loginRegistrationError")
 const emailRegistrationError = document.getElementById("emailRegistrationError");
 const passRegistrationError = document.getElementById("passRegistrationError");
 const repeatPassRegistrationError = document.getElementById("repeatPassRegistrationError");
+let authHeader;
 
-closeButtons.forEach(button => {
+    closeButtons.forEach(button => {
   button.addEventListener('click', (e) => {
     e.preventDefault();
     const dialog = button.closest('dialog');
@@ -194,8 +195,38 @@ recoverPassBtn.addEventListener('click', (e) => {
     resetRecoverErrors();
     
 });
-function goBuilding(){
-    window.location.href = "../pages/building.html"
+function goBuilding() {
+    fetch("http://localhost:5050/maps/redactor", {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': authHeader // Добавляем токен авторизации
+        }
+    })
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
+                });
+            }
+
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+                });
+            }
+
+            return response.json();
+        })
+        .then(data => {
+            window.location.href = `/maps/redactor/page`;
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
 }
 
 function showError(input, field, text) {

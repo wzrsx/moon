@@ -8,16 +8,20 @@ import (
 
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Получаем токен из заголовка Authorization
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Authorization header required", http.StatusUnauthorized)
-			return
+		cookie, err := r.Cookie("jwt_token")
+		var tokenString string
+
+		if err == nil {
+			tokenString = cookie.Value
+		} else {
+			// Если нет в куках, пробуем из заголовка
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				http.Error(w, "Authorization required", http.StatusUnauthorized)
+				return
+			}
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 		}
-
-		// Формат: Bearer <token>
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
 		// Проверяем токен
 		claims, err := GetClaims(tokenString)
 		if err != nil {

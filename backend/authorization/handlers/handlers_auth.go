@@ -9,6 +9,7 @@ import (
 	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/repository/queries_auth"
+	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
 	"net/smtp"
 	"sync"
@@ -210,8 +211,17 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	map_id, err := queries_maps.TakeMap(user_id, a.Pool)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Taking map: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Error Taking map: %v", err),
+		})
+		return
+	}
+
 	ctx := context.Background()
-	string_tocken, err := jwt_logic.CreateTocken(&ctx, code_info.Username, user_id, a.Logger)
+	string_tocken, err := jwt_logic.CreateTocken(&ctx, code_info.Username, user_id, map_id, a.Logger)
 	if err != nil {
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error create JWT-tocken: %v", err),
@@ -264,8 +274,17 @@ func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	map_id, err := queries_maps.TakeMap(data.UserID, a.Pool)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Taking map: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Error Taking map: %v", err),
+		})
+		return
+	}
+
 	ctx := context.Background()
-	string_tocken, err := jwt_logic.CreateTocken(&ctx, data.Username, data.UserID, a.Logger)
+	string_tocken, err := jwt_logic.CreateTocken(&ctx, data.Username, data.UserID, map_id, a.Logger)
 	if err != nil {
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error create JWT-tocken: %v", err),
@@ -273,6 +292,7 @@ func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rw.Header().Add("Authorization", string_tocken)
+	setCookie(rw, string_tocken)
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"message": "Success authorize",
@@ -311,4 +331,15 @@ func setCode(confirmation_code string, email string, username string, password s
 		Username:   username,
 		Password:   password,
 	}
+}
+func setCookie(rw http.ResponseWriter, string_tocken string) {
+	http.SetCookie(rw, &http.Cookie{
+		Name:     "jwt_token",
+		Value:    string_tocken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true, // Для HTTPS
+		SameSite: http.SameSiteStrictMode,
+		Expires:  time.Now().Add(24 * time.Hour), // Срок действия
+	})
 }

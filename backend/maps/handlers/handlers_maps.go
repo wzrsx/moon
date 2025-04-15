@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"html/template"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
@@ -33,21 +34,45 @@ func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request)
 		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
 		return
 	}
-	userID, ok := claims["user_id"].(string)
+
+	id_map, ok := claims["map_id"].(string)
 	if !ok {
 		a.Logger.Error("User ID not found in claims")
-		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
 		return
 	}
-	id_map, err := queries_maps.TakeMap(userID, a.Pool)
-	if err != nil {
-		a.Logger.Error("Take map error", zap.Error(err))
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "error query take map: " + err.Error()})
-		return
-	}
-	respondWithJSON(rw, http.StatusOK, map[string]string{"message": "successfully take map",
-		"id_map": id_map})
+
+	// Возвращаем JSON с ID карты
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"map_id":       id_map,
+		"redirect_url": "/maps/redactor", // Добавляем URL для редиректа
+	})
 }
+
+// Отдельный обработчик для рендеринга HTML
+func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
+		return
+	}
+
+	id_map, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("web/pages/building.html"))
+	err := tmpl.Execute(rw, id_map)
+	if err != nil {
+		a.Logger.Error("Template error maps editor", zap.Error(err))
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsTakeModules struct {
 		IdMap string `json:"id_map"`

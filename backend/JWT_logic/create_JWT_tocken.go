@@ -10,11 +10,12 @@ import (
 
 var jwtSecretKey = []byte("very-secret-key")
 
-func CreateTocken(c *context.Context, username string, user_id string, logger *zap.Logger) (string, error)  {
+func CreateTocken(c *context.Context, username string, user_id string, map_id string, logger *zap.Logger) (string, error) {
 	payload := jwt.MapClaims{
 		"user_id": user_id,
 		"usename": username,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"map_id":  map_id,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
