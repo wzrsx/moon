@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -35,7 +34,7 @@ func AuthorizeQuery(email string, password string, pool *pgxpool.Pool) (error, *
 
 	err = conn.QueryRow(context.Background(), "SELECT id, username FROM users WHERE email = $1 AND password = $2 ", email, password_hashed).Scan(&id_user, &username)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err.Error() == "no rows in result set" {
 			return errors.New("pass invalid"), nil
 		}
 		return err, nil

@@ -35,11 +35,16 @@ func (s *MoonServiceSrever) AddHandlers() *mux.Router {
 	auth_handlers := handlers_auth.CreateAuthHandlers(s.Cfg_auth, s.Logger, s.Pool)
 	maps_handlers := handlers_maps.CreateMapsHandlers(s.Cfg_db, s.Logger, s.Pool)
 
+	r.HandleFunc("/", MainHandler).Methods("GET")
 	r.HandleFunc("/auth/registration", auth_handlers.RegisterHandler).Methods("POST")
 	r.HandleFunc("/auth/check_code", auth_handlers.CheckCodeHandler).Methods("POST")
 	r.HandleFunc("/auth/signin", auth_handlers.SignInHandler).Methods("POST")
 
 	r.Handle("/maps/redactor", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.OpenMapsRedactor)))
+
+	// Статические файлы (если Nginx не обрабатывает)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
+		http.FileServer(http.Dir("./web"))))
 
 	return r
 }

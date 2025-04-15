@@ -255,6 +255,7 @@ func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 			respondWithJSON(rw, http.StatusConflict, map[string]string{
 				"message": fmt.Sprint("Invalid password."),
 			})
+			return
 		}
 		a.Logger.Sugar().Errorf("Error query to authorize: %v", err)
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{

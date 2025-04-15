@@ -120,6 +120,39 @@ signInBtn.addEventListener('click', (e) => {
         showError(passwordSignIn, passwordSignInError, "Пожалуйста, введите пароль.");
         return;
     }
+    const formData = {
+        email: loginSignIn.value,
+        password: passwordSignIn.value,
+    };
+    fetch("http://localhost:5050/auth/signin", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json' // Убедитесь, что заголовок установлен
+        },
+        body: JSON.stringify(formData),
+    })
+        .then(response => {
+            return response.json().then(data => {
+                if (!response.ok) {
+                    // Если ответ не успешен, проверяем наличие сообщения
+                    if (data.message) {
+                        // Выводим сообщение об ошибке в нужном элементе
+                        document.getElementById('passwordSignInError').innerText = data.message;
+                        document.getElementById('passwordSignInError').style.display = 'block'; // Показываем элемент
+                    }
+                    return Promise.reject(data);
+                }
+                authHeader = response.headers.get('Authorization')
+                return data; // Возвращаем успешно полученные данные
+            });
+        })
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Ошибка авторизации:', error);
+            // Здесь можно также обработать другие ошибки, если нужно
+        });
     //отправка на сервер
 });
 registrateBtn.addEventListener('click', (e) => {
@@ -162,7 +195,7 @@ recoverPassBtn.addEventListener('click', (e) => {
     
 });
 function goBuilding(){
-    window.location.href = "/pages/building.html"
+    window.location.href = "../pages/building.html"
 }
 
 function showError(input, field, text) {

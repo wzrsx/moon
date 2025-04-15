@@ -1,12 +1,12 @@
 @font-face {
     font-family: 'Jacoby';
-    src: url(./fonts/JacobyICGBlackCyrillic-Regular.otf) format('truetype');
+    src: url(fonts/JacobyICGBlackCyrillic-Regular.otf) format('truetype');
     font-weight: 400; 
     font-style: normal;
 }
 @font-face {
     font-family: 'Jura';
-    src: url(./fonts/Jura.ttf) format('truetype');
+    src: url(fonts/Jura.ttf) format('truetype');
     font-weight: 400; 
     font-style: normal;
 }
@@ -14,7 +14,7 @@
 body{
     width: 95%;
     font-family: 'Jacoby';
-    background-image: url('./photos/bg.jpg');
+    background-image: url('photos/bg.jpg');
     background-size: cover; 
     background-position: center; 
     background-repeat: no-repeat;
