@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users (
-    d UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(20),
     email VARCHAR(100),
     password VARCHAR(100)
@@ -23,7 +23,7 @@ CREATE TABLE modules(
             'administration_module', 'medical_module', 'exploring_module'])
         OR module_name = ANY(ARRAY['repair_module', 'cosmodrome', 'communication_tower', 'plantation',
             'landfill', 'production', 'astro_platform', 'sun_electronic_station',  'mine'])),
-    module_json JSONB,
+    module_points_json JSONB,
     CONSTRAINT fk_modeules_maps FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
 );
 

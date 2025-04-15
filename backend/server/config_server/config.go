@@ -12,7 +12,7 @@ import (
 
 type ConfigServer struct {
 	Host string `yaml:"http_host" env:"HTTP_HOST" env-default:"prod"`
-	Port string  `yaml:"http_port" env:"HTTP_PORT" env-default:"prod"`
+	Port string `yaml:"http_port" env:"HTTP_PORT" env-default:"prod"`
 }
 
 var once sync.Once
@@ -20,7 +20,7 @@ var cfg *ConfigServer
 
 func GetServerConf() *ConfigServer {
 	once.Do(func() {
-		cfg := &ConfigServer{}
+		cfg = &ConfigServer{}
 		configDir := os.Getenv("CONFIG_DIR")
 		if configDir == "" {
 			configDir = "backend"

@@ -19,7 +19,7 @@ var cfg *ConfigLogger
 
 func GetLoggerConf() *ConfigLogger {
 	once.Do(func() {
-		cfg := &ConfigLogger{}
+		cfg = &ConfigLogger{}
 		configDir := os.Getenv("CONFIG_DIR")
 		if configDir == "" {
 			configDir = "backend"

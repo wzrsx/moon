@@ -1,18 +1,63 @@
+version: '3.8'
+
 services:
-  moon-db:
-    image: postgres:13
-    container_name: moon-db
-    ports:
-      - "5432:5432"
+  geoserver:
+    image: kartoza/geoserver:2.23.0
+    container_name: geoserver
     environment:
-      - POSTGRES_DB=moon-db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=admin
+      - GEOSERVER_ADMIN_PASSWORD=mysecurepassword
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOWEBCACHE_CACHE_DIR=/opt/geoserver/data_dir/gwc
     volumes:
-      - ./repository/migrations:/docker-entrypoint-initdb.d
-      - management_data:/var/lib/postgresql/data
+      - geoserver_data:/opt/geoserver/data_dir
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgis:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d client" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/geoserver"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  postgis:
+    image: postgis/postgis:15-3.3
+    container_name: postgis
+    environment:
+      POSTGRES_USER: geo_user
+      POSTGRES_PASSWORD: geo_pass
+      POSTGRES_DB: geo_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geo_user -d geo_db"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  moon-db:
+    image: postgres:13
+    container_name: moon-db
+    environment:
+      POSTGRES_DB: moon-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - ./backend/repository/migrations:/docker-entrypoint-initdb.d
+      - moon_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d moon-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  geoserver_data:
+  postgres_data:
+  moon_db_data:

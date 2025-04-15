@@ -33,7 +33,7 @@ func AuthorizeQuery(email string, password string, pool *pgxpool.Pool) (error, *
 	var username string
 	var id_user string
 
-	err = conn.QueryRow(context.Background(), "SELECT id_user, username FROM users WHERE email = $1 AND password = $2 ", email, password_hashed).Scan(&id_user, &username)
+	err = conn.QueryRow(context.Background(), "SELECT id, username FROM users WHERE email = $1 AND password = $2 ", email, password_hashed).Scan(&id_user, &username)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return errors.New("pass invalid"), nil

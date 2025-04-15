@@ -60,9 +60,22 @@ func (a *AuthHandlers) RegisterHandler(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if len(creds.Password) < 5 {
-		respondWithJSON(rw, http.StatusOK, map[string]string{
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
 			"message": "Password is too small.",
 		})
+		return
+	}
+
+	// Проверяем есть ли email в БД
+	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
+		if err.Error() == "email exists" {
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"message": "email exists",
+			})
+			return
+		}
+		a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
+		return
 	}
 
 	a.sendWelcomeEmail(creds.Email, creds.Username, creds.Password, rw)
@@ -89,7 +102,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw htt
 							%s
 						</div>
 						
-						<p>Этот код действителен в течение 3 минут.</p>
+						<p>Этот код действителен в течение 5 минут.</p>
 						<p style="color: #888; font-size: 12px;">
 							Если вы не запрашивали этот код, пожалуйста, проигнорируйте это письмо.
 						</p>
@@ -130,7 +143,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw htt
 	}
 
 	// Устанавливаем код в слайс
-	setCode(email, username, password)
+	setCode(confirmationCode, email, username, password)
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"message": "Registration successful. Please check your email",
@@ -160,13 +173,11 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 
 	code_info := emailCodes[creds.Email]
 	if code_info.Attempts >= 10 {
-		mu.Lock()
-		defer mu.Unlock()
-
 		code_info.BlockUntil = time.Now().Add(time.Minute * 1)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "Too many attempts",
+			"message": "Too many attempts. You have blocked on 1 minute",
 		})
+		code_info.Attempts = 0
 		return
 	}
 
@@ -177,7 +188,7 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if code_info.ExpiresAt.After(time.Now()) {
+	if code_info.BlockUntil.After(time.Now()) {
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
 			"message": "You have blocked on 1 minute",
 		})
@@ -189,18 +200,6 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
 			"message": "Code is not match",
 		})
-		return
-	}
-
-	// Проверяем есть ли email в БД
-	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
-		if err.Error() == "email exists" {
-			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-				"message": "email exists",
-			})
-			return
-		}
-		a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
 		return
 	}
 
@@ -299,15 +298,15 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	json.NewEncoder(w).Encode(payload)
 }
 
-func setCode(email string, username string, password string) {
+func setCode(confirmation_code string, email string, username string, password string) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	emailCodes[email] = &EmailCodeRecord{
-		Code:       genConfirmCode(),
+		Code:       confirmation_code,
 		ExpiresAt:  time.Now().Add(5 * time.Minute),
 		BlockUntil: time.Now(),
-		Attempts:   10,
+		Attempts:   0,
 		Username:   username,
 		Password:   password,
 	}

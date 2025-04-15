@@ -25,7 +25,7 @@ var cfg *ConfigDB
 
 func GetDBConf() *ConfigDB {
 	once.Do(func() {
-		cfg := &ConfigDB{}
+		cfg = &ConfigDB{}
 		configDir := os.Getenv("CONFIG_DIR")
 		if configDir == "" {
 			configDir = "backend"

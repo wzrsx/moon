@@ -4,14 +4,14 @@ smtp_port: "587"
 smtp_host: "smtp.gmail.com"
 
 db_host: "moon-db"
-db_port: "5432"
+db_port: "5433"
 db_user: "postgres"
 db_password: "admin"
 db_name: "moon-db"
 db_ssl: "disable"
 
 http_host: "localhost"
-http_port: "8080"
+http_port: "5050"
 
 geoserver_url: "http://localhost:8080/geoserver"
 geoserver_username: "admin"

@@ -25,7 +25,7 @@ var cfg *ConfigAuth
 
 func GetAuthConf(cfg_db *config_db.ConfigDB) *ConfigAuth {
 	once.Do(func() {
-		cfg := &ConfigAuth{}
+		cfg = &ConfigAuth{}
 		configDir := os.Getenv("CONFIG_DIR")
 		if configDir == "" {
 			configDir = "backend"
