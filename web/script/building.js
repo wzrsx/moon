@@ -210,7 +210,7 @@ let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', function(e) {
     sidebar.classList.remove('visible');
-    greenLayer.setOpacity(1);
+    greenLayer.setOpacity(0.7);
     // Закрываем выпадающее меню
     document.getElementById('burger-checkbox').checked = false;
     const originalImg = this.querySelector('.photo-item-module');
@@ -409,3 +409,43 @@ ldsm.on(['precompose', 'postcompose'], function(event) {
     const rawCoords = evt.coordinate;
     console.log('Координаты в проекции карты:', rawCoords);
   });
+
+  const mousePositionElement = document.createElement('div');
+  mousePositionElement.id = 'mouse-coordinates';
+  mousePositionElement.style.position = 'absolute';
+  mousePositionElement.style.backgroundColor = 'white';
+  mousePositionElement.style.padding = '5px';
+  mousePositionElement.style.border = '1px solid #ccc';
+  mousePositionElement.style.borderRadius = '3px';
+  mousePositionElement.style.pointerEvents = 'none';
+  mousePositionElement.style.zIndex = '1000';
+  mousePositionElement.style.display = 'none';
+  mousePositionElement.style.fontFamily = 'Jura';
+  mousePositionElement.style.fontWeight = '700';
+  document.body.appendChild(mousePositionElement);
+  
+  // Флаг для отслеживания нахождения курсора на карте
+  let isCursorOnMap = false;
+  
+  // Обработчик входа курсора на карту
+  map.getViewport().addEventListener('pointerenter', function() {
+    isCursorOnMap = true;
+  });
+  
+  // Обработчик движения курсора
+  map.on('pointermove', function(evt) {
+    if (!isCursorOnMap) return;
+    
+    const coordinate = evt.coordinate;
+    mousePositionElement.innerHTML = `
+      Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+      Высота над уровнем моря: ??? м
+    `;
+    
+    mousePositionElement.style.left = (evt.pixel[0] + 10) + 'px';
+    mousePositionElement.style.top = (evt.pixel[1] + 10) + 'px';
+    mousePositionElement.style.display = 'block';
+  });
+  
+
+  
