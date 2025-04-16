@@ -1,7 +1,7 @@
 // модули
 let modulesDataByMap;
 // Загрузка модулей с сервера
-fetch("http://localhost:5050/maps/page/take_modules")
+fetch("http://localhost:5050/maps/redactor/page/take_modules")
 .then(response => {
   if (!response.ok) {
     return response.json().then(data => Promise.reject(data));
@@ -14,25 +14,47 @@ fetch("http://localhost:5050/maps/page/take_modules")
     const [lon, lat] = module.points;
     
     // Генерируем путь к изображению для каждого модуля
-    const iconPath = `/static/style/photos/${module.module_name}.png`; 
+    // const iconPath = `/static/style/photos/${module.module_name}.png`; 
+    const iconPath = `/static/style/photos/inhabited_modules.png`; 
+    console.log(iconPath)
     // Или используем поле из данных, если есть: module.icon_path
     
     const vectorLayer = new ol.layer.Vector({
       source: new ol.source.Vector({
         features: [
           new ol.Feature({
-            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
-            name: module.Module_name,
-            id: module.IdModule,
-            icon: iconPath // Сохраняем путь к иконке в свойствах
+            geometry: new ol.geom.Point(ol.proj.fromLonLat(moscowCenter))
           })
         ]
       }),
       style: function(feature, resolution) {
-        return createModuleStyle(
-          map.getView().getZoom(),
-          feature.get('icon') // Получаем путь к иконке из свойств
-        );
+        const zoom = map.getView().getZoom();
+        const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
+        if (zoom >= 12) {
+          // Показываем PNG-иконку
+          return new ol.style.Style({
+            image: new ol.style.Icon({
+              src: '/m.PNG',
+              scale: iconScale,
+              anchor: [0.5, 1],
+              imgSize: [798, 598]
+            })
+          });
+        } else {
+          // Показываем точку (круг)
+          return new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 3, // Размер точки
+              fill: new ol.style.Fill({
+                color: 'red' // Цвет точки
+              }),
+              stroke: new ol.style.Stroke({
+                color: 'white', // Обводка
+                width: 1
+              })
+            })
+          });
+        }
       }
     });
     
@@ -51,6 +73,26 @@ fetch("http://localhost:5050/maps/page/take_modules")
 .catch(error => {
   console.error('Ошибка загрузки модулей:', error);
 });
+
+function createModuleStyle(zoom, iconPath) {
+  // Временный упрощенный стиль (всегда видимый красный кружок)
+  return new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 10,
+      fill: new ol.style.Fill({ color: 'red' }),
+      stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+    })
+  });
+}
+
+// Вспомогательная функция для цветов по типу модуля
+function getColorByModuleType(type) {
+  const colors = {
+    'inhabited': '#4CAF50', // Зеленый
+    'technological': '#2196F3' // Синий
+  };
+  return colors[type] || '#FF5722'; // Оранжевый по умолчанию
+}
 
 // кнопки
 const placeModulesBtn = document.getElementById("placeModulesBtn");
