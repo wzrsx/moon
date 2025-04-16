@@ -635,10 +635,7 @@ navElement.addEventListener('mousemove', function(e) {
 
 // Функция для обновления позиции и содержимого координат
 function updateMousePosition(coordinate, pixel, clientX, clientY) {
-  mousePositionElement.innerHTML = `
-    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-    Высота над уровнем моря: ??? м
-  `;
+  // Сначала обновляем позицию элемента
   if (pixel) {
     mousePositionElement.style.left = (pixel[0] + 10) + 'px';
     mousePositionElement.style.top = (pixel[1] + 10) + 'px';
@@ -647,5 +644,46 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
     mousePositionElement.style.top = (clientY + 10) + 'px';
   }
   
+  // Показываем элемент с координатами (без высоты пока)
+  mousePositionElement.innerHTML = `
+    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+    Высота над уровнем моря: загрузка...
+  `;
   mousePositionElement.style.display = 'block';
+
+  // Запрос значения пикселя в точке
+  const viewResolution = map.getView().getResolution();
+  const url = ldem.getSource().getFeatureInfoUrl(
+    coordinate,
+    viewResolution,
+    'EPSG:100000',
+    {'INFO_FORMAT': 'application/json'}
+  );
+  
+  if (url) {
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        let elevationText;
+        if (data.features && data.features.length > 0) {
+          const elevation = data.features[0].properties.GRAY_INDEX;
+          elevationText = `${elevation.toFixed(2)} м`;
+        } else {
+          elevationText = 'нет данных';
+        }
+        
+        // Обновляем только часть с высотой
+        mousePositionElement.innerHTML = `
+          Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+          Высота над уровнем моря: ${elevationText}
+        `;
+      })
+      .catch(error => {
+        console.error('Ошибка запроса:', error);
+        mousePositionElement.innerHTML = `
+          Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+          Высота: ошибка запроса
+        `;
+      });
+  }
 }
