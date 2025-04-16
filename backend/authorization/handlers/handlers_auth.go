@@ -173,6 +173,13 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	defer mu.Unlock()
 
 	code_info := emailCodes[creds.Email]
+
+	if code_info == nil {
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"message": "Code to email is not exists.",
+		})
+		return
+	}
 	if code_info.Attempts >= 10 {
 		code_info.BlockUntil = time.Now().Add(time.Minute * 1)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
@@ -208,6 +215,10 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	err, user_id := queries_auth.RegistrationQuery(code_info.Username, creds.Email, code_info.Password, a.Pool)
 	if err != nil {
 		a.Logger.Sugar().Errorf("Error create new user in DB: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"message": fmt.Sprint("Error create new user"),
+		})
+		delete(emailCodes, creds.Email)
 		return
 	}
 
@@ -217,6 +228,7 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error Taking map: %v", err),
 		})
+		delete(emailCodes, creds.Email)
 		return
 	}
 
@@ -323,7 +335,7 @@ func setCode(confirmation_code string, email string, username string, password s
 	mu.Lock()
 	defer mu.Unlock()
 
-	emailCodes[email] = &EmailCodeRecord{
+	record := &EmailCodeRecord{
 		Code:       confirmation_code,
 		ExpiresAt:  time.Now().Add(5 * time.Minute),
 		BlockUntil: time.Now(),
@@ -331,6 +343,18 @@ func setCode(confirmation_code string, email string, username string, password s
 		Username:   username,
 		Password:   password,
 	}
+
+	emailCodes[email] = record
+
+	time.AfterFunc(15*time.Minute, func() {
+		mu.Lock()
+		defer mu.Unlock()
+
+		// Удаляем только если это та же самая запись
+		if stored, exists := emailCodes[email]; exists && stored == record {
+			delete(emailCodes, email)
+		}
+	})
 }
 func setCookie(rw http.ResponseWriter, string_tocken string) {
 	http.SetCookie(rw, &http.Cookie{

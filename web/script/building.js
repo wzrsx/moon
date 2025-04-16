@@ -1,3 +1,57 @@
+// модули
+let modulesDataByMap;
+// Загрузка модулей с сервера
+fetch("http://localhost:5050/maps/page/take_modules")
+.then(response => {
+  if (!response.ok) {
+    return response.json().then(data => Promise.reject(data));
+  }
+  return response.json();
+})
+.then(modules => {
+  // Создаем слой для каждого модуля
+  modules.forEach((module, index) => {
+    const [lon, lat] = module.points;
+    
+    // Генерируем путь к изображению для каждого модуля
+    const iconPath = `/static/style/photos/${module.module_name}.png`; 
+    // Или используем поле из данных, если есть: module.icon_path
+    
+    const vectorLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({
+        features: [
+          new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+            name: module.Module_name,
+            id: module.IdModule,
+            icon: iconPath // Сохраняем путь к иконке в свойствах
+          })
+        ]
+      }),
+      style: function(feature, resolution) {
+        return createModuleStyle(
+          map.getView().getZoom(),
+          feature.get('icon') // Получаем путь к иконке из свойств
+        );
+      }
+    });
+    
+    map.addLayer(vectorLayer);
+  });
+
+  // Обновляем стили при изменении масштаба
+  map.getView().on('change:resolution', function() {
+    map.getLayers().forEach(layer => {
+      if (layer instanceof ol.layer.Vector) {
+        layer.changed();
+      }
+    });
+  });
+})
+.catch(error => {
+  console.error('Ошибка загрузки модулей:', error);
+});
+
 // кнопки
 const placeModulesBtn = document.getElementById("placeModulesBtn");
 const notificationsBtn = document.getElementById("notificationsBtn");
@@ -156,6 +210,7 @@ let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', function(e) {
     sidebar.classList.remove('visible');
+    greenLayer.setOpacity(1);
     // Закрываем выпадающее меню
     document.getElementById('burger-checkbox').checked = false;
     const originalImg = this.querySelector('.photo-item-module');
@@ -207,7 +262,8 @@ modules.forEach(module => {
     function onMouseUp() {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
-      
+      greenLayer.setOpacity(0);
+      //сделать fetch
       if (clone) {
         clone.remove();
         clone = null;
@@ -282,12 +338,14 @@ proj4.defs("EPSG:100000",
   const ldem = createFullscreenLayer('LDEM_83S_10MPP_ADJ', 1.0, 1);
   const ldsm = createFullscreenLayer('LDSM_83S_10MPP_ADJ', 0.3, 2);
   const hillshade = createFullscreenLayer('LDEM_83S_10MPP_ADJ_HILL', 0.6, 3);
+  const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
 
   // 4. Добавляем слои на карту
   map.addLayer(ldem);
   map.addLayer(ldsm);
   map.addLayer(hillshade);
-
+  map.addLayer(greenLayer);
+  
   // Для базового слоя (яркость)
 ldem.on(['precompose', 'postcompose'], function(event) {
   const context = event.context;

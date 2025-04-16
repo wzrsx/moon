@@ -74,18 +74,21 @@ func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request
 }
 
 func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
-	type CredentialsTakeModules struct {
-		IdMap string `json:"id_map"`
-	}
-	var creds CredentialsTakeModules
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
-		a.Logger.Error("Take module error", zap.Error(err))
-		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Take module error: " + err.Error()})
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
 		return
 	}
 
-	modules, err := queries_maps.TakeModules(creds.IdMap, a.Pool)
+	id_map, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+		return
+	}
+
+	modules, err := queries_maps.TakeModules(id_map, a.Pool)
 	if err != nil {
 		a.Logger.Error("Error querying modules", zap.Error(err))
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{

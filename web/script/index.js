@@ -136,14 +136,11 @@ signInBtn.addEventListener('click', (e) => {
             return response.json().then(data => {
                 if (!response.ok) {
                     // Если ответ не успешен, проверяем наличие сообщения
-                    if (data.message) {
-                        // Выводим сообщение об ошибке в нужном элементе
-                        document.getElementById('passwordSignInError').innerText = data.message;
-                        document.getElementById('passwordSignInError').style.display = 'block'; // Показываем элемент
+                    if (data.message) {                    
+                        showError(null, passwordSignInError, data.message);
                     }
                     return Promise.reject(data);
                 }
-                authHeader = response.headers.get('Authorization')
                 return data; // Возвращаем успешно полученные данные
             });
         })
@@ -188,6 +185,29 @@ registrateBtn.addEventListener('click', (e) => {
         showError(repeatPassRegistration, repeatPassRegistrationError, "Пароли не совпадают.");
         return;
     }
+    const bodyrequest = {
+        username: login,
+        email: email,
+        password: password,
+    }
+    fetch("http://localhost:5050/auth/registration", {
+        method: 'POST',
+        contentType: 'application/json',
+        body: JSON.stringify(bodyrequest)
+    })
+    .then (response => {
+        return response.json().then(data => {
+            if (!response.ok) {
+                // Если ответ не успешен, проверяем наличие сообщения
+                if (data.message) {
+                    showError(null, passRegistrationError, data.message);
+                }
+                return Promise.reject(data);
+            }
+            authHeader = response.headers.get('Authorization')
+            return data; // Возвращаем успешно полученные данные
+        });
+    })
     //отправка на сервер
 });
 recoverPassBtn.addEventListener('click', (e) => {
@@ -199,10 +219,6 @@ function goBuilding() {
     fetch("http://localhost:5050/maps/redactor", {
         method: 'GET',
         credentials: 'include',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': authHeader // Добавляем токен авторизации
-        }
     })
         .then(response => {
             const contentType = response.headers.get('content-type');
