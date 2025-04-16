@@ -13,7 +13,8 @@ function loadModules() {
       const vectorSource = new ol.source.Vector();
       const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
-        style: createModuleStyleFunction()
+        style: createModuleStyleFunction(),
+        zIndex: 5
       });
 
       modules.forEach(module => {
@@ -195,9 +196,12 @@ const modulesList = document.getElementById("modulesList");
 const modules = modulesList.querySelectorAll('.item-module');
 const typeModulesTitle = document.getElementById("typeModulesTitle");
 const notificationsContainer = document.getElementById("notificationsContainer");
+
+const checkboxDropMenu = document.getElementById('burger-checkbox');
 //уведы всплывающие
 const notification = document.getElementById("customNotification");
 let currentModuleType = null;
+let isOpenAside = null;
 //обработчики
 placeModulesBtn.addEventListener('click', (e) => {
   e.preventDefault();
@@ -209,6 +213,7 @@ placeModulesBtn.addEventListener('click', (e) => {
     showModules();
   }
   sidebar.classList.add('visible');
+  isOpenAside = true;
 });
 
 notificationsBtn.addEventListener('click', (e) => {
@@ -218,6 +223,7 @@ notificationsBtn.addEventListener('click', (e) => {
   typeModulesTitle.innerText = "Уведомления";
   notificationsContainer.style.display = 'block';
   sidebar.classList.add('visible');
+  isOpenAside = true;
 });
 saveProjectBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -247,10 +253,12 @@ dialog.addEventListener("close", () => {
 document.addEventListener('keydown', event => {
   if (event.key === "Escape" || event.keyCode === 27) {
     closeAside();
+    
   }
 });
 function closeAside(){
   sidebar.classList.remove('visible');
+  isOpenAside = false;
 }
 function sendNotification(text, success){
   if(!success){
@@ -280,7 +288,7 @@ function showModules() {
       ? "Обитаемые модули" 
       : "Технологические объекты";
       
-  modulesChoiceType.style.opacity = '1';
+  modulesChoiceType.style.opacity = '0';
   modulesChoiceType.style.transform = 'translateY(20px)';
   modulesChoiceType.style.transition = 'all 0.3s ease-out';
   
@@ -297,7 +305,7 @@ function showModules() {
       setTimeout(() => {
           modules.forEach((module, index) => {
               setTimeout(() => {
-                  module.style.opacity = '0';
+                  module.style.opacity = '1';
                   module.style.transform = 'translateY(0)';
                   module.style.transition = 'all 0.3s ease-out';
               }, index * 100);
@@ -335,9 +343,10 @@ let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', function(e) {
     sidebar.classList.remove('visible');
+    isOpenAside = false;
     greenLayer.setOpacity(0.7);
     // Закрываем выпадающее меню
-    document.getElementById('burger-checkbox').checked = false;
+    checkboxDropMenu.checked = false;
     const originalImg = this.querySelector('.photo-item-module');
     
     clone = originalImg.cloneNode(true);
@@ -586,28 +595,57 @@ ldsm.on(['precompose', 'postcompose'], function(event) {
   mousePositionElement.style.fontWeight = '700';
   document.body.appendChild(mousePositionElement);
   
-  // Флаг для отслеживания нахождения курсора на карте
-  let isCursorOnMap = false;
-  
-  // Обработчик входа курсора на карту
-  map.getViewport().addEventListener('pointerenter', function() {
-    isCursorOnMap = true;
-  });
-  
-  // Обработчик движения курсора
-  map.on('pointermove', function(evt) {
-    if (!isCursorOnMap) return;
-    
-    const coordinate = evt.coordinate;
-    mousePositionElement.innerHTML = `
-      Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-      Высота над уровнем моря: ??? м
-    `;
-    
-    mousePositionElement.style.left = (evt.pixel[0] + 10) + 'px';
-    mousePositionElement.style.top = (evt.pixel[1] + 10) + 'px';
-    mousePositionElement.style.display = 'block';
-  });
-  
+//Вывод координат
+const dropdownMenu = document.querySelector('.dropdown-menu');
+const zoomItems = document.querySelector('.ol-zoom');
+const navElement = document.querySelector('nav');
 
+checkboxDropMenu.addEventListener('click', (e) => {
+  mousePositionElement.style.display = checkboxDropMenu.checked ? 'none' : 'block';
+});
+// Обработчик движения курсора по карте
+map.on('pointermove', function(evt) {
+  if (isOpenAside) {
+    mousePositionElement.style.display = 'none';
+    return;
+  }
+  updateMousePosition(evt.coordinate, evt.pixel);
+});
+//Обработчик движения курсора по всей странице
+document.addEventListener('mousemove', function(e) {
+  if (dropdownMenu.contains(e.target) || zoomItems.contains(e.target)) {
+      mousePositionElement.style.display = 'none';
+  }
+});
+// Обработчик покидания окна
+document.addEventListener('mouseout', function(e) {
+  if (!e.relatedTarget && !e.toElement) {
+    mousePositionElement.style.display = 'none';
+  }
+});
+// Обработчик движения курсора по nav
+navElement.addEventListener('mousemove', function(e) {
+  if (!isOpenAside) {
+    const mapRect = map.getTargetElement().getBoundingClientRect();
+    const pixel = [e.clientX - mapRect.left, e.clientY - mapRect.top];
+    const coordinate = map.getCoordinateFromPixel(pixel);
+    updateMousePosition(coordinate, null, e.clientX, e.clientY);
+  }
+});
+
+// Функция для обновления позиции и содержимого координат
+function updateMousePosition(coordinate, pixel, clientX, clientY) {
+  mousePositionElement.innerHTML = `
+    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+    Высота над уровнем моря: ??? м
+  `;
+  if (pixel) {
+    mousePositionElement.style.left = (pixel[0] + 10) + 'px';
+    mousePositionElement.style.top = (pixel[1] + 10) + 'px';
+  } else {
+    mousePositionElement.style.left = (clientX + 10) + 'px';
+    mousePositionElement.style.top = (clientY + 10) + 'px';
+  }
   
+  mousePositionElement.style.display = 'block';
+}
