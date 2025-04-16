@@ -1,95 +1,178 @@
 // модули
-let modulesDataByMap;
-// Загрузка модулей с сервера
-fetch("http://localhost:5050/maps/redactor/page/take_modules")
-.then(response => {
-  if (!response.ok) {
-    return response.json().then(data => Promise.reject(data));
-  }
-  return response.json();
-})
-.then(modules => {
-  // Создаем слой для каждого модуля
-  modules.forEach((module, index) => {
-    const [lon, lat] = module.points;
-    
-    // Генерируем путь к изображению для каждого модуля
-    // const iconPath = `/static/style/photos/${module.module_name}.png`; 
-    const iconPath = `/static/style/photos/inhabited_modules.png`; 
-    console.log(iconPath)
-    // Или используем поле из данных, если есть: module.icon_path
-    
-    const vectorLayer = new ol.layer.Vector({
-      source: new ol.source.Vector({
-        features: [
-          new ol.Feature({
-            geometry: new ol.geom.Point(ol.proj.fromLonLat(moscowCenter))
-          })
-        ]
-      }),
-      style: function(feature, resolution) {
-        const zoom = map.getView().getZoom();
-        const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
-        if (zoom >= 12) {
-          // Показываем PNG-иконку
-          return new ol.style.Style({
-            image: new ol.style.Icon({
-              src: '/m.PNG',
-              scale: iconScale,
-              anchor: [0.5, 1],
-              imgSize: [798, 598]
-            })
+// Глобальная переменная для хранения слоев модулей
+let moduleLayers = [];
+
+// Функция загрузки модулей с сервера
+// Функция загрузки модулей с сервера
+function loadModules() {
+  fetch("http://localhost:5050/maps/redactor/page/take_modules")
+    .then(response => response.json())
+    .then(modules => {
+      clearModuleLayers();
+      
+      const vectorSource = new ol.source.Vector();
+      const vectorLayer = new ol.layer.Vector({
+        source: vectorSource,
+        style: createModuleStyleFunction()
+      });
+
+      modules.forEach(module => {
+        // Координаты уже в метрах (EPSG:100000)
+        const [x, y] = module.points;
+        
+        // Проверяем, что координаты в пределах видимой области
+        if (Math.abs(x) <= 216400 && Math.abs(y) <= 216400) {
+          const feature = new ol.Feature({
+            geometry: new ol.geom.Point([x, y]),
+            name: module.module_name,
+            type: module.module_type,
+            id: module.id_module
           });
+          vectorSource.addFeature(feature);
         } else {
-          // Показываем точку (круг)
-          return new ol.style.Style({
-            image: new ol.style.Circle({
-              radius: 3, // Размер точки
-              fill: new ol.style.Fill({
-                color: 'red' // Цвет точки
-              }),
-              stroke: new ol.style.Stroke({
-                color: 'white', // Обводка
-                width: 1
-              })
-            })
-          });
+          console.warn(`Модуль ${module.module_name} вне зоны видимости`, [x, y]);
         }
-      }
-    });
-    
-    map.addLayer(vectorLayer);
-  });
+      });
 
-  // Обновляем стили при изменении масштаба
-  map.getView().on('change:resolution', function() {
-    map.getLayers().forEach(layer => {
-      if (layer instanceof ol.layer.Vector) {
-        layer.changed();
-      }
-    });
-  });
-})
-.catch(error => {
-  console.error('Ошибка загрузки модулей:', error);
-});
+      map.addLayer(vectorLayer);
+      moduleLayers.push(vectorLayer);
 
-function createModuleStyle(zoom, iconPath) {
-  // Временный упрощенный стиль (всегда видимый красный кружок)
-  return new ol.style.Style({
-    image: new ol.style.Circle({
-      radius: 10,
-      fill: new ol.style.Fill({ color: 'red' }),
-      stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+      // Центрируем карту на модулях
+      if (modules.length > 0) {
+        const [firstX, firstY] = modules[0].points;
+        map.getView().setCenter([firstX, firstY]);
+        map.getView().setZoom(5);
+      }
     })
-  });
+    .catch(console.error);
 }
+// Функция создания стиля для модулей
+function createModuleStyleFunction() {
+  return function(feature, resolution) {
+    const zoom = map.getView().getZoom();
+    const moduleType = feature.get('type');
+    const moduleName = feature.get('name');
+
+    // Путь к иконке модуля
+    const iconPath = `/static/style/photos/${moduleType}_modules.png`; // MODULE NAME _________________>>>>
+
+    const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
+
+    if (zoom >= 17) {
+      // Создание стиля для зоны вокруг модуля
+      const coordinates = feature.getGeometry().getCoordinates(); // Получаем координаты точки
+      const x = coordinates[0];
+      const y = coordinates[1];
+      
+      // Остальной код
+      const size = 6; // Размер квадрата в пикселях
+      const halfSize = size / 2;
+    
+      // Создание квадратной геометрии
+      const squareCoords = [
+        [x - halfSize, y - halfSize],
+        [x + halfSize, y - halfSize],
+        [x + halfSize, y + halfSize],
+        [x - halfSize, y + halfSize],
+        [x - halfSize, y - halfSize], // замыкание квадрата
+      ];
+    
+      return [
+        new ol.style.Style({
+          fill: new ol.style.Fill({ color: getColorByModuleType(moduleType) }),
+        }),
+        new ol.style.Style({
+          geometry: new ol.geom.Polygon([squareCoords]),
+          fill: new ol.style.Fill({ color: getColorByModuleType(moduleType) }),
+        }),
+        new ol.style.Style({
+          text: new ol.style.Text({
+            text: moduleName,
+            offsetY: -20,
+            font: 'bold 12px Jura',
+            fill: new ol.style.Fill({ color: '#fff' }),
+            stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
+          }),
+        }),
+      ];
+    } else if (zoom >= 12) {
+      return new ol.style.Style({
+        image: new ol.style.Icon({
+          src: iconPath,
+          scale: iconScale,
+          anchor: [0.5, 1],
+          imgSize: [798, 598]
+        }),
+        text: new ol.style.Text({
+          text: moduleName,
+          offsetY: 15,
+          font: 'bold 12px Jura',
+          fill: new ol.style.Fill({ color: '#fff' }),
+          stroke: new ol.style.Stroke({ color: '#000', width: 2 })
+        })
+      });
+    } else {
+      // Стиль для отдаленного вида (цветная точка)
+      return new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 5 + (zoom * 0.2),
+          fill: new ol.style.Fill({
+            color: getColorByModuleType(moduleType)
+          }),
+          stroke: new ol.style.Stroke({
+            color: '#fff',
+            width: 1
+          })
+        }),
+        text: new ol.style.Text({
+          text: moduleName,
+          offsetY: -20,
+          font: 'bold 12px Jura',
+          fill: new ol.style.Fill({ color: '#fff' }),
+          stroke: new ol.style.Stroke({ color: '#000', width: 2 })
+        })
+      });
+    }
+  };
+}
+
+// Функция очистки слоев модулей
+function clearModuleLayers() {
+  moduleLayers.forEach(layer => {
+    map.removeLayer(layer);
+  });
+  moduleLayers = [];
+}
+
+// Функция добавления нового модуля
+function addModuleToMap(moduleData) {
+  // Получаем ссылку на векторный слой, который уже добавлен на карту
+  const currentVectorLayer = moduleLayers[moduleLayers.length - 1]; // Последний добавленный слой
+  const vectorSource = currentVectorLayer.getSource(); // Получаем его source
+  
+  // Создаём новую точку
+  const feature = new ol.Feature({
+    geometry: new ol.geom.Point(moduleData.points),
+    name: moduleData.module_name,
+    type: moduleData.module_type,
+    id: moduleData.id_module // если у вас есть этот ID
+  });
+  
+  // Добавляем точку в векторный источник
+  vectorSource.addFeature(feature);
+
+  sendNotification(`Модуль "${moduleData.module_name}" добавлен`, true);
+}
+
+// Вызываем загрузку модулей при инициализации
+loadModules();
+
 
 // Вспомогательная функция для цветов по типу модуля
 function getColorByModuleType(type) {
   const colors = {
-    'inhabited': '#4CAF50', // Зеленый
-    'technological': '#2196F3' // Синий
+    'inhabited': '#2196F3', // Синий
+    'technological': '#ff4f00' // Оранжевый
   };
   return colors[type] || '#FF5722'; // Оранжевый по умолчанию
 }
@@ -197,7 +280,7 @@ function showModules() {
       ? "Обитаемые модули" 
       : "Технологические объекты";
       
-  modulesChoiceType.style.opacity = '0';
+  modulesChoiceType.style.opacity = '1';
   modulesChoiceType.style.transform = 'translateY(20px)';
   modulesChoiceType.style.transition = 'all 0.3s ease-out';
   
@@ -214,7 +297,7 @@ function showModules() {
       setTimeout(() => {
           modules.forEach((module, index) => {
               setTimeout(() => {
-                  module.style.opacity = '1';
+                  module.style.opacity = '0';
                   module.style.transform = 'translateY(0)';
                   module.style.transition = 'all 0.3s ease-out';
               }, index * 100);
@@ -252,7 +335,7 @@ let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', function(e) {
     sidebar.classList.remove('visible');
-    greenLayer.setOpacity(1);
+    greenLayer.setOpacity(0.7);
     // Закрываем выпадающее меню
     document.getElementById('burger-checkbox').checked = false;
     const originalImg = this.querySelector('.photo-item-module');
@@ -301,11 +384,46 @@ modules.forEach(module => {
     document.addEventListener('mousemove', onMouseMove);
     
     // Очистка при отпускании кнопки мыши
-    function onMouseUp() {
+    function onMouseUp(e) {
+      const pixel = [e.clientX, e.clientY];
+      const coordinates = map.getCoordinateFromPixel(pixel);
+      const nameEn = module.getAttribute('data-name-en-db');
+      const moduleData = {
+        module_name: nameEn,
+        module_type: currentModuleType,
+        points: coordinates
+      };
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
-      greenLayer.setOpacity(0);
+      greenLayer.setOpacity(0); //sadasdasasd
       //сделать fetch
+      fetch("http://localhost:5050/maps/redactor/page/save_module", {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify(moduleData)
+      })
+      .then((response) => {
+          return response.json().then(data => {
+            if (!response.ok) {
+                console.log(data.error);
+                if (data.error) {                    
+                  sendNotification(data.error, false);
+                }
+                return Promise.reject(data);
+            }
+            return data; // Возвращаем успешно полученные данные
+        });
+      })
+      .then(data => {
+        addModuleToMap(moduleData);
+      })
+      .catch(error => {
+        console.error('Ошибка сохранения модуля:', error);
+        // Здесь можно также обработать другие ошибки, если нужно
+      });
+      
       if (clone) {
         clone.remove();
         clone = null;
@@ -347,8 +465,10 @@ proj4.defs("EPSG:100000",
     view: new ol.View({
       projection: 'EPSG:100000',
       center: [0, 0],
-      zoom: 1,
-      extent: [-216400, -216400, 216400, 216400]
+      extent: [-216400, -216400, 216400, 216400],
+      zoom: 1, // начальный уровень зума
+      minZoom: 1, // минимальный уровень зума
+      maxZoom: 20 // максимальный уровень зума
     })
   });
   
@@ -451,3 +571,43 @@ ldsm.on(['precompose', 'postcompose'], function(event) {
     const rawCoords = evt.coordinate;
     console.log('Координаты в проекции карты:', rawCoords);
   });
+
+  const mousePositionElement = document.createElement('div');
+  mousePositionElement.id = 'mouse-coordinates';
+  mousePositionElement.style.position = 'absolute';
+  mousePositionElement.style.backgroundColor = 'white';
+  mousePositionElement.style.padding = '5px';
+  mousePositionElement.style.border = '1px solid #ccc';
+  mousePositionElement.style.borderRadius = '3px';
+  mousePositionElement.style.pointerEvents = 'none';
+  mousePositionElement.style.zIndex = '1000';
+  mousePositionElement.style.display = 'none';
+  mousePositionElement.style.fontFamily = 'Jura';
+  mousePositionElement.style.fontWeight = '700';
+  document.body.appendChild(mousePositionElement);
+  
+  // Флаг для отслеживания нахождения курсора на карте
+  let isCursorOnMap = false;
+  
+  // Обработчик входа курсора на карту
+  map.getViewport().addEventListener('pointerenter', function() {
+    isCursorOnMap = true;
+  });
+  
+  // Обработчик движения курсора
+  map.on('pointermove', function(evt) {
+    if (!isCursorOnMap) return;
+    
+    const coordinate = evt.coordinate;
+    mousePositionElement.innerHTML = `
+      Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+      Высота над уровнем моря: ??? м
+    `;
+    
+    mousePositionElement.style.left = (evt.pixel[0] + 10) + 'px';
+    mousePositionElement.style.top = (evt.pixel[1] + 10) + 'px';
+    mousePositionElement.style.display = 'block';
+  });
+  
+
+  

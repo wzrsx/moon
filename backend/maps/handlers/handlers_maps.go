@@ -3,11 +3,12 @@ package handlers_maps
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt"
 	"html/template"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
+
+	"github.com/golang-jwt/jwt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -69,7 +70,8 @@ func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request
 	err := tmpl.Execute(rw, id_map)
 	if err != nil {
 		a.Logger.Error("Template error maps editor", zap.Error(err))
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error maps editor"})
+		return
 	}
 }
 
@@ -98,6 +100,48 @@ func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(rw, http.StatusOK, modules)
+}
+
+func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		return
+	}
+
+	id_map, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+		return
+	}
+
+
+	module := queries_maps.NewModule()
+	err := json.NewDecoder(r.Body).Decode(&module)
+
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"error": fmt.Sprintf("Error save module: %v", err),
+		})
+		return
+	}
+	module.MapId = id_map
+
+	err = module.SaveModule(a.Pool)
+	if err != nil {
+		a.Logger.Error("Error querying module", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Error save module: %v", err),
+		})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"message": "Successfuly saved module",
+	})
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

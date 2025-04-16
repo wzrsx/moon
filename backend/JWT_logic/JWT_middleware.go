@@ -17,7 +17,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			// Если нет в куках, пробуем из заголовка
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, "Authorization required", http.StatusUnauthorized)
+				http.Redirect(w, r, "/", http.StatusSeeOther)
 				return
 			}
 			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
