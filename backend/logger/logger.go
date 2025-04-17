@@ -37,7 +37,7 @@ func InitLogger(cfg *config_logger.ConfigLogger) *zap.Logger {
 	}
 
 	logger = logger.With(
-		zap.String("service", "quiz-master"),
+		zap.String("service", "auth-service"),
 	)
 
 	zap.ReplaceGlobals(logger)

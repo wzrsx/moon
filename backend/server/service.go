@@ -5,7 +5,7 @@ import (
 	"loonar_mod/backend/authorization/config_auth"
 	handlers_auth "loonar_mod/backend/authorization/handlers"
 	"loonar_mod/backend/config_db"
-	handlers_maps "loonar_mod/backend/maps/handlers"
+	handlers_maps "loonar_mod/backend/geoserver/handlers"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,15 +13,15 @@ import (
 	"go.uber.org/zap"
 )
 
-type MoonServiceSrever struct {
+type MoonServiceServer struct {
 	Pool     *pgxpool.Pool
 	Logger   *zap.Logger
 	Cfg_auth *config_auth.ConfigAuth
 	Cfg_db   *config_db.ConfigDB
 }
 
-func CreateMoonServiceSrever(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.ConfigAuth, cfg_db *config_db.ConfigDB) *MoonServiceSrever {
-	return &MoonServiceSrever{
+func CreateMoonServiceServer(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.ConfigAuth, cfg_db *config_db.ConfigDB) *MoonServiceServer {
+	return &MoonServiceServer{
 		Pool:     pool,
 		Logger:   logger,
 		Cfg_auth: cfg_auth,
@@ -29,7 +29,7 @@ func CreateMoonServiceSrever(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *c
 	}
 }
 
-func (s *MoonServiceSrever) AddHandlers() *mux.Router {
+func (s *MoonServiceServer) AddHandlers() *mux.Router {
 	r := mux.NewRouter()
 
 	auth_handlers := handlers_auth.CreateAuthHandlers(s.Cfg_auth, s.Logger, s.Pool)

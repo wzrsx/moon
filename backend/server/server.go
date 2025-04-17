@@ -3,6 +3,8 @@ package server
 import (
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/config_db"
+	"loonar_mod/backend/geoserver/config_geoserver"
+	"loonar_mod/backend/geoserver/geoserver_init"
 	config_server "loonar_mod/backend/server/config_server"
 	"net/http"
 	"time"
@@ -11,10 +13,16 @@ import (
 	"go.uber.org/zap"
 )
 
-func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.ConfigAuth, cfg_db *config_db.ConfigDB) error {
+func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.ConfigAuth, cfg_db *config_db.ConfigDB, cfg_geoserver *config_geoserver.ConfigGeoServer) *http.Server {
 	cfg_server := config_server.GetServerConf()
-	service := CreateMoonServiceSrever(pool, logger, cfg_auth, cfg_db)
+	service := CreateMoonServiceServer(pool, logger, cfg_auth, cfg_db)
 	router := service.AddHandlers()
+
+	geo_client := geoserver_init.NewGeoClient(cfg_geoserver)
+	err := geo_client.GeoserverInit()
+	if err != nil {
+		logger.Fatal("geoserver_init", zap.Error(err))
+	}
 
 	srv := &http.Server{
 		Handler:      router,
@@ -22,9 +30,9 @@ func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.Co
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
-		return err
+		return srv
 	}
-	return nil
+	return srv
 }

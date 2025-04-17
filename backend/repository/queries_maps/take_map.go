@@ -18,7 +18,7 @@ func TakeMap(user_id string, pool *pgxpool.Pool) (string, error) {
 	// Проверяем существование карты
 	var id_map string
 	err = conn.QueryRow(context.Background(),
-		"SELECT id FROM maps WHERE user_id = $1", user_id).Scan(&id_map)
+		"SELECT id FROM geoserver WHERE user_id = $1", user_id).Scan(&id_map)
 
 	if err != nil {
 		// Если ошибка - не потому что запись не найдена
@@ -28,7 +28,7 @@ func TakeMap(user_id string, pool *pgxpool.Pool) (string, error) {
 
 		// Создаем новую карту, если не найдена
 		err = conn.QueryRow(context.Background(),
-			`INSERT INTO maps (user_id) 
+			`INSERT INTO geoserver (user_id) 
              VALUES ($1) 
              RETURNING id`,
 			user_id).Scan(&id_map)

@@ -6,7 +6,7 @@ all: build run
 
 build:
 	@echo "Building binary..."
-	go build -o bin/server ./backend/cmd/moon_app
+	go build -o bin/moon_app ./backend/cmd/moon_app
 	@echo "Binary built."
 run:
 	@echo "Go server is running..."

@@ -1,15 +1,35 @@
 version: '3.8'
 
 services:
+  moon-app:
+    container_name: moon-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"  # Порт приложения
+    depends_on:
+      moon-db:
+        condition: service_healthy
+      geoserver:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   geoserver:
     image: kartoza/geoserver:2.23.0
     container_name: geoserver
     environment:
-      - GEOSERVER_ADMIN_PASSWORD=mysecurepassword
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
       - GEOSERVER_ADMIN_USER=admin
       - GEOWEBCACHE_CACHE_DIR=/opt/geoserver/data_dir/gwc
     volumes:
       - geoserver_data:/opt/geoserver/data_dir
+      - ./maps:/maps  # Подключаем вашу папку с картами
+      - ./backend/geoserver/customization/epsg.properties:/opt/geoserver/data_dir/user_projections/epsg.properties
     ports:
       - "8080:8080"
     depends_on:
@@ -54,7 +74,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres -d moon-db"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 15
 
 
 volumes:
