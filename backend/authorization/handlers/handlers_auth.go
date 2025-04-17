@@ -11,7 +11,6 @@ import (
 	"loonar_mod/backend/repository/queries_auth"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
-	"net/smtp"
 	"sync"
 	"time"
 
@@ -84,7 +83,7 @@ func (a *AuthHandlers) RegisterHandler(rw http.ResponseWriter, r *http.Request) 
 
 func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw http.ResponseWriter) {
 
-	auth := smtp.PlainAuth("", a.ConfigAuth.Sender, a.ConfigAuth.SenderPassword, a.ConfigAuth.SMTP_Host)
+	// auth := smtp.PlainAuth("", a.ConfigAuth.Sender, a.ConfigAuth.SenderPassword, a.ConfigAuth.SMTP_Host)
 
 	confirmationCode := genConfirmCode()
 
@@ -128,20 +127,20 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw htt
 	message += "\r\n" + body
 
 	// Отправка письма
-	err := smtp.SendMail(
-		a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
-		auth,
-		a.ConfigAuth.Sender,
-		[]string{email},
-		[]byte(message),
-	)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error sending email: %v", err)
-		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"error": fmt.Sprintf("Error sending email: %v", err),
-		})
-		return
-	}
+	// err := smtp.SendMail(
+	// 	a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
+	// 	auth,
+	// 	a.ConfigAuth.Sender,
+	// 	[]string{email},
+	// 	[]byte(message),
+	// )
+	// if err != nil {
+	// 	a.Logger.Sugar().Errorf("Error sending email: %v", err)
+	// 	respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+	// 		"error": fmt.Sprintf("Error sending email: %v", err),
+	// 	})
+	// 	return
+	// }
 
 	// Устанавливаем код в слайс
 	setCode(confirmationCode, email, username, password)
