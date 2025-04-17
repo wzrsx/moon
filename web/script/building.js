@@ -9,7 +9,7 @@ function loadModules() {
     .then(response => response.json())
     .then(modules => {
       clearModuleLayers();
-      
+
       const vectorSource = new ol.source.Vector();
       const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
@@ -20,7 +20,7 @@ function loadModules() {
       modules.forEach(module => {
         // Координаты уже в метрах (EPSG:100000)
         const [x, y] = module.points;
-        
+
         // Проверяем, что координаты в пределах видимой области
         if (Math.abs(x) <= 216400 && Math.abs(y) <= 216400) {
           const feature = new ol.Feature({
@@ -49,7 +49,7 @@ function loadModules() {
 }
 // Функция создания стиля для модулей
 function createModuleStyleFunction() {
-  return function(feature, resolution) {
+  return function (feature, resolution) {
     const zoom = map.getView().getZoom();
     const moduleType = feature.get('type');
     const moduleName = feature.get('name');
@@ -64,11 +64,11 @@ function createModuleStyleFunction() {
       const coordinates = feature.getGeometry().getCoordinates(); // Получаем координаты точки
       const x = coordinates[0];
       const y = coordinates[1];
-      
+
       // Остальной код
       const size = 6; // Размер квадрата в пикселях
       const halfSize = size / 2;
-    
+
       // Создание квадратной геометрии
       const squareCoords = [
         [x - halfSize, y - halfSize],
@@ -77,7 +77,7 @@ function createModuleStyleFunction() {
         [x - halfSize, y + halfSize],
         [x - halfSize, y - halfSize], // замыкание квадрата
       ];
-    
+
       return [
         new ol.style.Style({
           fill: new ol.style.Fill({ color: getColorByModuleType(moduleType) }),
@@ -150,7 +150,7 @@ function addModuleToMap(moduleData) {
   // Получаем ссылку на векторный слой, который уже добавлен на карту
   const currentVectorLayer = moduleLayers[moduleLayers.length - 1]; // Последний добавленный слой
   const vectorSource = currentVectorLayer.getSource(); // Получаем его source
-  
+
   // Создаём новую точку
   const feature = new ol.Feature({
     geometry: new ol.geom.Point(moduleData.points),
@@ -158,7 +158,7 @@ function addModuleToMap(moduleData) {
     type: moduleData.module_type,
     id: moduleData.id_module // если у вас есть этот ID
   });
-  
+
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
 
@@ -209,7 +209,7 @@ placeModulesBtn.addEventListener('click', (e) => {
   modulesContainer.style.display = 'none'; // Добавляем скрытие контейнера модулей
   notificationsContainer.style.display = 'none'; // Скрываем уведомления
   typeModulesTitle.innerText = "Выбор модулей";
-  if(currentModuleType){
+  if (currentModuleType) {
     showModules();
   }
   sidebar.classList.add('visible');
@@ -226,47 +226,47 @@ notificationsBtn.addEventListener('click', (e) => {
   isOpenAside = true;
 });
 saveProjectBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    /*to do ОТВЕТ ОТ СЕРВЕРА*/
-    //sendNotification("Изменения успешно сохранены", 1);
-    code = 404;//пример
-    sendNotification(`Возникла ошибка: ${code}`, 0);
+  e.preventDefault();
+  /*to do ОТВЕТ ОТ СЕРВЕРА*/
+  //sendNotification("Изменения успешно сохранены", 1);
+  code = 404;//пример
+  sendNotification(`Возникла ошибка: ${code}`, 0);
 });
 exitToMainBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    blurDiv.classList.add("blur"); 
-    dialog.showModal();
+  e.preventDefault();
+  blurDiv.classList.add("blur");
+  dialog.showModal();
 });
-function closeconfirmDialog(){
-    blurDiv.classList.remove("blur"); 
-    dialog.close();
+function closeconfirmDialog() {
+  blurDiv.classList.remove("blur");
+  dialog.close();
 }
 confirmBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    blurDiv.classList.remove("blur"); 
-    window.location.href = "../index.html"
+  e.preventDefault();
+  blurDiv.classList.remove("blur");
+  window.location.href = "../index.html"
 });
 dialog.addEventListener("close", () => {
-    blurDiv.classList.remove("blur"); 
+  blurDiv.classList.remove("blur");
 });
 /*to do ПРИМЕНИТЬ НА ВСЕ БОКОВЫЕ ПО КЛАССУ*/
 document.addEventListener('keydown', event => {
   if (event.key === "Escape" || event.keyCode === 27) {
     closeAside();
-    
+
   }
 });
-function closeAside(){
+function closeAside() {
   sidebar.classList.remove('visible');
   isOpenAside = false;
 }
-function sendNotification(text, success){
-  if(!success){
+function sendNotification(text, success) {
+  if (!success) {
     notification.style.backgroundColor = "#ff0000";
-  }else{
+  } else {
     notification.style.backgroundColor = "#4CAF50";
   }
-  notification.innerText=`${text}`;
+  notification.innerText = `${text}`;
   notification.classList.add('show');
   setTimeout(() => {
     notification.classList.remove('show');
@@ -284,54 +284,54 @@ function openTechnologicalModules() {
   showModules();
 }
 function showModules() {
-  typeModulesTitle.innerText = currentModuleType === 'inhabited' 
-      ? "Обитаемые модули" 
-      : "Технологические объекты";
-      
+  typeModulesTitle.innerText = currentModuleType === 'inhabited'
+    ? "Обитаемые модули"
+    : "Технологические объекты";
+
   modulesChoiceType.style.opacity = '0';
   modulesChoiceType.style.transform = 'translateY(20px)';
   modulesChoiceType.style.transition = 'all 0.3s ease-out';
-  
-  setTimeout(() => {
-      modulesChoiceType.style.display = 'none';
-      modulesContainer.style.display = 'block';
-      notificationsContainer.style.display = 'none'; // Скрываем уведомления
-      
-      modules.forEach(module => {
-          module.style.opacity = '0';
-          module.style.transform = 'translateY(20px)';
-      });
 
-      setTimeout(() => {
-          modules.forEach((module, index) => {
-              setTimeout(() => {
-                  module.style.opacity = '1';
-                  module.style.transform = 'translateY(0)';
-                  module.style.transition = 'all 0.3s ease-out';
-              }, index * 100);
-          });
-      }, 50);
+  setTimeout(() => {
+    modulesChoiceType.style.display = 'none';
+    modulesContainer.style.display = 'block';
+    notificationsContainer.style.display = 'none'; // Скрываем уведомления
+
+    modules.forEach(module => {
+      module.style.opacity = '0';
+      module.style.transform = 'translateY(20px)';
+    });
+
+    setTimeout(() => {
+      modules.forEach((module, index) => {
+        setTimeout(() => {
+          module.style.opacity = '1';
+          module.style.transform = 'translateY(0)';
+          module.style.transition = 'all 0.3s ease-out';
+        }, index * 100);
+      });
+    }, 50);
   }, 300);
 }
 
-function backToTypes() {  
+function backToTypes() {
   typeModulesTitle.innerText = "Выбор модулей";
   modules.forEach(module => {
-      module.style.opacity = '0';
-      module.style.transform = 'translateY(20px)';
-      module.style.transition = 'all 0.2s ease-out';
+    module.style.opacity = '0';
+    module.style.transform = 'translateY(20px)';
+    module.style.transition = 'all 0.2s ease-out';
   });
-  
+
   setTimeout(() => {
-      modulesContainer.style.display = 'none';
-      notificationsContainer.style.display = 'none'; // Скрываем уведомления
-      modulesChoiceType.style.display = 'grid';
-      
-      setTimeout(() => {
-          modulesChoiceType.style.opacity = '1';
-          modulesChoiceType.style.transform = 'translateY(0)';
-          modulesChoiceType.style.transition = 'all 0.3s ease-out 0.1s';
-      }, 50);
+    modulesContainer.style.display = 'none';
+    notificationsContainer.style.display = 'none'; // Скрываем уведомления
+    modulesChoiceType.style.display = 'grid';
+
+    setTimeout(() => {
+      modulesChoiceType.style.opacity = '1';
+      modulesChoiceType.style.transform = 'translateY(0)';
+      modulesChoiceType.style.transition = 'all 0.3s ease-out 0.1s';
+    }, 50);
   }, 200);
   currentModuleType = null;
 }
@@ -341,19 +341,19 @@ let draggedItem = null;
 let clone = null;
 let startX, startY;
 modules.forEach(module => {
-  module.addEventListener('mousedown', function(e) {
+  module.addEventListener('mousedown', function (e) {
     sidebar.classList.remove('visible');
     isOpenAside = false;
     greenLayer.setOpacity(0.7);
     // Закрываем выпадающее меню
     checkboxDropMenu.checked = false;
     const originalImg = this.querySelector('.photo-item-module');
-    
+
     clone = originalImg.cloneNode(true);
-    
+
     clone.style.transform = 'scale(0.3)';
     clone.style.transition = 'transform 0.2s';
-    
+
     // Стили для клона (только изображение)
     clone.style.position = 'absolute';
     clone.style.zIndex = '1000';
@@ -361,37 +361,37 @@ modules.forEach(module => {
     clone.style.width = originalImg.offsetWidth + 'px';
     clone.style.height = originalImg.offsetHeight + 'px';
     clone.style.objectFit = 'cover'; // Сохраняем пропорции
-    
+
     // Запоминаем оригинальный элемент
     draggedItem = this;
-    
+
     // Позиция курсора при зажатии
     startX = e.clientX;
     startY = e.clientY;
-    
+
     // Позиция клона (рассчитываем относительно изображения)
     const rect = originalImg.getBoundingClientRect();
     clone.style.left = rect.left + 'px';
     clone.style.top = rect.top + 'px';
-    
+
     document.body.appendChild(clone);
-    
+
     // Смещаем клон относительно курсора
     const shiftX = e.clientX - rect.left;
     const shiftY = e.clientY - rect.top;
-    
+
     function moveAt(pageX, pageY) {
       clone.style.left = pageX - shiftX + 'px';
       clone.style.top = pageY - shiftY + 'px';
     }
-    
+
     function onMouseMove(e) {
       moveAt(e.clientX, e.clientY);
     }
-    
+
     // Перемещаем клон при движении мыши
     document.addEventListener('mousemove', onMouseMove);
-    
+
     // Очистка при отпускании кнопки мыши
     function onMouseUp(e) {
       const pixel = [e.clientX, e.clientY];
@@ -413,115 +413,115 @@ modules.forEach(module => {
         },
         body: JSON.stringify(moduleData)
       })
-      .then((response) => {
+        .then((response) => {
           return response.json().then(data => {
             if (!response.ok) {
-                console.log(data.error);
-                if (data.error) {                    
-                  sendNotification(data.error, false);
-                }
-                return Promise.reject(data);
+              console.log(data.error);
+              if (data.error) {
+                sendNotification(data.error, false);
+              }
+              return Promise.reject(data);
             }
             return data; // Возвращаем успешно полученные данные
+          });
+        })
+        .then(data => {
+          addModuleToMap(moduleData);
+        })
+        .catch(error => {
+          console.error('Ошибка сохранения модуля:', error);
+          // Здесь можно также обработать другие ошибки, если нужно
         });
-      })
-      .then(data => {
-        addModuleToMap(moduleData);
-      })
-      .catch(error => {
-        console.error('Ошибка сохранения модуля:', error);
-        // Здесь можно также обработать другие ошибки, если нужно
-      });
-      
+
       if (clone) {
         clone.remove();
         clone = null;
         draggedItem = null;
       }
     }
-    
+
     document.addEventListener('mouseup', onMouseUp);
   });
-  
+
   // Отмена стандартного drag'n'drop
-  module.ondragstart = function() {
+  module.ondragstart = function () {
     return false;
   };
 });
 
 // 1. Регистрация проекции
 proj4.defs("EPSG:100000",
-    'PROJCS["Moon_2015_South_Polar_Stereographic",' +
-    'GEOGCS["Moon_2015",' +
-    'DATUM["D_Moon_2015",' +
-    'SPHEROID["Moon_2015_IAU_IAG",1737400,0]],' +
-    'PRIMEM["Reference_Meridian",0],' +
-    'UNIT["degree",0.0174532925199433]],' +
-    'PROJECTION["Polar_Stereographic"],' +
-    'PARAMETER["latitude_of_origin",-90],' +
-    'PARAMETER["central_meridian",0],' +
-    'PARAMETER["scale_factor",1],' +
-    'PARAMETER["false_easting",0],' +
-    'PARAMETER["false_northing",0],' +
-    'UNIT["metre",1],' +
-    'AUTHORITY["EPSG","100000"]]'
-  );
-  ol.proj.proj4.register(proj4);
-  
-  // 2. Настройка полноэкранной карты
-  const map = new ol.Map({
-    target: 'map',
-    view: new ol.View({
-      projection: 'EPSG:100000',
-      center: [0, 0],
-      extent: [-216400, -216400, 216400, 216400],
-      zoom: 1, // начальный уровень зума
-      minZoom: 1, // минимальный уровень зума
-      maxZoom: 20 // максимальный уровень зума
-    })
-  });
-  
-  // 3. Функция создания полноэкранных слоев
-  const createFullscreenLayer = (layerName, opacity, zIndex) => {
-    return new ol.layer.Image({
-      source: new ol.source.ImageWMS({
-        url: 'http://localhost:8080/geoserver/moon_workspace/wms',
-        params: {
-          'LAYERS': `moon_workspace:${layerName}`,
-          'VERSION': '1.3.0',
-          'CRS': 'EPSG:100000',
-          'FORMAT': 'image/png',
-          'TRANSPARENT': true,
-          'WIDTH': Math.floor(window.innerWidth * 1.5),
-          'HEIGHT': Math.floor(window.innerHeight * 1.5)
-        },
-        serverType: 'geoserver',
-        ratio: 1,
-        hidpi: false
-      }),
-      opacity: opacity,
-      zIndex: zIndex
-    });
-  };
-  
-  // 4. Создание и добавление слоев
-  // Слои в правильном порядке:
-  const ldem = createFullscreenLayer('LDEM_83S_10MPP_ADJ', 1.0, 1);
-  const ldsm = createFullscreenLayer('LDSM_83S_10MPP_ADJ', 0.3, 2);
-  const hillshade = createFullscreenLayer('LDEM_83S_10MPP_ADJ_HILL', 0.6, 3);
-  const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
+  'PROJCS["Moon_2015_South_Polar_Stereographic",' +
+  'GEOGCS["Moon_2015",' +
+  'DATUM["D_Moon_2015",' +
+  'SPHEROID["Moon_2015_IAU_IAG",1737400,0]],' +
+  'PRIMEM["Reference_Meridian",0],' +
+  'UNIT["degree",0.0174532925199433]],' +
+  'PROJECTION["Polar_Stereographic"],' +
+  'PARAMETER["latitude_of_origin",-90],' +
+  'PARAMETER["central_meridian",0],' +
+  'PARAMETER["scale_factor",1],' +
+  'PARAMETER["false_easting",0],' +
+  'PARAMETER["false_northing",0],' +
+  'UNIT["metre",1],' +
+  'AUTHORITY["EPSG","100000"]]'
+);
+ol.proj.proj4.register(proj4);
 
-  // 4. Добавляем слои на карту
-  map.addLayer(ldem);
-  map.addLayer(ldsm);
-  map.addLayer(hillshade);
-  map.addLayer(greenLayer);
-  
-  // Для базового слоя (яркость)
-ldem.on(['precompose', 'postcompose'], function(event) {
+// 2. Настройка полноэкранной карты
+const map = new ol.Map({
+  target: 'map',
+  view: new ol.View({
+    projection: 'EPSG:100000',
+    center: [0, 0],
+    extent: [-216400, -216400, 216400, 216400],
+    zoom: 1, // начальный уровень зума
+    minZoom: 1, // минимальный уровень зума
+    maxZoom: 20 // максимальный уровень зума
+  })
+});
+
+// 3. Функция создания полноэкранных слоев
+const createFullscreenLayer = (layerName, opacity, zIndex) => {
+  return new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+      url: 'http://localhost:8080/geoserver/moon_workspace/wms',
+      params: {
+        'LAYERS': `moon_workspace:${layerName}`,
+        'VERSION': '1.3.0',
+        'CRS': 'EPSG:100000',
+        'FORMAT': 'image/png',
+        'TRANSPARENT': true,
+        'WIDTH': Math.floor(window.innerWidth * 1.5),
+        'HEIGHT': Math.floor(window.innerHeight * 1.5)
+      },
+      serverType: 'geoserver',
+      ratio: 1,
+      hidpi: false
+    }),
+    opacity: opacity,
+    zIndex: zIndex
+  });
+};
+
+// 4. Создание и добавление слоев
+// Слои в правильном порядке:
+const ldem = createFullscreenLayer('LDEM_83S_10MPP_ADJ', 1.0, 1);
+const ldsm = createFullscreenLayer('LDSM_83S_10MPP_ADJ', 0.3, 2);
+const hillshade = createFullscreenLayer('LDEM_83S_10MPP_ADJ_HILL', 0.6, 3);
+const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
+
+// 4. Добавляем слои на карту
+map.addLayer(ldem);
+map.addLayer(ldsm);
+map.addLayer(hillshade);
+map.addLayer(greenLayer);
+
+// Для базового слоя (яркость)
+ldem.on(['precompose', 'postcompose'], function (event) {
   const context = event.context;
   const canvas = context.canvas;
-  
+
   if (event.type === 'precompose') {
     // Сохраняем оригинальное состояние
     context.save();
@@ -533,9 +533,9 @@ ldem.on(['precompose', 'postcompose'], function(event) {
 });
 
 // Для hillshade (multiply)
-hillshade.on(['precompose', 'postcompose'], function(event) {
+hillshade.on(['precompose', 'postcompose'], function (event) {
   const context = event.context;
-  
+
   if (event.type === 'precompose') {
     context.save();
     context.globalCompositeOperation = 'multiply';
@@ -545,9 +545,9 @@ hillshade.on(['precompose', 'postcompose'], function(event) {
 });
 
 // Для ldsm (screen)
-ldsm.on(['precompose', 'postcompose'], function(event) {
+ldsm.on(['precompose', 'postcompose'], function (event) {
   const context = event.context;
-  
+
   if (event.type === 'precompose') {
     context.save();
     context.globalCompositeOperation = 'screen';
@@ -556,45 +556,45 @@ ldsm.on(['precompose', 'postcompose'], function(event) {
   }
 });
 
-  // 6. Автоматическая подстройка под размер окна
-  function updateMapSize() {
-    const size = [window.innerWidth, window.innerHeight];
-    map.setSize(size);
-    map.getView().setZoom(map.getView().getZoom());
-    
-    /*layers.forEach(layer => {
-      layer.getSource().updateParams({
-        'WIDTH': Math.floor(size[0] * 1.5),
-        'HEIGHT': Math.floor(size[1] * 1.5)
-      });
-    });*/
-  }
-  
-  window.addEventListener('resize', () => {
-    setTimeout(updateMapSize, 100);
-  });
-  
-  // Инициализация
-  updateMapSize();
-  map.on('click', function(evt) {
-    const rawCoords = evt.coordinate;
-    console.log('Координаты в проекции карты:', rawCoords);
-  });
+// 6. Автоматическая подстройка под размер окна
+function updateMapSize() {
+  const size = [window.innerWidth, window.innerHeight];
+  map.setSize(size);
+  map.getView().setZoom(map.getView().getZoom());
 
-  const mousePositionElement = document.createElement('div');
-  mousePositionElement.id = 'mouse-coordinates';
-  mousePositionElement.style.position = 'absolute';
-  mousePositionElement.style.backgroundColor = 'white';
-  mousePositionElement.style.padding = '5px';
-  mousePositionElement.style.border = '1px solid #ccc';
-  mousePositionElement.style.borderRadius = '3px';
-  mousePositionElement.style.pointerEvents = 'none';
-  mousePositionElement.style.zIndex = '1000';
-  mousePositionElement.style.display = 'none';
-  mousePositionElement.style.fontFamily = 'Jura';
-  mousePositionElement.style.fontWeight = '700';
-  document.body.appendChild(mousePositionElement);
-  
+  /*layers.forEach(layer => {
+    layer.getSource().updateParams({
+      'WIDTH': Math.floor(size[0] * 1.5),
+      'HEIGHT': Math.floor(size[1] * 1.5)
+    });
+  });*/
+}
+
+window.addEventListener('resize', () => {
+  setTimeout(updateMapSize, 100);
+});
+
+// Инициализация
+updateMapSize();
+map.on('click', function (evt) {
+  const rawCoords = evt.coordinate;
+  console.log('Координаты в проекции карты:', rawCoords);
+});
+
+const mousePositionElement = document.createElement('div');
+mousePositionElement.id = 'mouse-coordinates';
+mousePositionElement.style.position = 'absolute';
+mousePositionElement.style.backgroundColor = 'white';
+mousePositionElement.style.padding = '5px';
+mousePositionElement.style.border = '1px solid #ccc';
+mousePositionElement.style.borderRadius = '3px';
+mousePositionElement.style.pointerEvents = 'none';
+mousePositionElement.style.zIndex = '1000';
+mousePositionElement.style.display = 'none';
+mousePositionElement.style.fontFamily = 'Jura';
+mousePositionElement.style.fontWeight = '700';
+document.body.appendChild(mousePositionElement);
+
 //Вывод координат
 const dropdownMenu = document.querySelector('.dropdown-menu');
 const zoomItems = document.querySelector('.ol-zoom');
@@ -604,7 +604,7 @@ checkboxDropMenu.addEventListener('click', (e) => {
   mousePositionElement.style.display = checkboxDropMenu.checked ? 'none' : 'block';
 });
 // Обработчик движения курсора по карте
-map.on('pointermove', function(evt) {
+map.on('pointermove', function (evt) {
   if (isOpenAside) {
     mousePositionElement.style.display = 'none';
     return;
@@ -612,19 +612,19 @@ map.on('pointermove', function(evt) {
   updateMousePosition(evt.coordinate, evt.pixel);
 });
 //Обработчик движения курсора по всей странице
-document.addEventListener('mousemove', function(e) {
+document.addEventListener('mousemove', function (e) {
   if (dropdownMenu.contains(e.target) || zoomItems.contains(e.target)) {
-      mousePositionElement.style.display = 'none';
+    mousePositionElement.style.display = 'none';
   }
 });
 // Обработчик покидания окна
-document.addEventListener('mouseout', function(e) {
+document.addEventListener('mouseout', function (e) {
   if (!e.relatedTarget && !e.toElement) {
     mousePositionElement.style.display = 'none';
   }
 });
 // Обработчик движения курсора по nav
-navElement.addEventListener('mousemove', function(e) {
+navElement.addEventListener('mousemove', function (e) {
   if (!isOpenAside) {
     const mapRect = map.getTargetElement().getBoundingClientRect();
     const pixel = [e.clientX - mapRect.left, e.clientY - mapRect.top];
@@ -633,26 +633,26 @@ navElement.addEventListener('mousemove', function(e) {
   }
 });
 
-// Функция для обновления позиции и содержимого координат
-function updateMousePosition(coordinate, pixel, clientX, clientY) {
-  // Сначала обновляем позицию элемента
-  if (pixel) {
-    mousePositionElement.style.left = (pixel[0] + 10) + 'px';
-    mousePositionElement.style.top = (pixel[1] + 10) + 'px';
-  } else {
-    mousePositionElement.style.left = (clientX + 10) + 'px';
-    mousePositionElement.style.top = (clientY + 10) + 'px';
+// Выносим debounce и кэш за пределы функции
+let lastElevationRequest = null;
+const elevationCache = new Map(); // Кэш для хранения высот
+
+// Функция для кэширования координат (округление до 2 знаков)
+function getCacheKey(coordinate) {
+  return `${coordinate[0].toFixed(2)},${coordinate[1].toFixed(2)}`;
+}
+
+// Функция запроса высоты (уже с debounce)
+const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
+  const cacheKey = getCacheKey(coordinate);
+  
+  // Проверяем кэш
+  if (elevationCache.has(cacheKey)) {
+    const elevationText = elevationCache.get(cacheKey);
+    updateElevationText(coordinate, elevationText);
+    return;
   }
   
-  // Показываем элемент с координатами (без высоты пока)
-  mousePositionElement.innerHTML = `
-    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-    Высота над уровнем моря: загрузка...
-  `;
-  mousePositionElement.style.display = 'block';
-
-  // Запрос значения пикселя в точке
-  const viewResolution = map.getView().getResolution();
   const url = ldem.getSource().getFeatureInfoUrl(
     coordinate,
     viewResolution,
@@ -660,30 +660,76 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
     {'INFO_FORMAT': 'application/json'}
   );
   
-  if (url) {
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        let elevationText;
-        if (data.features && data.features.length > 0) {
-          const elevation = data.features[0].properties.GRAY_INDEX;
-          elevationText = `${elevation.toFixed(2)} м`;
-        } else {
-          elevationText = 'нет данных';
-        }
-        
-        // Обновляем только часть с высотой
-        mousePositionElement.innerHTML = `
-          Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-          Высота над уровнем моря: ${elevationText}
-        `;
-      })
-      .catch(error => {
-        console.error('Ошибка запроса:', error);
-        mousePositionElement.innerHTML = `
-          Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-          Высота: ошибка запроса
-        `;
-      });
+  if (!url) return;
+
+  // Отменяем предыдущий запрос, если он еще выполняется
+  if (lastElevationRequest) {
+    lastElevationRequest.abort();
   }
+  
+  lastElevationRequest = fetch(url)
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    })
+    .then(data => {
+      let elevationText;
+      if (data.features && data.features.length > 0) {
+        const elevation = data.features[0].properties.GRAY_INDEX;
+        elevationText = `${elevation.toFixed(2)} м`;
+      } else {
+        elevationText = 'нет данных';
+      }
+      
+      // Сохраняем в кэш
+      elevationCache.set(cacheKey, elevationText);
+      updateElevationText(coordinate, elevationText);
+    })
+    .catch(error => {
+      if (error.name !== 'AbortError') {
+        console.error('Ошибка запроса:', error);
+        updateElevationText(coordinate, 'ошибка запроса');
+      }
+    });
+}, 100);
+
+// Функция для обновления текста высоты
+function updateElevationText(coordinate, elevationText) {
+  mousePositionElement.innerHTML = `
+    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+    Высота над уровнем моря: ${elevationText}
+  `;
+}
+
+// Функция для обновления позиции и содержимого координат
+function updateMousePosition(coordinate, pixel, clientX, clientY) {
+  // Обновляем позицию элемента
+  if (pixel) {
+    mousePositionElement.style.left = (pixel[0] + 10) + 'px';
+    mousePositionElement.style.top = (pixel[1] + 10) + 'px';
+  } else {
+    mousePositionElement.style.left = (clientX + 10) + 'px';
+    mousePositionElement.style.top = (clientY + 10) + 'px';
+  }
+
+  // Показываем элемент с координатами
+  mousePositionElement.innerHTML = `
+    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+    Высота над уровнем моря: загрузка...
+  `;
+  mousePositionElement.style.display = 'block';
+
+  // Запрашиваем высоту с debounce и кэшированием
+  const viewResolution = map.getView().getResolution();
+  fetchElevationDebounced(coordinate, viewResolution);
+}
+
+// Функция debounce для ограничения частоты вызовов
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    const context = this;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), wait);
+  };
 }
