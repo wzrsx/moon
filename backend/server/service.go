@@ -44,6 +44,7 @@ func (s *MoonServiceSrever) AddHandlers() *mux.Router {
 	r.Handle("/maps/redactor/page", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderMapRedactor))).Methods("GET")
 	r.Handle("/maps/redactor/page/take_modules", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModules))).Methods("GET")
 	r.Handle("/maps/redactor/page/save_module", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.SaveModule))).Methods("POST")
+	r.Handle("/maps/redactor/page/take_modules_requirements", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesRequirements))).Methods("GET")
 
 	// Статические файлы (если Nginx не обрабатывает)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
