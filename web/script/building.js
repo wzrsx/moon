@@ -191,7 +191,10 @@ const dialog = document.getElementById("confirmDialog");
 const sidebar = document.getElementById("modulesSidebar");
 
 const modulesChoiceType = document.getElementById("modulesChoiceType");
-const modulesContainer = document.getElementById('modulesContainer');
+
+const modulesContainerInhabited = document.getElementById('modulesContainerInhabited');
+const modulesContainerTechnological = document.getElementById('modulesContainerTechnological');
+
 const modulesList = document.getElementById("modulesList");
 const modules = modulesList.querySelectorAll('.item-module');
 const typeModulesTitle = document.getElementById("typeModulesTitle");
@@ -206,7 +209,8 @@ let isOpenAside = null;
 placeModulesBtn.addEventListener('click', (e) => {
   e.preventDefault();
   modulesChoiceType.style.display = 'grid';
-  modulesContainer.style.display = 'none'; // Добавляем скрытие контейнера модулей
+  modulesContainerInhabited.style.display = 'none'; // Добавляем скрытие контейнера модулей
+  modulesContainerTechnological.style.display = 'none'; 
   notificationsContainer.style.display = 'none'; // Скрываем уведомления
   typeModulesTitle.innerText = "Выбор модулей";
   if (currentModuleType) {
@@ -219,7 +223,8 @@ placeModulesBtn.addEventListener('click', (e) => {
 notificationsBtn.addEventListener('click', (e) => {
   e.preventDefault();
   modulesChoiceType.style.display = 'none';
-  modulesContainer.style.display = 'none'; // Добавляем скрытие контейнера модулей
+  modulesContainerInhabited.style.display = 'none'; // Добавляем скрытие контейнера модулей
+  modulesContainerTechnological.style.display = 'none'; 
   typeModulesTitle.innerText = "Уведомления";
   notificationsContainer.style.display = 'block';
   sidebar.classList.add('visible');
@@ -294,7 +299,8 @@ function showModules() {
 
   setTimeout(() => {
     modulesChoiceType.style.display = 'none';
-    modulesContainer.style.display = 'block';
+    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'block' : 'none';
+    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'block' : 'none';
     notificationsContainer.style.display = 'none'; // Скрываем уведомления
 
     modules.forEach(module => {
@@ -323,7 +329,8 @@ function backToTypes() {
   });
 
   setTimeout(() => {
-    modulesContainer.style.display = 'none';
+    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'none' : 'block';
+    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'none' : 'block';
     notificationsContainer.style.display = 'none'; // Скрываем уведомления
     modulesChoiceType.style.display = 'grid';
 
@@ -342,6 +349,33 @@ let clone = null;
 let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', function (e) {
+    //Получаем требования к модулю
+    fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(moduleData)
+    })
+      .then((response) => {
+        return response.json().then(data => {
+          if (!response.ok) {
+            console.log(data.error);
+            if (data.error) {
+              sendNotification(data.error, false);
+            }
+            return Promise.reject(data);
+          }
+          return data; // Возвращаем успешно полученные данные
+        });
+      })
+      .then(data => {
+        addModuleToMap(moduleData);
+      })
+      .catch(error => {
+        console.error('Ошибка сохранения модуля:', error);
+        // Здесь можно также обработать другие ошибки, если нужно
+      });
     sidebar.classList.remove('visible');
     isOpenAside = false;
     greenLayer.setOpacity(0.7);
@@ -394,6 +428,8 @@ modules.forEach(module => {
 
     // Очистка при отпускании кнопки мыши
     function onMouseUp(e) {
+      //Проверка зоны
+
       const pixel = [e.clientX, e.clientY];
       const coordinates = map.getCoordinateFromPixel(pixel);
       const nameEn = module.getAttribute('data-name-en-db');
@@ -634,7 +670,8 @@ navElement.addEventListener('mousemove', function (e) {
 });
 
 // Выносим debounce и кэш за пределы функции
-let lastElevationRequest = null;
+// Выносим debounce и кэш за пределы функции
+let lastElevationController = null; // Используем AbortController вместо request
 const elevationCache = new Map(); // Кэш для хранения высот
 
 // Функция для кэширования координат (округление до 2 знаков)
@@ -663,11 +700,14 @@ const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
   if (!url) return;
 
   // Отменяем предыдущий запрос, если он еще выполняется
-  if (lastElevationRequest) {
-    lastElevationRequest.abort();
+  if (lastElevationController) {
+    lastElevationController.abort();
   }
   
-  lastElevationRequest = fetch(url)
+  // Создаем новый контроллер для текущего запроса
+  lastElevationController = new AbortController();
+  
+  fetch(url, { signal: lastElevationController.signal })
     .then(response => {
       if (!response.ok) throw new Error('Network response was not ok');
       return response.json();
@@ -733,3 +773,58 @@ function debounce(func, wait) {
     timeout = setTimeout(() => func.apply(context, args), wait);
   };
 }
+
+
+async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, heightMeters) {
+  const minX = centerX - widthMeters / 2;
+  const minY = centerY - heightMeters / 2;
+  const maxX = centerX + widthMeters / 2;
+  const maxY = centerY + heightMeters / 2;
+
+  // Рассчитываем размеры в пикселях (10mpp)
+  const widthPixels = Math.ceil(widthMeters / 10);  // Округляем вверх
+  const heightPixels = Math.ceil(heightMeters / 10);
+
+  // 1. Запрашиваем изображение (1 пиксель = 10 метров)
+  const imgUrl = `http://localhost:8080/geoserver/wms?` +
+    `service=WMS&version=1.1.0&request=GetMap&` +
+    `layers=${layerName}&` +
+    `bbox=${minX},${minY},${maxX},${maxY}&` +
+    `width=${widthPixels}&height=${heightPixels}&` + // 10mpp
+    `srs=EPSG:100000&` +
+    `format=image/png&` +
+    `transparent=true`;
+
+  // 2. Загружаем изображение в Canvas
+  const img = await loadImage(imgUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = widthPixels;
+  canvas.height = heightPixels;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, widthPixels, heightPixels);
+
+  // 3. Анализируем пиксели
+  const imageData = ctx.getImageData(0, 0, widthPixels, heightPixels).data;
+  for (let i = 0; i < imageData.length; i += 4) {
+    const r = imageData[i];     // Красный канал (GRAY_INDEX)
+    if (r !== 1 * 255) {       // Если значение не 1 (8-bit)
+      return false;
+    }
+  }
+  return true;
+}
+
+
+// Вспомогательная функция загрузки изображения
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+// Пример вызова (проверяем область 1000x1000 метров)
+checkAreaAllOnes("compress_5deg", 26700, 71800, 1000, 1000)
+  .then(result => console.log("Все пиксели = 1:", result));
