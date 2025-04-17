@@ -204,6 +204,7 @@ registrateBtn.addEventListener('click', (e) => {
                 }
                 return Promise.reject(data);
             }
+            console.log(data.code);// TEST
             authHeader = response.headers.get('Authorization')
             return data; // Возвращаем успешно полученные данные
         });

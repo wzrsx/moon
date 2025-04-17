@@ -145,11 +145,11 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw htt
 
 	// Устанавливаем код в слайс
 	setCode(confirmationCode, email, username, password)
-
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"message": "Registration successful. Please check your email",
 		"next":    "codeDialog",
-	}) // ИМЯ ДЛЯ ДИАЛОГА
+		"code":    confirmationCode, // Отправляем код и в ответе (для удобства тестирования)
+	})
 }
 
 func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request) {
