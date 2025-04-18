@@ -30,6 +30,9 @@ func CreateMapsHandlers(cfg_db *config_db.ConfigDB, logger *zap.Logger, pool *pg
 }
 
 func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Accept") != "application/json" {
+		return
+	}
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
 		a.Logger.Error("No claims in context")
@@ -47,7 +50,7 @@ func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request)
 	// Возвращаем JSON с ID карты
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"map_id":       id_map,
-		"redirect_url": "/geoserver/redactor", // Добавляем URL для редиректа
+		"redirect_url": "/maps/redactor/page", // Добавляем URL для редиректа
 	})
 }
 
@@ -167,7 +170,7 @@ func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.R
 	}
 	log.Println(requirements)
 	respondWithJSON(rw, http.StatusAccepted, map[string]interface{}{
-		"message":   "Success response",
+		"message":           "Success response",
 		"requirements_json": requirements,
 	})
 }

@@ -39,13 +39,15 @@ func main() {
 		srv = server.StartServe(pool.PoolConns, logger, cfg_auth, cfg_db, cfg_geoserver)
 	}()
 
+	logger.Sugar().Info("Server started")
+
 	<-done
 	logger.Fatal("Server is shutting down...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err = srv.Shutdown(ctx); err != nil {
 		logger.Error("Server shutdown failed", zap.Error(err))
 	}
 }

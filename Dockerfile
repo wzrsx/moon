@@ -20,7 +20,7 @@ ENV CONFIG_PATH=config
 
 # Копируем только бинарник и статику
 COPY --from=builder /app-moon/bin/moon_app .
-COPY ./web .
+COPY ./web ./web
 
 # Создаем структуру директорий для конфигов
 RUN mkdir -p ${CONFIG_PATH}/authorization \
@@ -44,6 +44,7 @@ ENV CONFIG_DIR="config"
 ENV DB_PORT="5432"
 ENV DB_HOST="moon-db"
 ENV GEO_URL="http://geoserver:8080/geoserver"
+ENV HTTP_HOST="0.0.0.0"
 
 
 CMD ["./moon_app"]

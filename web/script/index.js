@@ -38,42 +38,42 @@ const passRegistrationError = document.getElementById("passRegistrationError");
 const repeatPassRegistrationError = document.getElementById("repeatPassRegistrationError");
 let authHeader;
 
-    closeButtons.forEach(button => {
-  button.addEventListener('click', (e) => {
-    e.preventDefault();
-    const dialog = button.closest('dialog');
-    dialog.close();
-    blurDiv.classList.remove("blur");
-    isSwitching = false;
-  });
+closeButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const dialog = button.closest('dialog');
+        dialog.close();
+        blurDiv.classList.remove("blur");
+        isSwitching = false;
+    });
 });
 
 let isSwitching = false; //переключение 
 
 authBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    blurDiv.classList.add("blur"); 
-    signInDialog.showModal(); 
+    blurDiv.classList.add("blur");
+    signInDialog.showModal();
 });
 buildingPageBtn.addEventListener('click', (e) => {
     e.preventDefault();
 });
 
 signInDialog.addEventListener("close", () => {
-    if(!isSwitching){
-        blurDiv.classList.remove("blur"); 
+    if (!isSwitching) {
+        blurDiv.classList.remove("blur");
     }
     isSwitching = false;
 });
 registrationDialog.addEventListener("close", () => {
-    if(!isSwitching){
-        blurDiv.classList.remove("blur"); 
+    if (!isSwitching) {
+        blurDiv.classList.remove("blur");
     }
     isSwitching = false;
 });
 forgetPassDialog.addEventListener("close", () => {
-    if(!isSwitching){
-        blurDiv.classList.remove("blur"); 
+    if (!isSwitching) {
+        blurDiv.classList.remove("blur");
     }
     isSwitching = false;
 });
@@ -108,15 +108,15 @@ signInBtnForm2.addEventListener('click', (e) => {
 //отправка формы
 signInBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    resetSignInErrors(); 
-    const loginValue = loginSignIn.value.trim(); 
-    const passwordValue = passwordSignIn.value.trim(); 
+    resetSignInErrors();
+    const loginValue = loginSignIn.value.trim();
+    const passwordValue = passwordSignIn.value.trim();
 
     if (!loginValue) {
         showError(loginSignIn, loginSignInError, "Пожалуйста, введите логин.");
         return;
-      }
-    
+    }
+
     if (!passwordValue) {
         showError(passwordSignIn, passwordSignInError, "Пожалуйста, введите пароль.");
         return;
@@ -136,7 +136,7 @@ signInBtn.addEventListener('click', (e) => {
             return response.json().then(data => {
                 if (!response.ok) {
                     // Если ответ не успешен, проверяем наличие сообщения
-                    if (data.message) {                    
+                    if (data.message) {
                         showError(null, passwordSignInError, data.message);
                     }
                     return Promise.reject(data);
@@ -166,7 +166,7 @@ registrateBtn.addEventListener('click', (e) => {
         return;
     }
     if (!email) {
-        showError(emailRegistration, emailRegistrationError , "Пожалуйста, введите почту.");
+        showError(emailRegistration, emailRegistrationError, "Пожалуйста, введите почту.");
         return;
     }
 
@@ -195,54 +195,48 @@ registrateBtn.addEventListener('click', (e) => {
         contentType: 'application/json',
         body: JSON.stringify(bodyrequest)
     })
-    .then (response => {
-        return response.json().then(data => {
-            if (!response.ok) {
-                // Если ответ не успешен, проверяем наличие сообщения
-                if (data.message) {
-                    showError(null, passRegistrationError, data.message);
+        .then(response => {
+            return response.json().then(data => {
+                if (!response.ok) {
+                    // Если ответ не успешен, проверяем наличие сообщения
+                    if (data.message) {
+                        showError(null, passRegistrationError, data.message);
+                    }
+                    return Promise.reject(data);
                 }
-                return Promise.reject(data);
-            }
-            console.log(data.code);// TEST
-            authHeader = response.headers.get('Authorization')
-            return data; // Возвращаем успешно полученные данные
-        });
-    })
+                console.log(data.code);// TEST
+                authHeader = response.headers.get('Authorization')
+                return data; // Возвращаем успешно полученные данные
+            });
+        })
     //отправка на сервер
 });
 recoverPassBtn.addEventListener('click', (e) => {
     e.preventDefault();
     resetRecoverErrors();
-    
+
 });
+
 function goBuilding() {
     fetch("http://localhost:5050/maps/redactor", {
         method: 'GET',
         credentials: 'include',
+        headers: {
+            'Accept': 'application/json' // Явно указываем, что ожидаем JSON
+        }
     })
         .then(response => {
-            const contentType = response.headers.get('content-type');
-
-            if (!contentType || !contentType.includes('application/json')) {
-                return response.text().then(text => {
-                    throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
-                });
-            }
-
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error || `Ошибка сервера: ${response.status}`);
-                });
-            }
-
-            return response.json();
-        })
-        .then(data => {
-            window.location.href = `/maps/redactor/page`;
+            return response.json().then(data => {
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.href = `/maps/redactor/page`;
+                }
+            });
         })
         .catch(error => {
             console.error('Ошибка:', error);
+            // Можно показать пользователю сообщение об ошибке
         });
 }
 
@@ -251,13 +245,15 @@ function showError(input, field, text) {
     field.style.display = "block";
     input.style.borderColor = 'red';
 }
+
 function resetSignInErrors() {
     loginSignInError.style.display = "none";
     passwordSignInError.style.display = "none";
     loginSignIn.style.borderColor = 'transparent';
     passwordSignIn.style.borderColor = 'transparent';
 }
-function resetRegErrors(){
+
+function resetRegErrors() {
     loginRegistrationError.style.display = "none";
     emailRegistrationError.style.display = "none";
     passRegistrationError.style.display = "none";
@@ -267,6 +263,7 @@ function resetRegErrors(){
     passRegistration.style.borderColor = 'transparent';
     repeatPassRegistration.style.borderColor = 'transparent';
 }
+
 function isEmailValid(value) {
     return EMAIL_REGEXP.test(value);
 }
@@ -275,26 +272,26 @@ function isEmailValid(value) {
 function isPassValid(value, field, input) {
     const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
     if (!value) {
-      showError(input, field, "Пожалуйста, введите пароль.");
-      input.style.borderColor = "red";
-      return false;
+        showError(input, field, "Пожалуйста, введите пароль.");
+        input.style.borderColor = "red";
+        return false;
     }
     // Проверка длины пароля
     if (value.length < 5) {
-      showError(input, field, "Пароль должен содержать не менее 5 символов.");
-      input.style.borderColor = "red";
-      return false;
+        showError(input, field, "Пароль должен содержать не менее 5 символов.");
+        input.style.borderColor = "red";
+        return false;
     }
-  
+
     // Проверка наличия специального символа в пароле
     if (!specialCharRegex.test(value)) {
-      showError(
-        input,
-        field,
-        "Пароль должен содержать хотя бы один специальный символ."
-      );
-      input.style.borderColor = "red";
-      return false;
+        showError(
+            input,
+            field,
+            "Пароль должен содержать хотя бы один специальный символ."
+        );
+        input.style.borderColor = "red";
+        return false;
     }
     return true;
-  }
+}

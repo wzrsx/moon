@@ -571,10 +571,10 @@ const createFullscreenLayer = (layerName, opacity, zIndex) => {
 
 // 4. Создание и добавление слоев
 // Слои в правильном порядке:
-const ldem = createFullscreenLayer('LDEM_83S_10MPP_ADJ', 1.0, 1);
-const ldsm = createFullscreenLayer('LDSM_83S_10MPP_ADJ', 0.3, 2);
-const hillshade = createFullscreenLayer('LDEM_83S_10MPP_ADJ_HILL', 0.6, 3);
-const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
+const ldem = createFullscreenLayer('ldem-83s', 1.0, 1);
+const ldsm = createFullscreenLayer('ldsm-83s', 0.3, 2);
+const hillshade = createFullscreenLayer('ldem-hill', 0.6, 3);
+const greenLayer = createFullscreenLayer('cmps_5deg', 0, 4);
 
 // 4. Добавляем слои на карту
 map.addLayer(ldem);
