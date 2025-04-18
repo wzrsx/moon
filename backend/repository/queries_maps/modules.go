@@ -15,14 +15,15 @@ type Module struct {
 	Points     []float64 `json:"points"`
 }
 type ModuleRequirements struct {
-	ModuleType              string  `json:"module_type"`
-	MaxSlopeDegrees         int     `json:"max_slope_degrees"`
-	WidthMeters            int     `json:"width_meters"`
-	LengthMeters           int     `json:"length_meters"`
-	MinDistanceFromLiving  *int    `json:"min_distance_from_living"`  // Используем указатель для nullable полей
-	MaxDistanceFromLiving  *int    `json:"max_distance_from_living"`
-	MinDistanceBetweenModules *int `json:"min_distance_between_modules"`
+	ModuleType                string `json:"module_type"`
+	MaxSlopeDegrees           int    `json:"max_slope_degrees"`
+	WidthMeters               int    `json:"width_meters"`
+	LengthMeters              int    `json:"length_meters"`
+	MinDistanceFromLiving     *int   `json:"min_distance_from_living"` // Используем указатель для nullable полей
+	MaxDistanceFromLiving     *int   `json:"max_distance_from_living"`
+	MinDistanceBetweenModules *int   `json:"min_distance_between_modules"`
 }
+
 func NewModule() *Module {
 	return &Module{}
 }

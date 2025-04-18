@@ -23,7 +23,7 @@ func NewGeoClient(cfg *config_geoserver.ConfigGeoServer) *GeoServerClient {
 
 func (g *GeoServerClient) GeoserverInit() error {
 	// 1. Создаем workspace (если не существует)
-	if err := g.CreateWorkspace("moon-workspace"); err != nil {
+	if err := g.createWorkspaceWithRetry("moon-workspace"); err != nil {
 		return fmt.Errorf("workspace creation failed: %w", err)
 	}
 
@@ -78,35 +78,40 @@ func (g *GeoServerClient) doRequest(method, url string, body io.Reader, contentT
 	return data, resp.StatusCode, nil
 }
 
-func (g *GeoServerClient) CreateWorkspace(name string) error {
-	// Проверяем существование workspace
+func (g *GeoServerClient) createWorkspaceWithRetry(name string) error {
+	// First check if workspace exists
 	url := fmt.Sprintf("%s/rest/workspaces/%s", g.ConfigGeoServer.BaseURL, name)
 	_, status, err := g.doRequest("GET", url, nil, "")
-	if err != nil {
-		return fmt.Errorf("failed to check workspace: %w", err)
-	}
 
-	// Если workspace уже существует
+	// If exists, return success
 	if status == http.StatusOK {
 		log.Printf("Workspace %s already exists", name)
 		return nil
 	}
 
-	// Создаем новый workspace
-	url = fmt.Sprintf("%s/rest/workspaces", g.ConfigGeoServer.BaseURL)
-	body := fmt.Sprintf(`<workspace><name>%s</name></workspace>`, name)
+	// If not found (404), create it
+	if status == http.StatusNotFound {
+		url = fmt.Sprintf("%s/rest/workspaces", g.ConfigGeoServer.BaseURL)
+		body := fmt.Sprintf(`<workspace><name>%s</name></workspace>`, name)
 
-	_, status, err = g.doRequest("POST", url, strings.NewReader(body), "application/xml")
+		_, status, err = g.doRequest("POST", url, strings.NewReader(body), "application/xml")
+		if err != nil {
+			return fmt.Errorf("request failed: %w", err)
+		}
+
+		if status != http.StatusCreated {
+			return fmt.Errorf("unexpected status code: %d", status)
+		}
+
+		log.Printf("Workspace %s created successfully", name)
+		return nil
+	}
+
+	// Handle other status codes
 	if err != nil {
-		return fmt.Errorf("failed to create workspace: %w", err)
+		return fmt.Errorf("workspace check failed: %w", err)
 	}
-
-	if status != http.StatusCreated {
-		return fmt.Errorf("failed to create workspace (status %d)", status)
-	}
-
-	log.Printf("Workspace %s created successfully", name)
-	return nil
+	return fmt.Errorf("unexpected status code: %d", status)
 }
 
 func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, layerName, filePath string) error {

@@ -142,6 +142,40 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 		"message": "Successfuly saved module",
 	})
 }
+func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
+	type CredentialModulesRequirements struct {
+		ModuleType string
+	}
+	var creds CredentialModulesRequirements
+
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"error": fmt.Sprintf("Error take module requirements: %v", err),
+		})
+		return
+	}
+	requirements, err := queries_maps.TakeModulesRequirements(creds.ModuleType, a.Pool)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Quering take module requirements: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Error take module requirements: %v", err),
+		})
+	}
+	requirementsJSON, err := json.Marshal(requirements)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error marshaling requirements: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": "Error response",
+		})
+		return
+	}
+	respondWithJSON(rw, http.StatusAccepted, map[string]interface{}{
+		"message":   "Error response",
+		"requirements_json": requirementsJSON,
+	})
+}
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
