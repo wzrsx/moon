@@ -23,32 +23,32 @@ func NewGeoClient(cfg *config_geoserver.ConfigGeoServer) *GeoServerClient {
 
 func (g *GeoServerClient) GeoserverInit() error {
 	// 1. Создаем workspace (если не существует)
-	if err := g.createWorkspaceWithRetry("moon-workspace"); err != nil {
-		return fmt.Errorf("workspace creation failed: %w", err)
-	}
+	// if err := g.createWorkspaceWithRetry("moon-workspace"); err != nil {
+	// 	return fmt.Errorf("workspace creation failed: %w", err)
+	// }
 
-	// 2. Добавляем все карты, создавая для каждой отдельное хранилище
-	maps := []struct {
-		name string
-		path string
-	}{
-		{"ldem-83s", "file:/maps/LDEM_83S_10MPP_ADJ.tiff"},
-		{"ldem-hill", "file:/maps/LDEM_83S_10MPP_ADJ_HILL.tiff"},
-		{"ldsm-83s", "file:/maps/LDSM_83S_10MPP_ADJ.tiff"},
-		{"cmps_5deg", "file:/maps/compress_5deg.tif"},
-	}
+	// // 2. Добавляем все карты, создавая для каждой отдельное хранилище
+	// maps := []struct {
+	// 	name string
+	// 	path string
+	// }{
+	// 	{"ldem-83s", "file:/maps/LDEM_83S_10MPP_ADJ.tiff"},
+	// 	{"ldem-hill", "file:/maps/LDEM_83S_10MPP_ADJ_HILL.tiff"},
+	// 	{"ldsm-83s", "file:/maps/LDSM_83S_10MPP_ADJ.tiff"},
+	// 	{"cmps_5deg", "file:/maps/compress_5deg.tif"},
+	// }
 
-	for _, m := range maps {
-		storeName := fmt.Sprintf("%s-store", m.name)
-		if err := g.CreateAndPublishGeoTIFFLayer("moon-workspace", storeName, m.name, m.path); err != nil {
-			return fmt.Errorf("failed to add %s: %w", m.name, err)
-		}
-	}
+	// for _, m := range maps {
+	// 	storeName := fmt.Sprintf("%s-store", m.name)
+	// 	if err := g.CreateAndPublishGeoTIFFLayer("moon-workspace", storeName, m.name, m.path); err != nil {
+	// 		return fmt.Errorf("failed to add %s: %w", m.name, err)
+	// 	}
+	// }
 
-	// 3. Устанавливаем стиль
-	if err := g.SetLayerStyle("moon-workspace", "cmps_5deg", "raster-style"); err != nil {
-		return err
-	}
+	// // 3. Устанавливаем стиль
+	// if err := g.SetLayerStyle("moon-workspace", "cmps_5deg", "raster-style"); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

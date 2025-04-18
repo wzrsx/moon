@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
@@ -144,7 +145,7 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 }
 func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
 	type CredentialModulesRequirements struct {
-		ModuleType string
+		ModuleType string `json:"module_type"`
 	}
 	var creds CredentialModulesRequirements
 
@@ -162,18 +163,12 @@ func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.R
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error take module requirements: %v", err),
 		})
-	}
-	requirementsJSON, err := json.Marshal(requirements)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error marshaling requirements: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": "Error response",
-		})
 		return
 	}
+	log.Println(requirements)
 	respondWithJSON(rw, http.StatusAccepted, map[string]interface{}{
-		"message":   "Error response",
-		"requirements_json": requirementsJSON,
+		"message":   "Success response",
+		"requirements_json": requirements,
 	})
 }
 

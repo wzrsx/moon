@@ -10,4 +10,4 @@ build:
 	@echo "Binary built."
 run:
 	@echo "Go server is running..."
-	./bin/server
+	./bin/moon_app

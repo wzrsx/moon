@@ -147,6 +147,18 @@ function clearModuleLayers() {
 
 // Функция добавления нового модуля
 function addModuleToMap(moduleData) {
+  // Если слоев нет - создаем новый
+  if (moduleLayers.length === 0) {
+    const vectorSource = new ol.source.Vector();
+    const vectorLayer = new ol.layer.Vector({
+      source: vectorSource,
+      style: createModuleStyleFunction(),
+      zIndex: 5
+    });
+    
+    map.addLayer(vectorLayer);
+    moduleLayers.push(vectorLayer);
+  }
   // Получаем ссылку на векторный слой, который уже добавлен на карту
   const currentVectorLayer = moduleLayers[moduleLayers.length - 1]; // Последний добавленный слой
   const vectorSource = currentVectorLayer.getSource(); // Получаем его source
@@ -349,13 +361,17 @@ let clone = null;
 let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', function (e) {
+     const moduleType = {
+      module_type: module.getAttribute('data-name-en-db')
+    };
+    let widthModule, lengthModule;
     //Получаем требования к модулю
     fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
       method: 'POST',
       headers: {
         'content-type': 'application/json'
       },
-      body: JSON.stringify(moduleData)
+      body: JSON.stringify(moduleType)
     })
       .then((response) => {
         return response.json().then(data => {
@@ -370,12 +386,14 @@ modules.forEach(module => {
         });
       })
       .then(data => {
-        addModuleToMap(moduleData);
+        widthModule = data.requirements_json.width_meters;
+        lengthModule = data.requirements_json.length_meters;
+        //console.log(data)
       })
       .catch(error => {
-        console.error('Ошибка сохранения модуля:', error);
-        // Здесь можно также обработать другие ошибки, если нужно
+        console.error('Ошибка получения требований модуля:', error);
       });
+
     sidebar.classList.remove('visible');
     isOpenAside = false;
     greenLayer.setOpacity(0.7);
@@ -429,7 +447,6 @@ modules.forEach(module => {
     // Очистка при отпускании кнопки мыши
     function onMouseUp(e) {
       //Проверка зоны
-
       const pixel = [e.clientX, e.clientY];
       const coordinates = map.getCoordinateFromPixel(pixel);
       const nameEn = module.getAttribute('data-name-en-db');
@@ -438,36 +455,21 @@ modules.forEach(module => {
         module_type: currentModuleType,
         points: coordinates
       };
+      checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], widthModule, lengthModule)
+      .then(result => {
+        console.log(result);
+        if (!result) {
+          sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
+        }else{
+          saveModule(moduleData);
+        }
+      })
+      
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
       greenLayer.setOpacity(0); //sadasdasasd
       //сделать fetch
-      fetch("http://localhost:5050/maps/redactor/page/save_module", {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(moduleData)
-      })
-        .then((response) => {
-          return response.json().then(data => {
-            if (!response.ok) {
-              console.log(data.error);
-              if (data.error) {
-                sendNotification(data.error, false);
-              }
-              return Promise.reject(data);
-            }
-            return data; // Возвращаем успешно полученные данные
-          });
-        })
-        .then(data => {
-          addModuleToMap(moduleData);
-        })
-        .catch(error => {
-          console.error('Ошибка сохранения модуля:', error);
-          // Здесь можно также обработать другие ошибки, если нужно
-        });
+      
 
       if (clone) {
         clone.remove();
@@ -484,7 +486,34 @@ modules.forEach(module => {
     return false;
   };
 });
-
+function saveModule(moduleData){
+  fetch("http://localhost:5050/maps/redactor/page/save_module", {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(moduleData)
+  })
+    .then((response) => {
+      return response.json().then(data => {
+        if (!response.ok) {
+          console.log(data.error);
+          if (data.error) {
+            sendNotification(data.error, false);
+          }
+          return Promise.reject(data);
+        }
+        return data; // Возвращаем успешно полученные данные
+      });
+    })
+    .then(data => {
+      addModuleToMap(moduleData);
+    })
+    .catch(error => {
+      console.error('Ошибка сохранения модуля:', error);
+      // Здесь можно также обработать другие ошибки, если нужно
+    });
+}
 // 1. Регистрация проекции
 proj4.defs("EPSG:100000",
   'PROJCS["Moon_2015_South_Polar_Stereographic",' +
@@ -784,7 +813,7 @@ async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, height
   // Рассчитываем размеры в пикселях (10mpp)
   const widthPixels = Math.ceil(widthMeters / 10);  // Округляем вверх
   const heightPixels = Math.ceil(heightMeters / 10);
-
+  console.log(widthPixels, heightPixels);
   // 1. Запрашиваем изображение (1 пиксель = 10 метров)
   const imgUrl = `http://localhost:8080/geoserver/wms?` +
     `service=WMS&version=1.1.0&request=GetMap&` +
@@ -805,14 +834,16 @@ async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, height
 
   // 3. Анализируем пиксели
   const imageData = ctx.getImageData(0, 0, widthPixels, heightPixels).data;
-  for (let i = 0; i < imageData.length; i += 4) {
-    const r = imageData[i];     // Красный канал (GRAY_INDEX)
-    if (r !== 1 * 255) {       // Если значение не 1 (8-bit)
+  
+  for (let i = 3; i < imageData.length; i += 4) { // Проверяем только альфа-канал
+    const alpha = imageData[i]; // Альфа-канал (0 = прозрачный, 255 = непрозрачный)
+    if (alpha === 0) { // Если пиксель прозрачный
       return false;
     }
   }
   return true;
 }
+
 
 
 // Вспомогательная функция загрузки изображения
@@ -825,6 +856,7 @@ function loadImage(url) {
     img.src = url;
   });
 }
+
 // Пример вызова (проверяем область 1000x1000 метров)
-checkAreaAllOnes("compress_5deg", 26700, 71800, 1000, 1000)
+checkAreaAllOnes("compress_5deg", 26700, 71800, 100, 100)
   .then(result => console.log("Все пиксели = 1:", result));
