@@ -1,15 +1,24 @@
 // модули
 // Глобальная переменная для хранения слоев модулей
 let moduleLayers = [];
+let cachedModules = [];//данные о модулях
+const dangerSource = new ol.source.Vector(); // Красные зоны (запретные)
+const safeSource = new ol.source.Vector();   // Зеленые зоны (разрешенные)
+// Функция загрузки модулей с сервера
 
-// Функция загрузки модулей с сервера
-// Функция загрузки модулей с сервера
 function loadModules() {
   fetch("http://localhost:5050/maps/redactor/page/take_modules")
     .then(response => response.json())
     .then(modules => {
+       // Гарантированно инициализируем как массив
+      cachedModules = Array.isArray(modules) ? modules : [];
       clearModuleLayers();
-
+      if (!modules || modules.length === 0) {
+        console.log("Нет модулей для отображения");
+        return; // Прекращаем выполнение если модулей нет
+      }
+      cachedModules = modules;
+      clearModuleLayers();
       const vectorSource = new ol.source.Vector();
       const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
@@ -53,9 +62,9 @@ function createModuleStyleFunction() {
     const zoom = map.getView().getZoom();
     const moduleType = feature.get('type');
     const moduleName = feature.get('name');
-
+    const styles = [];
     // Путь к иконке модуля
-    const iconPath = `/static/style/photos/${moduleType}_modules.png`; // MODULE NAME _________________>>>>
+    const iconPath = `/static/style/photos/${moduleName}.png`; // MODULE NAME _________________>>>>
 
     const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
 
@@ -101,12 +110,12 @@ function createModuleStyleFunction() {
         image: new ol.style.Icon({
           src: iconPath,
           scale: iconScale,
-          anchor: [0.5, 1],
-          imgSize: [798, 598]
+          anchor: [0.5, 0.5],
+          imgSize: [300, 300]
         }),
         text: new ol.style.Text({
           text: moduleName,
-          offsetY: 15,
+          offsetY: 20,
           font: 'bold 12px Jura',
           fill: new ol.style.Fill({ color: '#fff' }),
           stroke: new ol.style.Stroke({ color: '#000', width: 2 })
@@ -208,7 +217,7 @@ const modulesContainerInhabited = document.getElementById('modulesContainerInhab
 const modulesContainerTechnological = document.getElementById('modulesContainerTechnological');
 
 const modulesList = document.getElementById("modulesList");
-const modules = modulesList.querySelectorAll('.item-module');
+const modules = document.querySelectorAll('.item-module');
 const typeModulesTitle = document.getElementById("typeModulesTitle");
 const notificationsContainer = document.getElementById("notificationsContainer");
 
@@ -287,7 +296,7 @@ function sendNotification(text, success) {
   notification.classList.add('show');
   setTimeout(() => {
     notification.classList.remove('show');
-  }, 1250);
+  }, 1500);
 }
 /*можно будет с бд подтянуть модули*/
 function openInhabitedModules() {
@@ -360,132 +369,136 @@ let draggedItem = null;
 let clone = null;
 let startX, startY;
 modules.forEach(module => {
-  module.addEventListener('mousedown', function (e) {
+  module.addEventListener('mousedown', async function (e) {
      const moduleType = {
       module_type: module.getAttribute('data-name-en-db')
     };
-    let widthModule, lengthModule;
+
     //Получаем требования к модулю
-    fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify(moduleType)
-    })
-      .then((response) => {
-        return response.json().then(data => {
-          if (!response.ok) {
-            console.log(data.error);
-            if (data.error) {
-              sendNotification(data.error, false);
-            }
-            return Promise.reject(data);
-          }
-          return data; // Возвращаем успешно полученные данные
-        });
-      })
-      .then(data => {
-        widthModule = data.requirements_json.width_meters;
-        lengthModule = data.requirements_json.length_meters;
-        //console.log(data)
-      })
-      .catch(error => {
-        console.error('Ошибка получения требований модуля:', error);
-      });
+    try {
+      // 1. Получаем требования СНАЧАЛА
+      const moduleRequirements = await getRequirements(moduleType);
+      console.log("Требования модуля:", moduleRequirements);
 
-    sidebar.classList.remove('visible');
-    isOpenAside = false;
-    greenLayer.setOpacity(0.7);
-    // Закрываем выпадающее меню
-    checkboxDropMenu.checked = false;
-    const originalImg = this.querySelector('.photo-item-module');
-
-    clone = originalImg.cloneNode(true);
-
-    clone.style.transform = 'scale(0.3)';
-    clone.style.transition = 'transform 0.2s';
-
-    // Стили для клона (только изображение)
-    clone.style.position = 'absolute';
-    clone.style.zIndex = '1000';
-    clone.style.pointerEvents = 'none';
-    clone.style.width = originalImg.offsetWidth + 'px';
-    clone.style.height = originalImg.offsetHeight + 'px';
-    clone.style.objectFit = 'cover'; // Сохраняем пропорции
-
-    // Запоминаем оригинальный элемент
-    draggedItem = this;
-
-    // Позиция курсора при зажатии
-    startX = e.clientX;
-    startY = e.clientY;
-
-    // Позиция клона (рассчитываем относительно изображения)
-    const rect = originalImg.getBoundingClientRect();
-    clone.style.left = rect.left + 'px';
-    clone.style.top = rect.top + 'px';
-
-    document.body.appendChild(clone);
-
-    // Смещаем клон относительно курсора
-    const shiftX = e.clientX - rect.left;
-    const shiftY = e.clientY - rect.top;
-
-    function moveAt(pageX, pageY) {
-      clone.style.left = pageX - shiftX + 'px';
-      clone.style.top = pageY - shiftY + 'px';
-    }
-
-    function onMouseMove(e) {
-      moveAt(e.clientX, e.clientY);
-    }
-
-    // Перемещаем клон при движении мыши
-    document.addEventListener('mousemove', onMouseMove);
-
-    // Очистка при отпускании кнопки мыши
-    function onMouseUp(e) {
-      //Проверка зоны
-      const pixel = [e.clientX, e.clientY];
-      const coordinates = map.getCoordinateFromPixel(pixel);
-      const nameEn = module.getAttribute('data-name-en-db');
-      const moduleData = {
-        module_name: nameEn,
-        module_type: currentModuleType,
-        points: coordinates
-      };
-      checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], widthModule, lengthModule)
-      .then(result => {
-        console.log(result);
-        if (!result) {
-          sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
-        }else{
-          saveModule(moduleData);
-        }
-      })
+      // 2. Прячем sidebar и т.д.
+      sidebar.classList.remove('visible');
+      isOpenAside = false;
+      checkboxDropMenu.checked = false;
       
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      greenLayer.setOpacity(0); //sadasdasasd
-      //сделать fetch
-      
+      // 3. Показываем радиусы и уклоны (?)
+      toggleExclusionRadius(true, cachedModules, moduleRequirements);
+      greenLayer.setOpacity(0.7)
+      // 4. Создаем drag-элемент
+      const originalImg = this.querySelector('.photo-item-module');
+      clone = originalImg.cloneNode(true);
 
-      if (clone) {
-        clone.remove();
-        clone = null;
-        draggedItem = null;
+      clone.style.transform = 'scale(0.3)';
+      clone.style.transition = 'transform 0.2s';
+  
+      // Стили для клона (только изображение)
+      clone.style.position = 'absolute';
+      clone.style.zIndex = '1000';
+      clone.style.pointerEvents = 'none';
+      clone.style.width = originalImg.offsetWidth + 'px';
+      clone.style.height = originalImg.offsetHeight + 'px';
+      clone.style.objectFit = 'contain';
+
+  
+      // Запоминаем оригинальный элемент
+      draggedItem = this;
+  
+      // Позиция курсора при зажатии
+      startX = e.clientX;
+      startY = e.clientY;
+  
+      // Позиция клона (рассчитываем относительно изображения)
+      const rect = originalImg.getBoundingClientRect();
+      clone.style.left = rect.left + 'px';
+      clone.style.top = rect.top + 'px';
+  
+      document.body.appendChild(clone);
+  
+      // Смещаем клон относительно курсора
+      const shiftX = e.clientX - rect.left;
+      const shiftY = e.clientY - rect.top;
+  
+      function moveAt(pageX, pageY) {
+        clone.style.left = pageX - shiftX + 'px';
+        clone.style.top = pageY - shiftY + 'px';
       }
+  
+      function onMouseMove(e) {
+        moveAt(e.clientX, e.clientY);
+      }
+  
+      // Перемещаем клон при движении мыши
+      document.addEventListener('mousemove', onMouseMove);
+  
+      // Очистка при отпускании кнопки мыши
+      function onMouseUp(e) {
+        //Проверка зоны
+        const pixel = [e.clientX, e.clientY];
+        const coordinates = map.getCoordinateFromPixel(pixel);
+        const nameEn = module.getAttribute('data-name-en-db');
+        const moduleData = {
+          module_name: nameEn,
+          module_type: currentModuleType,
+          points: coordinates
+        };
+        
+        //ЕСЛИ Жилой -> 15deg 
+        if(currentModuleType === 'inhabited'){
+          checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
+          .then(result => {
+            console.log(result);
+            if (!result) {
+              sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
+            }
+            else if(isInDangerZone(coordinates)){
+              sendNotification("Запрещенная зона!", 0);
+            }
+            else{
+              saveModule(moduleData);
+            }
+          })
+        }
+        //ЕСЛИ Производство -> 5deg
+        else if(currentModuleType === 'technological'){
+          checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
+          .then(result => {
+            console.log(result);
+            if (!result) {
+              sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
+            }
+            else if(isInDangerZone(coordinates)){
+              sendNotification("Запрещенная зона!", 0);
+            }
+            else{
+              saveModule(moduleData);
+            }
+          })
+        }
+        
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        greenLayer.setOpacity(0); 
+        toggleExclusionRadius(false);
+        if (clone) {
+          clone.remove();
+          clone = null;
+          draggedItem = null;
+        }
+      }
+  
+      document.addEventListener('mouseup', onMouseUp);
+      module.ondragstart = () => false;
+    } catch (error) {
+      sendNotification('Ошибка при получении требований модуля', 0);
+      console.error(error);
     }
-
-    document.addEventListener('mouseup', onMouseUp);
   });
-
-  // Отмена стандартного drag'n'drop
-  module.ondragstart = function () {
-    return false;
-  };
 });
+
 function saveModule(moduleData){
   fetch("http://localhost:5050/maps/redactor/page/save_module", {
     method: 'POST',
@@ -507,6 +520,11 @@ function saveModule(moduleData){
       });
     })
     .then(data => {
+      cachedModules.push({
+        points: moduleData.points,
+        module_name: moduleData.module_name,
+        module_type: moduleData.module_type,
+      });
       addModuleToMap(moduleData);
     })
     .catch(error => {
@@ -856,7 +874,151 @@ function loadImage(url) {
     img.src = url;
   });
 }
+  // Функция для добавления/удаления радиуса
+const exclusionRadiusLayers = [];
 
-// Пример вызова (проверяем область 1000x1000 метров)
-checkAreaAllOnes("compress_5deg", 26700, 71800, 100, 100)
-  .then(result => console.log("Все пиксели = 1:", result));
+function toggleExclusionRadius(show, modules, moduleToAdd) {
+  // Удаляем все существующие слои с радиусами
+  exclusionRadiusLayers.forEach(layer => {
+    map.removeLayer(layer);
+  });
+  exclusionRadiusLayers.length = 0;
+
+  if (!show || !modules || !moduleToAdd) return;
+
+  // Получаем требования для добавляемого модуля
+  const moduleRequirements = moduleToAdd;
+
+
+  const dangerLayer = new ol.layer.Vector({
+    source: dangerSource,
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 0, 0, 0.5)' // Красный с прозрачностью
+      }),
+      stroke: new ol.style.Stroke({
+        color: 'rgba(255, 0, 0, 0.8)',
+        width: 2
+      })
+    }),
+    zIndex: 6
+  });
+
+  const safeLayer = new ol.layer.Vector({
+    source: safeSource,
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(0, 56, 43, 0.2)' // Зеленый с прозрачностью
+      }),
+      stroke: new ol.style.Stroke({
+        color: 'rgba(1, 50, 32, 0.8)',
+        width: 2
+      })
+    }),
+    zIndex: 5
+  });
+
+  // Обрабатываем каждый существующий модуль
+  modules.forEach(module => {
+    if (!module.points || !Array.isArray(module.points)) {
+      console.error("Некорректные координаты модуля:", module);
+      return;
+    }
+
+    // 1. Красные зоны (запретные) - проверяем все ограничения 
+    if (1) {
+      const radius = getMinZoneRadius(moduleRequirements);
+      console.log(radius);
+      if (radius > 0) {
+        const feature = new ol.Feature({
+          geometry: new ol.geom.Circle(module.points, radius)
+        });
+        dangerSource.addFeature(feature);
+      }
+    }
+
+    // 2. Зеленые зоны (разрешенные) - проверяем требования близости 
+    if (shouldShowSafeZone(moduleRequirements)) {
+      const radius = getSafeZoneRadius(moduleRequirements);
+      if (radius > 0) {
+        const feature = new ol.Feature({
+          geometry: new ol.geom.Circle(module.points, radius)
+        });
+        safeSource.addFeature(feature);
+      }
+    }
+  });
+
+  // Добавляем слои на карту
+  map.addLayer(dangerLayer);
+  map.addLayer(safeLayer);
+  exclusionRadiusLayers.push(dangerLayer, safeLayer);
+}
+
+// Вспомогательные функции:
+function isInDangerZone(point) {
+  const features = dangerSource.getFeatures();
+  for (const feature of features) {
+    const geometry = feature.getGeometry();
+    if (geometry.intersectsCoordinate(point)) {
+      return true;
+    }
+  }
+  return false;
+}
+function shouldShowMinZone(requirements) {
+  // Проверяем, нужно ли показывать красную зону для этого модуля
+  return requirements.is_hazardous || 
+         requirements.min_distance_from_living ||
+         requirements.min_distance_from_production;
+}
+
+function getMinZoneRadius(requirements) {
+    if(requirements.min_distance_from_living) {
+      return requirements.min_distance_from_living;
+    }
+    else if(requirements.min_distance_from_production){
+      return requirements.min_distance_from_production;
+    }
+}
+
+function shouldShowSafeZone(requirements) {
+  return requirements.max_distance_from_living ||
+         requirements.max_distance_from_production;
+}
+
+function getSafeZoneRadius(requirements) {
+  // Определяем радиус зеленой зоны
+  if (requirements.max_distance_from_living) return requirements.max_distance_from_living;
+  if (requirements.max_distance_from_production) return requirements.max_distance_from_production;
+  return 0; // Нет зоны
+}
+
+function getRequirements(moduleType) {
+  return fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(moduleType)
+  })
+    .then((response) => {
+      return response.json().then(data => {
+        if (!response.ok) {
+          console.log(data.error);
+          if (data.error) {
+            sendNotification(data.error, false);
+          }
+          return Promise.reject(data);
+        }
+        return data; // Возвращаем успешно полученные данные
+      });
+    })
+    .then(data => {
+      return data.requirements_json; // Возвращаем для цепочки промисов
+    })
+    .catch(error => {
+      console.error('Ошибка получения требований модуля:', error);
+      throw error; // Пробрасываем ошибку дальше
+    });
+}
