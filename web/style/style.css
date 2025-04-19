@@ -562,7 +562,6 @@ h3{
     height: 90%;
     margin: 1% 5%;
     transition: all 0.4s ease-out;
-    overflow-x: auto;
 }
 
 .modules-back-button {
@@ -580,24 +579,34 @@ h3{
     grid-template-columns: repeat(3, 1fr); /* 3 колонки одинаковой ширины */
     grid-template-rows: repeat(3, 1fr);
     gap: 20px;
-    overflow-y: auto;
+    overflow: auto;
     max-height: calc(100% - 30px);
 }
 
-.item-module{
+.item-module {
     padding: 7px;
     background-color: #F8FEFF;
     border-radius: 10px;
     aspect-ratio: 4/3.3;
     cursor: pointer;
-}
-.photo-item-module{
-    border-radius: 5px;
-}
-.name-module{
-    font-size: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Для абсолютного позиционирования фото */
 }
 
+.photo-item-module {
+    border-radius: 5px;
+    width: 100%;
+    max-height: 308px;
+    object-fit: contain;
+    object-position: center;
+    margin: auto 0; 
+}
+
+.name-module {
+    font-size: 20px;
+    margin-top: auto;
+}
 /*уведы список*/
 .notification-item{
     opacity: 0;
