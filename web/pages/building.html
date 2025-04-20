@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/style/reset.css">
-    <link rel="stylesheet" href="/static/style/style.css">
+    <link rel="stylesheet" href="/static/style/building.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
     <style>
         #map {
@@ -21,37 +21,37 @@
             <nav class="nav-map-container">
                 <input type="checkbox" id="burger-checkbox" class="burger-checkbox">
                 <label for="burger-checkbox" class="burger">
-                    <svg viewBox="0 0 100 80" width="40" height="26">
+                    <svg class="burger-icon" fill="white" viewBox="0 0 100 80" width="40" height="26">
                         <rect class="burger-line top" width="100" height="15" rx="8"></rect>
                         <rect class="burger-line middle" y="30" width="100" height="15" rx="8"></rect>
                         <rect class="burger-line bottom" y="60" width="100" height="15" rx="8"></rect>
                     </svg>
                 </label>
-    
+
                 <div class="dropdown-menu">
                     <button class="dropdown-menu-btn" id="placeModulesBtn">
-                        <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="36" height="35" viewBox="0 0 36 35" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>Разместить модули</span>
+                        <span class="dropdown-menu-btn__text">Разместить модули</span>
                     </button>
                     <button class="dropdown-menu-btn" id="notificationsBtn">
                         <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>Уведомления</span>
+                        <span class="dropdown-menu-btn__text">Уведомления</span>
                     </button>
                     <button class="dropdown-menu-btn" id="saveProjectBtn">
                         <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>Сохранить</span>
+                        <span class="dropdown-menu-btn__text">Сохранить</span>
                     </button>
                     <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
                         <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>Выйти</span>
+                        <span class="dropdown-menu-btn__text">Выйти</span>
                     </button>
                 </div>
             </nav>
@@ -100,7 +100,7 @@
                             <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены. 
+                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены.
                         <br>
                         Пожалуйста, следите за дальнейшими обновлениями!
                     <p>
@@ -112,7 +112,7 @@
                             <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены. 
+                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены.
                         <br>
                         Пожалуйста, следите за дальнейшими обновлениями!
                     <p>
@@ -124,14 +124,14 @@
                             <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены. 
+                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены.
                         <br>
                         Пожалуйста, следите за дальнейшими обновлениями!
                     <p>
                 </div>
         </div>
     </aside>
-    
+
 
     <dialog class="confirm-dialog" id="confirmDialog">
         <div class="content-confirm-dialog">

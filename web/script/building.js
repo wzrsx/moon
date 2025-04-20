@@ -244,7 +244,7 @@ function closeconfirmDialog() {
 confirmBtn.addEventListener('click', (e) => {
   e.preventDefault();
   blurDiv.classList.remove("blur");
-  window.location.href = "../index.html"
+  window.location.href = "/"
 });
 dialog.addEventListener("close", () => {
   blurDiv.classList.remove("blur");

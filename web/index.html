@@ -3,88 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style/reset.css">
-    <link rel="stylesheet" href="/static/style/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&family=Ruda:wght@400;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css" />
+    <link rel="stylesheet" href="/static/style/index.css">
     <title>Moon</title>
 </head>
 <body>
-    <div id="blurDiv"></div>
-    <header>
-    <ul class="header-menu">
-        <li class="nav-item" id="buildingPageBtn" onclick="goBuilding()" >Режим строительства</li>
-        <li class="nav-item" id="authBtn">Вход/Регистрация</li>
-    </ul>
-    </header>
-    <main class="main-page">
-        <h1>
-            Откройте новые горизонты: 
-        </h1>
-        <br>
-        <h2>
-            колонизация Луны начинается здесь!
-        </h2>
+    <main>
+      <h1>Новые горизонты</h1>
+      <p class="subtitle">Колонизация Луны начинается здесь!</p>
+      <ul class="header-menu">
+        <li class="nav-item" onclick="goBuilding(event)">
+          Режим строительства
+          <button class="nav-item__btn">Перейти</button>
+        </li>
+        <li class="nav-item" onclick="document.getElementById('signInDialog').showModal()">
+          Вход / Регистрация
+        </li>
+      </ul>
     </main>
-    <dialog class="sign-in-dialog" id="signInDialog">
-        <div class="content-sign-in-dialog">
-            <div class="header-form">
-                <button class="close-modal-button">
-                    &#x2715;
-                </button>
-                <p class="dialog-title">Вход</p>
-            </div>
-            <form action="">
-                <input type="text" id="loginSignIn" class="input-sign-in-dialog" placeholder="Введите логин">
-                <span class="error-message" id="loginSignInError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="passwordSignIn" class="input-sign-in-dialog" placeholder="Введите пароль">
-                <span class="error-message" id="passwordSignInError" style="color: #a90000; display: none;">error message</span>
-                <button id="signInBtn" class="submitBtn">Войти</button>
-            </form>
-            <div class="btns">
-                <button id="registrateBtnForm">Регистрация</button>
-                <button id="forgetPassBtn">Забыли пароль</button>
-            </div>
+
+    <dialog id="signInDialog">
+          <button class="close-modal-button" onclick="this.closest('dialog').close()">&#x2715;</button>
+          <p class="dialog-title">Вход</p>
+          <form>
+            <input type="text" id="loginSignIn" placeholder="Введите логин" class="input-sign-in-dialog" />
+              <span class="error-message" id="loginSignInError" style="color: #a90000; display: none;">error message</span>
+            <input type="password" id="passwordSignIn" placeholder="Введите пароль" class="input-sign-in-dialog" />
+              <span class="error-message" id="passwordSignInError" style="color: #a90000; display: none;">error message</span>
+            <button class="submitBtn" id="signInBtn">Войти</button>
+          </form>
+          <div class="btns">
+            <button class="submitBtn" onclick="let dialog = this.closest('dialog'); dialog.close(); dialog.nextElementSibling.showModal()">Регистрация</button>
+            <button class="submitBtn" onclick="let dialog = this.closest('dialog'); dialog.close(); dialog.nextElementSibling.nextElementSibling.showModal()">Забыли пароль</button>
+          </div>
+    </dialog>
+    <dialog id="registrationDialog">
+        <button class="close-modal-button" onclick="this.closest('dialog').close()">&#x2715;</button>
+        <p class="dialog-title">Регистрация</p>
+        <form action="">
+            <input type="text" id="loginRegistration" class="input-sign-in-dialog" placeholder="Введите логин">
+            <span class="error-message" id="loginRegistrationError" style="color: #a90000; display: none;">error message</span>
+            <input type="email" id="emailRegistration" class="input-sign-in-dialog" placeholder="Введите почту">
+            <span class="error-message" id="emailRegistrationError" style="color: #a90000; display: none;">error message</span>
+            <input type="password" id="passRegistration" class="input-sign-in-dialog" placeholder="Введите пароль">
+            <span class="error-message" id="passRegistrationError" style="color: #a90000; display: none;">error message</span>
+            <input type="password" id="repeatPassRegistration" class="input-sign-in-dialog" placeholder="Повторите пароль">
+            <span class="error-message" id="repeatPassRegistrationError" style="color: #a90000; display: none;">error message</span>
+            <button id="registrateBtn" class="submitBtn">Зарегистрироваться</button>
+        </form>
+        <div class="btns">
+            <button class="submitBtn" onclick="let dialog = this.closest('dialog'); dialog.close(); dialog.previousElementSibling.showModal()">Войти</button>
         </div>
     </dialog>
-    <dialog class="sign-in-dialog" id="registrationDialog">
-        <div class="content-sign-in-dialog">
-            <div class="header-form">
-                <button class="close-modal-button">
-                    &#x2715;
-                </button>
-                <p class="dialog-title">Регистрация</p>
-            </div>
-            <form action="">
-                <input type="text" id="loginRegistration" class="input-sign-in-dialog" placeholder="Введите логин">
-                <span class="error-message" id="loginRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="email" id="emailRegistration" class="input-sign-in-dialog" placeholder="Введите почту">
-                <span class="error-message" id="emailRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="passRegistration" class="input-sign-in-dialog" placeholder="Введите пароль">
-                <span class="error-message" id="passRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="repeatPassRegistration" class="input-sign-in-dialog" placeholder="Повторите пароль">
-                <span class="error-message" id="repeatPassRegistrationError" style="color: #a90000; display: none;">error message</span> 
-                <button id="registrateBtn" class="submitBtn">Зарегистрироваться</button>
-            </form>
-            <div class="btns">
-                <button id="signInBtnForm">Войти</button>
-            </div>
-        </div>
-    </dialog>
-    <dialog class="sign-in-dialog" id="forgetPassDialog">
-        <div class="content-sign-in-dialog">
-            <div class="header-form">
-                <button class="close-modal-button">
-                    &#x2715;
-                </button>
-                <p class="dialog-title">Забыли пароль</p>
-            </div>
-            <form action="">
-                <input type="text" id="loginForgetPass" class="input-sign-in-dialog" placeholder="Введите логин или почту">
-                <span class="error-message" id="forgetPassError" style="color: #a90000; display: none;">error message</span> 
-                <button id="recoverPassBtn" class="submitBtn">Восстановить</button>
-            </form>
-            <div class="btns">
-                <button id="signInBtnForm2">Войти</button>
-            </div>
+    <dialog id="forgetPassDialog">
+        <button class="close-modal-button" onclick="this.closest('dialog').close()">&#x2715;</button>
+        <p class="dialog-title">Забыли пароль</p>
+        <form action="">
+            <input type="text" id="loginForgetPass" class="input-sign-in-dialog" placeholder="Введите логин или почту">
+            <span class="error-message" id="forgetPassError" style="color: #a90000; display: none;">error message</span>
+            <button id="recoverPassBtn" class="submitBtn">Восстановить</button>
+        </form>
+        <div class="btns">
+            <button class="submitBtn" onclick="let dialog = this.closest('dialog'); dialog.close(); dialog.previousElementSibling.previousElementSibling.showModal()">Войти</button>
         </div>
     </dialog>
     <script src="/static/script/index.js"></script>
