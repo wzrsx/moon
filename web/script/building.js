@@ -497,6 +497,10 @@ modules.forEach(module => {
       console.error(error);
     }
   });
+  module.addEventListener('dragstart', (e) => {
+    e.preventDefault();
+    return false;
+  });
 });
 
 function saveModule(moduleData){
@@ -888,7 +892,7 @@ function toggleExclusionRadius(show, modules, moduleToAdd) {
   exclusionRadiusLayers.length = 0;
 
   if (!show || !modules || !moduleToAdd) return;
-
+  
   // Получаем требования для добавляемого модуля
   const moduleRequirements = moduleToAdd;
 
