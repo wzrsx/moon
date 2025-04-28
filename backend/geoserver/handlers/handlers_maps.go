@@ -174,7 +174,51 @@ func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.R
 		"requirements_json": requirements,
 	})
 }
-
+func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Request) {
+    // Определяем структуру для входящего запроса
+    type Request struct {
+        ModuleType1 string `json:"module_type_1"`
+        ModuleType2 string `json:"module_type_2"`
+    }
+    
+    var req Request
+    
+    // Декодируем тело запроса
+    err := json.NewDecoder(r.Body).Decode(&req)
+    if err != nil {
+        a.Logger.Sugar().Errorf("Error decoding request: %v", err)
+        respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+            "error": fmt.Sprintf("Invalid request format: %v", err),
+        })
+        return
+    }
+    
+    // Проверяем обязательные поля
+    if req.ModuleType1 == "" || req.ModuleType2 == "" {
+        a.Logger.Sugar().Error("Empty module types provided")
+        respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+            "error": "Both module_type_1 and module_type_2 are required",
+        })
+        return
+    }
+    
+    // Получаем данные о расстоянии
+    requirements, err := queries_maps.TakeModulesDistance(req.ModuleType1, req.ModuleType2, a.Pool)
+    if err != nil {
+        a.Logger.Sugar().Errorf("Error getting module distance: %v", err)
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+            "error": fmt.Sprintf("Failed to get module distance: %v", err),
+        })
+        return
+    }
+	log.Println(requirements)
+    
+    // Отправляем успешный ответ
+    respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+        "message": "Success response",
+        "requirements_json": requirements,
+    })
+}
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
