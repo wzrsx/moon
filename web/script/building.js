@@ -18,6 +18,7 @@ function loadModules() {
         return; // Прекращаем выполнение если модулей нет
       }
       cachedModules = modules;
+      console.log(cachedModules);
       clearModuleLayers();
       const vectorSource = new ol.source.Vector();
       const vectorLayer = new ol.layer.Vector({
@@ -64,7 +65,7 @@ function createModuleStyleFunction() {
     const moduleName = feature.get('name');
     const styles = [];
     // Путь к иконке модуля
-    const iconPath = `/static/style/photos/${moduleName}.png`; // MODULE NAME _________________>>>>
+    const iconPath = `/static/style/photos/modules_compressed/${moduleName}.png`; 
 
     const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
 
@@ -384,7 +385,7 @@ modules.forEach(module => {
       sidebar.classList.remove('visible');
       isOpenAside = false;
       checkboxDropMenu.checked = false;
-      
+      sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
       // 3. Показываем радиусы и уклоны (?)
       toggleExclusionRadius(true, cachedModules, moduleRequirements);
       greenLayer.setOpacity(0.7)
@@ -884,29 +885,22 @@ function loadImage(url) {
   // Функция для добавления/удаления радиуса
 const exclusionRadiusLayers = [];
 
-function toggleExclusionRadius(show, modules, moduleToAdd) {
+async function toggleExclusionRadius(show, modules, moduleToAdd) {
   // Удаляем все существующие слои с радиусами
   exclusionRadiusLayers.forEach(layer => {
     map.removeLayer(layer);
   });
   exclusionRadiusLayers.length = 0;
+  dangerSource.clear();
+  safeSource.clear();
 
   if (!show || !modules || !moduleToAdd) return;
   
-  // Получаем требования для добавляемого модуля
-  const moduleRequirements = moduleToAdd;
-
-
   const dangerLayer = new ol.layer.Vector({
     source: dangerSource,
     style: new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: 'rgba(255, 0, 0, 0.5)' // Красный с прозрачностью
-      }),
-      stroke: new ol.style.Stroke({
-        color: 'rgba(255, 0, 0, 0.8)',
-        width: 2
-      })
+      fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.5)' }),
+      stroke: new ol.style.Stroke({ color: 'rgba(255, 0, 0, 0.8)', width: 2 })
     }),
     zIndex: 6
   });
@@ -914,52 +908,46 @@ function toggleExclusionRadius(show, modules, moduleToAdd) {
   const safeLayer = new ol.layer.Vector({
     source: safeSource,
     style: new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: 'rgba(0, 56, 43, 0.2)' // Зеленый с прозрачностью
-      }),
-      stroke: new ol.style.Stroke({
-        color: 'rgba(1, 50, 32, 0.8)',
-        width: 2
-      })
+      fill: new ol.style.Fill({ color: 'rgba(0, 56, 43, 0.2)' }),
+      stroke: new ol.style.Stroke({ color: 'rgba(1, 50, 32, 0.8)', width: 2 })
     }),
     zIndex: 5
   });
 
-  // Обрабатываем каждый существующий модуль
-  modules.forEach(module => {
-    if (!module.points || !Array.isArray(module.points)) {
-      console.error("Некорректные координаты модуля:", module);
-      return;
-    }
+  // Обрабатываем модули асинхронно
+  try {
+    for (const module of modules) {
+      if (!module.points || !Array.isArray(module.points)) {
+        console.error("Некорректные координаты модуля:", module);
+        continue;
+      }
 
-    // 1. Красные зоны (запретные) - проверяем все ограничения 
-    if (1) {
-      const radius = getMinZoneRadius(moduleRequirements);
-      console.log(radius);
-      if (radius > 0) {
-        const feature = new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, radius)
-        });
-        dangerSource.addFeature(feature);
+      // все зоны
+      const allRadius = await getDistances(moduleToAdd.module_type, module.module_name);
+      if (allRadius.min_distance > 0) {
+        dangerSource.addFeature(new ol.Feature({
+          geometry: new ol.geom.Circle(module.points, allRadius.min_distance)
+        }));
+      }
+
+      if (allRadius.max_distance > 0) {
+        safeSource.addFeature(new ol.Feature({
+          geometry: new ol.geom.Circle(module.points, allRadius.max_distance)
+        }));
       }
     }
 
-    // 2. Зеленые зоны (разрешенные) - проверяем требования близости 
-    if (shouldShowSafeZone(moduleRequirements)) {
-      const radius = getSafeZoneRadius(moduleRequirements);
-      if (radius > 0) {
-        const feature = new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, radius)
-        });
-        safeSource.addFeature(feature);
-      }
-    }
-  });
+    // Добавляем слои после завершения всех асинхронных операций
+    map.addLayer(dangerLayer);
+    map.addLayer(safeLayer);
+    exclusionRadiusLayers.push(dangerLayer, safeLayer);
 
-  // Добавляем слои на карту
-  map.addLayer(dangerLayer);
-  map.addLayer(safeLayer);
-  exclusionRadiusLayers.push(dangerLayer, safeLayer);
+  } catch (error) {
+    console.error('Ошибка при построении зон:', error);
+    // Очищаем слои в случае ошибки
+    dangerSource.clear();
+    safeSource.clear();
+  }
 }
 
 // Вспомогательные функции:
@@ -973,33 +961,6 @@ function isInDangerZone(point) {
   }
   return false;
 }
-function shouldShowMinZone(requirements) {
-  // Проверяем, нужно ли показывать красную зону для этого модуля
-  return requirements.is_hazardous || 
-         requirements.min_distance_from_living ||
-         requirements.min_distance_from_production;
-}
-
-function getMinZoneRadius(requirements) {
-    if(requirements.min_distance_from_living) {
-      return requirements.min_distance_from_living;
-    }
-    else if(requirements.min_distance_from_production){
-      return requirements.min_distance_from_production;
-    }
-}
-
-function shouldShowSafeZone(requirements) {
-  return requirements.max_distance_from_living ||
-         requirements.max_distance_from_production;
-}
-
-function getSafeZoneRadius(requirements) {
-  // Определяем радиус зеленой зоны
-  if (requirements.max_distance_from_living) return requirements.max_distance_from_living;
-  if (requirements.max_distance_from_production) return requirements.max_distance_from_production;
-  return 0; // Нет зоны
-}
 
 function getRequirements(moduleType) {
   return fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
@@ -1012,7 +973,40 @@ function getRequirements(moduleType) {
     .then((response) => {
       return response.json().then(data => {
         if (!response.ok) {
-          console.log(data.error);
+          console.error(data.error);
+          if (data.error) {
+            sendNotification(data.error, false);
+          }
+          return Promise.reject(data);
+        }
+        return data; // Возвращаем успешно полученные данные
+      });
+    })
+    .then(data => {
+      return data.requirements_json; // Возвращаем для цепочки промисов
+    })
+    .catch(error => {
+      console.error('Ошибка получения требований модуля:', error);
+      throw error; // Пробрасываем ошибку дальше
+    });
+}
+function getDistances(moduleType1, moduleType2) {
+  const requestData = {
+    module_type_1: moduleType1,
+    module_type_2: moduleType2
+  };
+  
+  return fetch("http://localhost:5050/maps/redactor/page/take_modules_distance", {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(requestData)
+  })
+    .then((response) => {
+      return response.json().then(data => {
+        if (!response.ok) {
+          console.error(data.error);
           if (data.error) {
             sendNotification(data.error, false);
           }

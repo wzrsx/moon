@@ -19,9 +19,10 @@ type ModuleRequirements struct {
 	MaxSlopeDegrees           int    `json:"max_slope_degrees"`
 	WidthMeters               int    `json:"width_meters"`
 	LengthMeters              int    `json:"length_meters"`
-	MinDistanceFromLiving     *int   `json:"min_distance_from_living"` // Используем указатель для nullable полей
-	MaxDistanceFromLiving     *int   `json:"max_distance_from_living"`
-	MinDistanceBetweenModules *int   `json:"min_distance_between_modules"`
+}
+type ModulesDistance struct {
+	MinDistance 		*int `json:"min_distance,omitempty"`
+	MaxDistance 		*int `json:"max_distance,omitempty"`
 }
 
 func NewModule() *Module {
@@ -88,10 +89,7 @@ func TakeModulesRequirements(moduleType string, pool *pgxpool.Pool) (*ModuleRequ
 			module_type, 
 			max_slope_degrees, 
 			width_meters, 
-			length_meters, 
-			min_distance_from_living, 
-			max_distance_from_living, 
-			min_distance_between_modules 
+			length_meters
 		FROM module_requirements 
 		WHERE module_type = $1`,
 		moduleType)
@@ -102,9 +100,6 @@ func TakeModulesRequirements(moduleType string, pool *pgxpool.Pool) (*ModuleRequ
 		&req.MaxSlopeDegrees,
 		&req.WidthMeters,
 		&req.LengthMeters,
-		&req.MinDistanceFromLiving,
-		&req.MaxDistanceFromLiving,
-		&req.MinDistanceBetweenModules,
 	)
 
 	if err != nil {
@@ -140,4 +135,29 @@ func (m *Module) SaveModule(pool *pgxpool.Pool) error {
 	}
 
 	return nil
+}
+func TakeModulesDistance(moduleType1 string, moduleType2 string, pool *pgxpool.Pool) (*ModulesDistance, error) {
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+	row := conn.QueryRow(context.Background(),
+		`SELECT min_distance, max_distance FROM module_distance_rules 
+   		WHERE (module_type_1 = $1 AND module_type_2 = $2)
+    	OR (module_type_1 = $2 AND module_type_2 = $1)
+		LIMIT 1`,
+		moduleType1, moduleType2)
+
+	var req ModulesDistance
+	err = row.Scan(
+		&req.MinDistance,
+		&req.MaxDistance,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &req, nil
 }
