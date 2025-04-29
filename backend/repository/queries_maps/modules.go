@@ -19,8 +19,11 @@ type ModuleRequirements struct {
 	MaxSlopeDegrees           int    `json:"max_slope_degrees"`
 	WidthMeters               int    `json:"width_meters"`
 	LengthMeters              int    `json:"length_meters"`
+	Description               string `json:"description"`
 }
 type ModulesDistance struct {
+	ModuleType1 string `json:"module_type1"`
+	ModuleType2 string `json:"module_type2"`
 	MinDistance 		*int `json:"min_distance,omitempty"`
 	MaxDistance 		*int `json:"max_distance,omitempty"`
 }
@@ -89,7 +92,8 @@ func TakeModulesRequirements(moduleType string, pool *pgxpool.Pool) (*ModuleRequ
 			module_type, 
 			max_slope_degrees, 
 			width_meters, 
-			length_meters
+			length_meters,
+			description
 		FROM module_requirements 
 		WHERE module_type = $1`,
 		moduleType)
@@ -100,6 +104,7 @@ func TakeModulesRequirements(moduleType string, pool *pgxpool.Pool) (*ModuleRequ
 		&req.MaxSlopeDegrees,
 		&req.WidthMeters,
 		&req.LengthMeters,
+		&req.Description,
 	)
 
 	if err != nil {
@@ -136,28 +141,30 @@ func (m *Module) SaveModule(pool *pgxpool.Pool) error {
 
 	return nil
 }
-func TakeModulesDistance(moduleType1 string, moduleType2 string, pool *pgxpool.Pool) (*ModulesDistance, error) {
+func TakeModulesDistance(pool *pgxpool.Pool) ([]ModulesDistance, error) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Release()
-	row := conn.QueryRow(context.Background(),
-		`SELECT min_distance, max_distance FROM module_distance_rules 
-   		WHERE (module_type_1 = $1 AND module_type_2 = $2)
-    	OR (module_type_1 = $2 AND module_type_2 = $1)
-		LIMIT 1`,
-		moduleType1, moduleType2)
-
-	var req ModulesDistance
-	err = row.Scan(
-		&req.MinDistance,
-		&req.MaxDistance,
-	)
-
+	rows, err := conn.Query(context.Background(),
+		`SELECT module_type_1, module_type_2, min_distance, max_distance FROM module_distance_rules`)
+	if err != nil{
+		return nil, err
+	}
+	defer rows.Close()
+	var resp []ModulesDistance
+	for rows.Next() {
+		var module ModulesDistance
+		err = rows.Scan(&module.ModuleType1, &module.ModuleType2, &module.MinDistance, &module.MaxDistance)
+		if err != nil{
+			return nil, err
+		}
+		resp = append(resp, module)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	return &req, nil
+	return resp, nil
 }

@@ -1,4 +1,3 @@
-// Создаем элемент для popup
 const popup = new ol.Overlay({
     element: document.createElement('div'),
     positioning: 'bottom-center',
@@ -6,9 +5,8 @@ const popup = new ol.Overlay({
     stopEvent: false
   });
   map.addOverlay(popup);
-  
   // Функция для создания содержимого popup
-  function createPopupContent(moduleName, moduleType) {
+  function createPopupContent(moduleName, moduleType, moduleDescription) {
     return `
       <div class="module-popup">
         <div class="module-popup-header" style="background-color: ${getColorByModuleType(moduleType)}">
@@ -20,7 +18,10 @@ const popup = new ol.Overlay({
                style="max-width: 200px; max-height: 150px;">
         </div>
         <div>
-            Описание:
+            ${moduleDescription} <br>
+            Габариты:
+            Безопасные расстояния от других модулей:
+            Рекомендуемое расположение:x
         </div> 
       </div>
     `;
@@ -39,7 +40,7 @@ const popup = new ol.Overlay({
       const moduleType = feature.get('type');
       const coordinates = feature.getGeometry().getCoordinates();
       
-      popupElement.innerHTML = createPopupContent(moduleName, moduleType);
+      popupElement.innerHTML = createPopupContent(moduleName, moduleType, moduleDescription);
       popup.setPosition(coordinates);
       popupElement.style.display = 'block';
     } else {

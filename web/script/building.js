@@ -2,6 +2,7 @@
 // Глобальная переменная для хранения слоев модулей
 let moduleLayers = [];
 let cachedModules = [];//данные о модулях
+let cachedRadiusModules = [];
 const dangerSource = new ol.source.Vector(); // Красные зоны (запретные)
 const safeSource = new ol.source.Vector();   // Зеленые зоны (разрешенные)
 // Функция загрузки модулей с сервера
@@ -56,6 +57,9 @@ function loadModules() {
       }
     })
     .catch(console.error);
+}
+function loadRadiuses(){
+
 }
 // Функция создания стиля для модулей
 function createModuleStyleFunction() {
@@ -189,7 +193,7 @@ function addModuleToMap(moduleData) {
 
 // Вызываем загрузку модулей при инициализации
 loadModules();
-
+getDistances();
 
 // Вспомогательная функция для цветов по типу модуля
 function getColorByModuleType(type) {
@@ -450,12 +454,12 @@ modules.forEach(module => {
         //ЕСЛИ Жилой -> 15deg 
         if(currentModuleType === 'inhabited'){
           checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
-          .then(result => {
+          .then(async result => {
             console.log(result);
             if (!result) {
               sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
             }
-            else if(isInDangerZone(coordinates)){
+            else if(await isInDangerZone(coordinates)){
               sendNotification("Запрещенная зона!", 0);
             }
             else{
@@ -466,12 +470,12 @@ modules.forEach(module => {
         //ЕСЛИ Производство -> 5deg
         else if(currentModuleType === 'technological'){
           checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
-          .then(result => {
+          .then(async result => {
             console.log(result);
             if (!result) {
               sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
             }
-            else if(isInDangerZone(coordinates)){
+            else if(await isInDangerZone(coordinates)){
               sendNotification("Запрещенная зона!", 0);
             }
             else{
@@ -725,7 +729,6 @@ navElement.addEventListener('mousemove', function (e) {
 });
 
 // Выносим debounce и кэш за пределы функции
-// Выносим debounce и кэш за пределы функции
 let lastElevationController = null; // Используем AbortController вместо request
 const elevationCache = new Map(); // Кэш для хранения высот
 
@@ -886,16 +889,13 @@ function loadImage(url) {
 const exclusionRadiusLayers = [];
 
 async function toggleExclusionRadius(show, modules, moduleToAdd) {
-  // Удаляем все существующие слои с радиусами
-  exclusionRadiusLayers.forEach(layer => {
-    map.removeLayer(layer);
-  });
+  exclusionRadiusLayers.forEach(layer => map.removeLayer(layer));
   exclusionRadiusLayers.length = 0;
+    
+  if (!show || !modules || !moduleToAdd) return;
   dangerSource.clear();
   safeSource.clear();
 
-  if (!show || !modules || !moduleToAdd) return;
-  
   const dangerLayer = new ol.layer.Vector({
     source: dangerSource,
     style: new ol.style.Style({
@@ -914,44 +914,56 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
     zIndex: 5
   });
 
-  // Обрабатываем модули асинхронно
   try {
+    // Process modules asynchronously
     for (const module of modules) {
       if (!module.points || !Array.isArray(module.points)) {
-        console.error("Некорректные координаты модуля:", module);
+        console.error("Invalid module coordinates:", module);
         continue;
-      }
-
-      // все зоны
-      const allRadius = await getDistances(moduleToAdd.module_type, module.module_name);
-      if (allRadius.min_distance > 0) {
+      }      
+      const pair = findModulePair(module.module_name, moduleToAdd.module_type);
+      if (pair.min_distance > 0) {
         dangerSource.addFeature(new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, allRadius.min_distance)
+          geometry: new ol.geom.Circle(module.points, pair.min_distance)
         }));
       }
 
-      if (allRadius.max_distance > 0) {
+      if (pair.max_distance > 0) {
         safeSource.addFeature(new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, allRadius.max_distance)
+          geometry: new ol.geom.Circle(module.points, pair.max_distance)
         }));
       }
     }
 
-    // Добавляем слои после завершения всех асинхронных операций
+    // Add layers after all async operations complete
     map.addLayer(dangerLayer);
     map.addLayer(safeLayer);
     exclusionRadiusLayers.push(dangerLayer, safeLayer);
-
+    console.log(exclusionRadiusLayers);
   } catch (error) {
-    console.error('Ошибка при построении зон:', error);
-    // Очищаем слои в случае ошибки
+    console.error('Error building zones:', error);
+    // Clear layers in case of error
     dangerSource.clear();
     safeSource.clear();
   }
 }
+function findModulePair(type1, type2) {
+  //type1 на карте существующий модуль
+  //type2 добавляем
+  const moduleRules = cachedRadiusModules.filter(rule => 
+    rule.module_type1 === type1 || 
+    rule.module_type2 === type1
+  );//тут ищем 14 требований
+  
+  // Затем ищем нужную пару расстояний
+  return moduleRules.find(item => 
+    (item.module_type1 === type1 && item.module_type2 === type2) ||
+    (item.module_type1 === type2 && item.module_type2 === type1)
+  );
+}
 
 // Вспомогательные функции:
-function isInDangerZone(point) {
+async function isInDangerZone(point) {
   const features = dangerSource.getFeatures();
   for (const feature of features) {
     const geometry = feature.getGeometry();
@@ -990,18 +1002,9 @@ function getRequirements(moduleType) {
       throw error; // Пробрасываем ошибку дальше
     });
 }
-function getDistances(moduleType1, moduleType2) {
-  const requestData = {
-    module_type_1: moduleType1,
-    module_type_2: moduleType2
-  };
-  
+function getDistances() {  
   return fetch("http://localhost:5050/maps/redactor/page/take_modules_distance", {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(requestData)
+    method: 'GET'
   })
     .then((response) => {
       return response.json().then(data => {
@@ -1012,6 +1015,7 @@ function getDistances(moduleType1, moduleType2) {
           }
           return Promise.reject(data);
         }
+        cachedRadiusModules = Object.values(data.requirements_json);
         return data; // Возвращаем успешно полученные данные
       });
     })

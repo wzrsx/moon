@@ -30,6 +30,7 @@ CREATE TABLE module_requirements
     max_slope_degrees integer NOT NULL DEFAULT 15,
     width_meters integer NOT NULL,
     length_meters integer NOT NULL,
+    description text,
     CONSTRAINT module_requirements_pkey PRIMARY KEY (module_type)   
 );
 
@@ -66,22 +67,23 @@ INSERT INTO module_requirements (
     module_type,
     max_slope_degrees,
     width_meters,
-    length_meters
+    length_meters,
+    description
 ) VALUES
-('spaceport_module', 15, 50, 40),
-('landfill_module', 15, 50, 40),
-('production_module', 15, 70, 30),
-('astro_site_module', 15, 20, 15),
-('mine_module', 15, 30, 20),
-('communication_tower_module', 15, 10, 10),
-('solar_power_module', 15, 50, 30),
-('living_module', 15, 5, 3),
-('sport_module', 15, 15, 10),
-('administrative_module', 15, 12, 8),
-('medical_module', 15, 20, 10),
-('research_module', 15, 25, 12),
-('repair_module', 15, 30, 15),
-('plantation_module', 15, 50, 30);
+('spaceport_module', 15, 50, 40, 'Космодромы необходимы для запуска и посадки космических аппаратов, имеют зоны разгрузки и загрузки, транспортную и ремонтную инфраструктуры.'),
+('landfill_module', 15, 50, 40, 'Мусорные полигоны необходимы для утилизации отходов.'),
+('production_module', 15, 70, 30, 'Производственные предприятия необходимы для производства материалов и топлива.'),
+('astro_site_module', 15, 20, 15, 'Астрономические площадки необходимы для проведения астрономических наблюдений.'),
+('mine_module', 15, 30, 20, 'Добывающие шахты необходимы для добычи полезных ископаемых, таких как водяной лед.'),
+('communication_tower_module', 15, 10, 10, 'Вышки связи необходимы для обеспечения связи между объектами базы и с Землей.'),
+('solar_power_module', 15, 50, 30, 'Солнечные электростанции необходимы для обеспечения базы электроэнергией.'),
+('living_module', 15, 5, 3, 'Жилые модули необходимы для обеспечения комфортного проживания колонистов.'),
+('sport_module', 15, 15, 10, 'Спортивные модули необходимы для поддержания физической формы колонистов в условиях низкой гравитации.'),
+('administrative_module', 15, 12, 8, 'Административные модули необходимы для управления базой и координации деятельности колонистов.'),
+('medical_module', 15, 20, 10, 'Медицинские модули необходимы для оказания медицинской помощи и проведения исследований.'),
+('research_module', 15, 25, 12, 'Исследовательские модули необходимы для проведения научных экспериментов и исследований.'),
+('repair_module', 15, 30, 15, 'Ремонтные модули необходимы для обслуживания и ремонта оборудования базы.'),
+('plantation_module', 15, 50, 30, 'Плантации необходимы для выращивания пищи и производства кислорода.');
 
 INSERT INTO module_distance_rules (id, module_type_1, module_type_2, min_distance, max_distance) VALUES
 (1, 'living_module', 'repair_module', 100, 300),
