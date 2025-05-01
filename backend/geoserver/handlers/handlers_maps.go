@@ -144,42 +144,12 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 	})
 }
 func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
-	type CredentialModulesRequirements struct {
-		ModuleType string `json:"module_type"`
-	}
-	var creds CredentialModulesRequirements
-
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
-		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"error": fmt.Sprintf("Error take module requirements: %v", err),
-		})
-		return
-	}
-	requirements, err := queries_maps.TakeModulesRequirements(creds.ModuleType, a.Pool)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Quering take module requirements: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error take module requirements: %v", err),
-		})
-		return
-	}
-	log.Println(requirements)
-	respondWithJSON(rw, http.StatusAccepted, map[string]interface{}{
-		"message":   "Success response",
-		"requirements_json": requirements,
-	})
-}
-func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Request) {
-    
-    
-    // Получаем данные о расстоянии
-    requirements, err := queries_maps.TakeModulesDistance(a.Pool)
+// Получаем данные о расстоянии
+    requirements, err := queries_maps.TakeModulesRequirements(a.Pool)
     if err != nil {
-        a.Logger.Sugar().Errorf("Error getting module distance: %v", err)
+        a.Logger.Sugar().Errorf("Error getting modules requirements: %v", err)
         respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-            "error": fmt.Sprintf("Failed to get module distance: %v", err),
+            "error": fmt.Sprintf("Failed to get modules requirements: %v", err),
         })
         return
     }
@@ -189,6 +159,25 @@ func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Reque
     respondWithJSON(rw, http.StatusOK, map[string]interface{}{
         "message": "Success response",
         "requirements_json": requirements,
+    })
+
+}
+func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Request) {
+    // Получаем данные о расстоянии
+    distances, err := queries_maps.TakeModulesDistance(a.Pool)
+    if err != nil {
+        a.Logger.Sugar().Errorf("Error getting module distance: %v", err)
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+            "error": fmt.Sprintf("Failed to get module distance: %v", err),
+        })
+        return
+    }
+	log.Println(distances)
+    
+    // Отправляем успешный ответ
+    respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+        "message": "Success response",
+        "requirements_json": distances,
     })
 }
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

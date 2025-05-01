@@ -14,8 +14,9 @@ type Module struct {
 	ModuleName string    `json:"module_name"`
 	Points     []float64 `json:"points"`
 }
-type ModuleRequirements struct {
+type ModulesRequirements struct {
 	ModuleType                string `json:"module_type"`
+	ModuleName                string `json:"module_name"`
 	MaxSlopeDegrees           int    `json:"max_slope_degrees"`
 	WidthMeters               int    `json:"width_meters"`
 	LengthMeters              int    `json:"length_meters"`
@@ -81,37 +82,40 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 
 	return modules, nil
 }
-func TakeModulesRequirements(moduleType string, pool *pgxpool.Pool) (*ModuleRequirements, error) {
+func TakeModulesRequirements(pool *pgxpool.Pool) ([]ModulesRequirements, error) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Release()
-	row := conn.QueryRow(context.Background(),
+	rows, err := conn.Query(context.Background(),
 		`SELECT 
 			module_type, 
+			module_name,
 			max_slope_degrees, 
 			width_meters, 
 			length_meters,
 			description
-		FROM module_requirements 
-		WHERE module_type = $1`,
-		moduleType)
-
-	var req ModuleRequirements
-	err = row.Scan(
-		&req.ModuleType,
-		&req.MaxSlopeDegrees,
-		&req.WidthMeters,
-		&req.LengthMeters,
-		&req.Description,
-	)
+		FROM module_requirements`)
+	if err != nil{
+		return nil, err
+	}
+	defer rows.Close()
+	var req []ModulesRequirements
+	for rows.Next() {
+		var module ModulesRequirements
+		err = rows.Scan(&module.ModuleType, &module.ModuleName, &module.MaxSlopeDegrees, &module.WidthMeters, &module.LengthMeters, &module.Description)
+		if err != nil{
+			return nil, err
+		}
+		req = append(req, module)
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &req, nil
+	return req, nil
 }
 func (m *Module) SaveModule(pool *pgxpool.Pool) error {
 	// Всегда сохраняем в формате {"points": [...]}

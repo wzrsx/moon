@@ -1,10 +1,15 @@
 // модули
 // Глобальная переменная для хранения слоев модулей
 let moduleLayers = [];
-let cachedModules = [];//данные о модулях
-let cachedRadiusModules = [];
-const dangerSource = new ol.source.Vector(); // Красные зоны (запретные)
-const safeSource = new ol.source.Vector();   // Зеленые зоны (разрешенные)
+let cachedModules = [];//данные о модулях на карте
+let cachedRadiusModules = [];//данные о расстояниях между модулями
+let cachedInfoModules = []; //инфа о всех модулях
+
+let dangerSource = new ol.source.Vector(); // Красные зоны (запретные)
+let safeSource = new ol.source.Vector();   // Зеленые зоны (разрешенные)
+//Глобальные переменные для хранения зон
+let currentDangerZone = null;
+let currentSafeZone = null;
 // Функция загрузки модулей с сервера
 
 function loadModules() {
@@ -57,9 +62,6 @@ function loadModules() {
       }
     })
     .catch(console.error);
-}
-function loadRadiuses(){
-
 }
 // Функция создания стиля для модулей
 function createModuleStyleFunction() {
@@ -194,6 +196,7 @@ function addModuleToMap(moduleData) {
 // Вызываем загрузку модулей при инициализации
 loadModules();
 getDistances();
+getRequirements();
 
 // Вспомогательная функция для цветов по типу модуля
 function getColorByModuleType(type) {
@@ -301,7 +304,7 @@ function sendNotification(text, success) {
   notification.classList.add('show');
   setTimeout(() => {
     notification.classList.remove('show');
-  }, 1500);
+  }, 2000);
 }
 /*можно будет с бд подтянуть модули*/
 function openInhabitedModules() {
@@ -375,14 +378,14 @@ let clone = null;
 let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', async function (e) {
-     const moduleType = {
-      module_type: module.getAttribute('data-name-en-db')
-    };
+    const moduleType =  module.getAttribute('data-name-en-db');
 
     //Получаем требования к модулю
     try {
-      // 1. Получаем требования СНАЧАЛА
-      const moduleRequirements = await getRequirements(moduleType);
+      // 1. Получаем требования 
+      const moduleRequirements = cachedInfoModules.find(rule => 
+        rule.module_type === moduleType
+      );
       console.log("Требования модуля:", moduleRequirements);
 
       // 2. Прячем sidebar и т.д.
@@ -452,36 +455,54 @@ modules.forEach(module => {
         };
         
         //ЕСЛИ Жилой -> 15deg 
-        if(currentModuleType === 'inhabited'){
+        if (currentModuleType === 'inhabited') {
           checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
-          .then(async result => {
-            console.log(result);
-            if (!result) {
-              sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
-            }
-            else if(await isInDangerZone(coordinates)){
-              sendNotification("Запрещенная зона!", 0);
-            }
-            else{
+            .then(async result => {
+              if (!result) {
+                sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
+                return;
+              }
+              if (await isInDangerZone(coordinates)) {
+                sendNotification("Запрещенная зона!", 0);
+                return;
+              }
+              if (moduleRequirements.module_type === 'medical_module' ) {
+                if (!await isInSafeZone(coordinates)) { // аналогично
+                  sendNotification(`${moduleRequirements.module_name} должен располагаться в зеленой зоне`, 0);
+                  return;
+                }
+              }
               saveModule(moduleData);
-            }
-          })
+            })
+            .catch(error => {
+              console.error('Ошибка при проверке зон:', error);
+              sendNotification("Произошла ошибка при проверке местоположения.", 0);
+            });
         }
         //ЕСЛИ Производство -> 5deg
         else if(currentModuleType === 'technological'){
           checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
           .then(async result => {
-            console.log(result);
             if (!result) {
-              sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
+              sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
+              return;
             }
-            else if(await isInDangerZone(coordinates)){
+            if (await isInDangerZone(coordinates)) {
               sendNotification("Запрещенная зона!", 0);
+              return;
             }
-            else{
-              saveModule(moduleData);
+            if (moduleRequirements.module_type === 'repair_module' ) {
+              if (!await isInSafeZone(coordinates)) { // аналогично
+                sendNotification(`${moduleRequirements.module_name} должен располагаться в зеленой зоне`, 0);
+                return;
+              }
             }
+            saveModule(moduleData);
           })
+          .catch(error => {
+            console.error('Ошибка при проверке зон:', error);
+            sendNotification("Произошла ошибка при проверке местоположения.", 0);
+          });
         }
         
         document.removeEventListener('mousemove', onMouseMove);
@@ -671,10 +692,10 @@ window.addEventListener('resize', () => {
 
 // Инициализация
 updateMapSize();
-map.on('click', function (evt) {
+/*map.on('click', function (evt) {
   const rawCoords = evt.coordinate;
   console.log('Координаты в проекции карты:', rawCoords);
-});
+});*/
 
 const mousePositionElement = document.createElement('div');
 mousePositionElement.id = 'mouse-coordinates';
@@ -700,7 +721,8 @@ checkboxDropMenu.addEventListener('click', (e) => {
 });
 // Обработчик движения курсора по карте
 map.on('pointermove', function (evt) {
-  if (isOpenAside) {
+  const popupElement = popup.getElement();
+  if (isOpenAside || (popupElement && popupElement.style.display === 'block' && popupElement.contains(evt.originalEvent.target))) {
     mousePositionElement.style.display = 'none';
     return;
   }
@@ -889,13 +911,15 @@ function loadImage(url) {
 const exclusionRadiusLayers = [];
 
 async function toggleExclusionRadius(show, modules, moduleToAdd) {
+  // Очищаем предыдущие слои
   exclusionRadiusLayers.forEach(layer => map.removeLayer(layer));
   exclusionRadiusLayers.length = 0;
-    
-  if (!show || !modules || !moduleToAdd) return;
   dangerSource.clear();
   safeSource.clear();
 
+  if (!show || !modules || !moduleToAdd) return;
+
+  // Создаем стили для слоев
   const dangerLayer = new ol.layer.Vector({
     source: dangerSource,
     style: new ol.style.Style({
@@ -915,37 +939,94 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
   });
 
   try {
-    // Process modules asynchronously
+    const dangerPolygons = [];
+    const safePolygons = [];
+
     for (const module of modules) {
       if (!module.points || !Array.isArray(module.points)) {
         console.error("Invalid module coordinates:", module);
         continue;
-      }      
-      const pair = findModulePair(module.module_name, moduleToAdd.module_type);
-      if (pair.min_distance > 0) {
-        dangerSource.addFeature(new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, pair.min_distance)
-        }));
       }
 
+      const pair = findModulePair(module.module_name, moduleToAdd.module_type);
+
+      // Создаем опасные зоны (min_distance)
+      if (pair.min_distance > 0) {
+        const polygon = fromCircle(module.points, pair.min_distance); // Используем нашу функцию преобразования
+        dangerPolygons.push(polygon);
+      }
+
+      // Создаем безопасные зоны (max_distance)
       if (pair.max_distance > 0) {
-        safeSource.addFeature(new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, pair.max_distance)
-        }));
+        const polygon = fromCircle(module.points, pair.max_distance);
+        safePolygons.push(polygon);
+      }
+    }
+    // Объединяем пересекающиеся полигоны
+    const mergedDanger = mergePolygons(dangerPolygons);
+    const mergedSafe = mergePolygons(safePolygons);
+    // Затем добавляем опасные зоны, 
+    if (mergedSafe) {
+      if (mergedDanger) {
+        // Вычитаем из безопасной зоны пересекающуюся с опасной
+        try {
+          finalSafe = turf.difference(mergedSafe, mergedDanger);
+        } catch (e) {
+          console.warn('Ошибка вычитания зон:', e);
+          finalSafe = mergedSafe; // fallback
+        }
+      } else {
+        finalSafe = mergedSafe;
       }
     }
 
-    // Add layers after all async operations complete
+    // Добавляем в слои
+    if (mergedDanger) {
+      const dangerFeature = new ol.format.GeoJSON().readFeature(mergedDanger);
+      dangerSource.addFeature(dangerFeature);
+    }
+
+    if (finalSafe) {
+      const safeFeature = new ol.format.GeoJSON().readFeature(finalSafe);
+      safeSource.addFeature(safeFeature);
+    }
+
+    // Добавляем слои на карту
     map.addLayer(dangerLayer);
     map.addLayer(safeLayer);
     exclusionRadiusLayers.push(dangerLayer, safeLayer);
-    console.log(exclusionRadiusLayers);
+    currentDangerZone = mergedDanger;
+    currentSafeZone = finalSafe;
   } catch (error) {
     console.error('Error building zones:', error);
-    // Clear layers in case of error
     dangerSource.clear();
     safeSource.clear();
   }
+} 
+function mergePolygons(polygons) {
+  if (polygons.length === 0) return null;
+  
+  let merged = polygons[0];
+  for (let i = 1; i < polygons.length; i++) {
+    try {
+      merged = turf.union(merged, polygons[i]);
+    } catch (e) {
+      console.warn('Ошибка объединения полигонов:', e);
+    }
+  }
+  return merged;
+}
+// Функция для преобразования Circle в Polygon
+function fromCircle(center, radius, points = 32) {
+  const coordinates = [];
+      for (let i = 0; i <= points; i++) {
+        const angle = (i * 2 * Math.PI) / points;
+        const x = center[0] + radius * Math.cos(angle);
+        const y = center[1] + radius * Math.sin(angle);
+        coordinates.push([x, y]);
+      }
+      coordinates.push(coordinates[0]); // Замыкаем полигон
+      return turf.polygon([coordinates]);
 }
 function findModulePair(type1, type2) {
   //type1 на карте существующий модуль
@@ -964,23 +1045,25 @@ function findModulePair(type1, type2) {
 
 // Вспомогательные функции:
 async function isInDangerZone(point) {
-  const features = dangerSource.getFeatures();
-  for (const feature of features) {
-    const geometry = feature.getGeometry();
-    if (geometry.intersectsCoordinate(point)) {
-      return true;
-    }
+  if (!currentDangerZone) {
+    console.warn("Зоны ещё не построены");
+    return false;
   }
-  return false;
+  const pointTurf = turf.point(point);
+  return turf.booleanPointInPolygon(pointTurf, currentDangerZone);
+}
+async function isInSafeZone(point) {
+  if (!currentSafeZone) {
+    console.warn("Зоны ещё не построены");
+    return false;
+  }
+  const pointTurf = turf.point(point);
+  return turf.booleanPointInPolygon(pointTurf, currentSafeZone);
 }
 
-function getRequirements(moduleType) {
+function getRequirements() {
   return fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(moduleType)
+    method: 'GET'
   })
     .then((response) => {
       return response.json().then(data => {
@@ -991,11 +1074,12 @@ function getRequirements(moduleType) {
           }
           return Promise.reject(data);
         }
+        cachedInfoModules = Object.values(data.requirements_json);
         return data; // Возвращаем успешно полученные данные
       });
     })
     .then(data => {
-      return data.requirements_json; // Возвращаем для цепочки промисов
+      return data.requirements_json; 
     })
     .catch(error => {
       console.error('Ошибка получения требований модуля:', error);
