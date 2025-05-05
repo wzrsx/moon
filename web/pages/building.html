@@ -29,30 +29,88 @@
                 </label>
     
                 <div class="dropdown-menu">
-                    <button class="dropdown-menu-btn" id="placeModulesBtn">
-                        <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Разместить модули</span>
-                    </button>
-                    <button class="dropdown-menu-btn" id="notificationsBtn">
-                        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Уведомления</span>
-                    </button>
-                    <button class="dropdown-menu-btn" id="saveProjectBtn">
-                        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Сохранить</span>
-                    </button>
-                    <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
-                        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Выйти</span>
-                    </button>
+                    <div class="main-buttons">
+                        <button class="dropdown-menu-btn" id="placeModulesBtn">
+                            <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Разместить модули</span>
+                        </button>
+                        <button class="dropdown-menu-btn" id="showZonesBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_167_50)">
+                                <path d="M1.45833 17.4999C1.45833 17.4999 7.29167 5.83325 17.5 5.83325C27.7083 5.83325 33.5417 17.4999 33.5417 17.4999C33.5417 17.4999 27.7083 29.1666 17.5 29.1666C7.29167 29.1666 1.45833 17.4999 1.45833 17.4999Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17.5 21.8749C19.9162 21.8749 21.875 19.9162 21.875 17.4999C21.875 15.0837 19.9162 13.1249 17.5 13.1249C15.0838 13.1249 13.125 15.0837 13.125 17.4999C13.125 19.9162 15.0838 21.8749 17.5 21.8749Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_167_50">
+                                <rect width="35" height="35" fill="white"/>
+                                </clipPath>
+                            </defs>
+                            </svg>
+                            <span>Отображение зон</span>
+                        </button>
+                        <button class="dropdown-menu-btn" id="notificationsBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Уведомления</span>
+                        </button>
+                        <button class="dropdown-menu-btn" id="saveProjectBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Сохранить</span>
+                        </button>
+                        <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Выйти</span>
+                        </button>
+                    </div>
+                    <div class="zones-checkboxes">
+                        <span class="title-zones-checkboxes">Отображение зон</span>
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
+                                <span class="slope-title">Допустимые уклоны</span>
+                                <span class="slope-arrow">▼</span>
+                              </div>
+                              <div class="slope-options">
+                                <div class="slope-option">
+                                  <input type="checkbox" id="habitableModulesCheckbox" data-layer="greenLayer" onchange="updateOptionStyle(this)">
+                                  <label for="habitableModulesCheckbox">Для обитаемых</label>
+                                </div>
+                                <div class="slope-option">
+                                  <input type="checkbox" id="technicalModulesCheckbox" data-layer="greenLayer" onchange="updateOptionStyle(this)">
+                                  <label for="technicalModulesCheckbox">Для технологических</label>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
+                                <span class="slope-title">Для расположения модуля</span>
+                                <span class="slope-arrow">▼</span>
+                              </div>
+                              <div class="slope-options" id="checkboxesModulesName">
+                              </div>
+                            </div>
+                        </div>      
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <label class="slope-toggle-btn"> <!-- Обернули в <label>, чтобы клик по тексту тоже работал -->
+                                <span>Карта высот</span>
+                                <span class="slope-checkbox-label">
+                                  <input type="checkbox" id="heightMapToggle" class="slope-checkbox" onchange="updateOptionStyle(this)">
+                                  <span class="slope-checkbox-custom"></span>
+                                </span>
+                              </label>
+                            </div>
+                        </div>      
+                    </div>
                 </div>
             </nav>
             <div id="map"></div>
@@ -208,5 +266,6 @@
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
     <script src="/static/script/building.js"></script>
     <script src="/static/script/popup.js"></script>
+    <script src="/static/script/handlersZones.js"></script>
 </body>
 </html>

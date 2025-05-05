@@ -209,6 +209,7 @@ function getColorByModuleType(type) {
 
 // кнопки
 const placeModulesBtn = document.getElementById("placeModulesBtn");
+const showZonesBtn = document.getElementById("showZonesBtn");
 const notificationsBtn = document.getElementById("notificationsBtn");
 const saveProjectBtn = document.getElementById("saveProjectBtn");
 const blurDiv = document.getElementById("blurDiv");
@@ -248,7 +249,13 @@ placeModulesBtn.addEventListener('click', (e) => {
   sidebar.classList.add('visible');
   isOpenAside = true;
 });
-
+showZonesBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  const mainButtons = document.querySelector('.main-buttons');
+  const zonesCheckboxes = document.querySelector('.zones-checkboxes');
+  mainButtons.style.display = 'none';
+  zonesCheckboxes.style.display = 'block';
+});
 notificationsBtn.addEventListener('click', (e) => {
   e.preventDefault();
   modulesChoiceType.style.display = 'none';
@@ -374,6 +381,8 @@ function backToTypes() {
 
 //перетаскивание фотки на карту
 let draggedItem = null;
+let isDragging = false; // Флаг перетаскивания
+let moveEndHandler = null; // Ссылка на обработчик
 let clone = null;
 let startX, startY;
 modules.forEach(module => {
@@ -394,8 +403,13 @@ modules.forEach(module => {
       checkboxDropMenu.checked = false;
       sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
       // 3. Показываем радиусы и уклоны (?)
-      toggleExclusionRadius(true, cachedModules, moduleRequirements);
-      greenLayer.setOpacity(0.7)
+      await toggleExclusionRadius(true, cachedModules, moduleRequirements);
+
+      if (moduleRequirements.module_type === 'medical_module' || moduleRequirements.module_type === 'repair_module') {
+        await updateClippedLayer();
+      }else{
+        greenLayer.setOpacity(0.7);
+      }
       // 4. Создаем drag-элемент
       const originalImg = this.querySelector('.photo-item-module');
       clone = originalImg.cloneNode(true);
@@ -441,9 +455,20 @@ modules.forEach(module => {
   
       // Перемещаем клон при движении мыши
       document.addEventListener('mousemove', onMouseMove);
-  
+      isDragging = true;
+    
+      // Добавляем обработчик moveend только при начале перетаскивания
+      moveEndHandler = map.on('moveend', async function() {
+        if (isDragging) {
+          await updateClippedLayer();
+        }
+      });
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
+        isDragging = false;
+        map.removeLayer(currentClippedLayer);
+        toggleExclusionRadius(false);
+        greenLayer.setOpacity(0);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
         const coordinates = map.getCoordinateFromPixel(pixel);
@@ -453,7 +478,6 @@ modules.forEach(module => {
           module_type: currentModuleType,
           points: coordinates
         };
-        
         //ЕСЛИ Жилой -> 15deg 
         if (currentModuleType === 'inhabited') {
           checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
@@ -504,11 +528,8 @@ modules.forEach(module => {
             sendNotification("Произошла ошибка при проверке местоположения.", 0);
           });
         }
-        
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        greenLayer.setOpacity(0); 
-        toggleExclusionRadius(false);
         if (clone) {
           clone.remove();
           clone = null;
@@ -623,6 +644,7 @@ const ldem = createFullscreenLayer('LDEM_83S_10MPP_ADJ', 1.0, 1);
 const ldsm = createFullscreenLayer('LDSM_83S_10MPP_ADJ', 0.3, 2);
 const hillshade = createFullscreenLayer('LDEM_83S_10MPP_ADJ_HILL', 0.6, 3);
 const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
+greenLayer.set('name', 'greenLayer');
 // Создаем WMS-слой с возможностью обновления фильтра
 
 
@@ -916,7 +938,6 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
   exclusionRadiusLayers.length = 0;
   dangerSource.clear();
   safeSource.clear();
-
   if (!show || !modules || !moduleToAdd) return;
 
   // Создаем стили для слоев
@@ -949,7 +970,6 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
       }
 
       const pair = findModulePair(module.module_name, moduleToAdd.module_type);
-
       // Создаем опасные зоны (min_distance)
       if (pair.min_distance > 0) {
         const polygon = fromCircle(module.points, pair.min_distance); // Используем нашу функцию преобразования
@@ -965,6 +985,7 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
     // Объединяем пересекающиеся полигоны
     const mergedDanger = mergePolygons(dangerPolygons);
     const mergedSafe = mergePolygons(safePolygons);
+    let finalSafe;
     // Затем добавляем опасные зоны, 
     if (mergedSafe) {
       if (mergedDanger) {
@@ -1003,6 +1024,25 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
     safeSource.clear();
   }
 } 
+function disableExclusionZones() {
+  // Удаляем слои с карты
+  exclusionRadiusLayers.forEach(layer => {
+    if (map.getLayers().getArray().includes(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+  
+  // Очищаем массив слоев
+  exclusionRadiusLayers.length = 0;
+  
+  // Очищаем источники данных
+  dangerSource.clear();
+  safeSource.clear();
+  
+  // Сбрасываем текущие зоны
+  currentDangerZone = null;
+  currentSafeZone = null;
+}
 function mergePolygons(polygons) {
   if (polygons.length === 0) return null;
   
@@ -1075,6 +1115,7 @@ function getRequirements() {
           return Promise.reject(data);
         }
         cachedInfoModules = Object.values(data.requirements_json);
+        populateModuleCheckboxes();
         return data; // Возвращаем успешно полученные данные
       });
     })
@@ -1110,4 +1151,184 @@ function getDistances() {
       console.error('Ошибка получения требований модуля:', error);
       throw error; // Пробрасываем ошибку дальше
     });
+}
+
+function getBoundingBox(multiPolygonGeometry) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  multiPolygonGeometry.coordinates.forEach(polygon => {
+    polygon.forEach(ring => {
+      ring.forEach(coord => {
+        const [x, y] = coord;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      });
+    });
+  });
+
+  return [minX, minY, maxX, maxY]; // Возвращаем массив, а не объект
+}
+
+function getGreenLayerBbox(bbox, typeModule, width, height) {
+  console.log(bbox);
+  const imgUrl = `http://localhost:8080/geoserver/wms?` +
+    `service=WMS&version=1.1.0&request=GetMap&` +
+    `layers=moon_workspace:${typeModule}&` +
+    `bbox=${bbox.join(',')}&` + 
+    `width=${width}&height=${height}&` +
+    `srs=EPSG:100000&` +
+    `format=image/png&` +
+    `transparent=true`;
+
+  console.log('WMS Request (GeoTIFF-aligned):', imgUrl);
+  return loadImage(imgUrl);
+}
+
+async function getClippedImage(layerZone, typeModule, meterPerPixel = 10) {
+  const mapSize = map.getSize(); // Получаем текущий размер карты в пикселях
+  const dpr = window.devicePixelRatio || 1; // Учёт плотности экрана
+
+  const width = Math.floor(mapSize[0] * dpr);
+  const height = Math.floor(mapSize[1] * dpr);
+
+  // Получаем текущий BBOX из view
+  const view = map.getView();
+  const bbox = view.calculateExtent(map.getSize()); // EPSG:3857
+  const [minX, minY, maxX, maxY] = bbox;
+
+  // 1. Запрашиваем изображение по текущему BBOX с нужным разрешением
+  const image = await getGreenLayerBbox(bbox, typeModule, width, height);
+
+  // 2. Создаем canvas с учетом devicePixelRatio
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // Сбрасываем трансформации
+  ctx.scale(dpr, dpr); // Масштабируем контекст под плотность экрана
+
+  // 3. Рисуем изображение
+  ctx.drawImage(image, 0, 0, mapSize[0], mapSize[1]);
+
+  // 4. Проекция геокоординат в координаты canvas
+  function projectToCanvas(x, y) {
+    const canvasX = ((x - minX) / (maxX - minX)) * mapSize[0];
+    const canvasY = mapSize[1] - ((y - minY) / (maxY - minY)) * mapSize[1];
+    //console.log(`Projecting: (${x}, ${y}) -> (${canvasX}, ${canvasY})`);
+    return [canvasX, canvasY];
+  }
+  // 5. Накладываем маску
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.fillStyle = 'black';
+  ctx.beginPath();
+  if(layerZone.geometry.type === 'MultiPolygon'){
+    layerZone.geometry.coordinates.forEach(polygon => {
+      polygon.forEach(ring => {
+        ring.forEach((coord, index) => {
+          const [x, y] = projectToCanvas(coord[0], coord[1]);
+          if (index === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+      });
+    });
+  }
+  else if(layerZone.geometry.type === 'Polygon'){
+    coordinates.forEach(polygon => {
+      polygon.forEach((ring, ringIndex) => {
+        ring.forEach((coord, coordIndex) => {
+          const [x, y] = projectToCanvas(coord[0], coord[1]);
+          if (coordIndex === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+      });
+    });
+  }
+  ctx.fill();
+  // 6. Возвращаем слой OpenLayers
+  const clippedLayer = new ol.layer.Image({
+    source: new ol.source.ImageStatic({
+      url: canvas.toDataURL('image/png'),
+      imageExtent: bbox,
+      projection: 'EPSG:100000'
+    }),
+    opacity: 0.7,
+    zIndex: 5
+  });
+  clippedLayer.set('isClippedLayer', true);
+  return clippedLayer;
+}
+let currentClippedLayer = null;
+
+async function updateClippedLayer() {
+  // Удаляем старый слой, если он есть
+  if (currentClippedLayer) {
+    map.removeLayer(currentClippedLayer);
+    currentClippedLayer = null;
+  }
+  console.log("currentSafeZone ", currentSafeZone);
+  // Пересоздаем слой
+  const clippedLayer = await getClippedImage(currentSafeZone, 'compress_5deg', 10);
+
+  // Сохраняем ссылку на новый слой
+  currentClippedLayer = clippedLayer;
+
+  // Добавляем обратно
+  map.addLayer(clippedLayer);
+}
+
+function toggleSlopeOptions(header) {
+  const control = header.parentElement;
+  control.classList.toggle('expanded');
+}
+
+function updateOptionStyle(inputElement) {
+  const option = inputElement.closest('.slope-option') || inputElement.closest('.slope-toggle-btn');
+  
+  // Для radio-кнопок сначала снимаем выделение со всех элементов группы
+  if (inputElement.type === 'radio') {
+    // Находим все radio-кнопки в той же группе
+    const groupName = inputElement.name;
+    document.querySelectorAll(`input[name="${groupName}"]`).forEach(radio => {
+      radio.closest('.slope-option')?.classList.remove('checked');
+    });
+  }
+  
+  // Устанавливаем класс checked в зависимости от состояния элемента
+  if (inputElement.checked) {
+    option.classList.add('checked');
+  } else {
+    option.classList.remove('checked');
+  }
+}
+// Функция для создания чекбоксов типов модулей 
+function populateModuleCheckboxes() {
+  const optionsContainer = document.getElementById('checkboxesModulesName');
+  const groupRadioName = 'moduleSelection';
+  // Очищаем контейнер перед заполнением
+  optionsContainer.innerHTML = '';
+  
+  // Создаем чекбоксы для каждого наименования модуля
+  cachedInfoModules.forEach(module => {
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'slope-option radio';
+    
+    const radioId = `${module.module_type}Radio`;
+    
+    optionDiv.innerHTML = `
+      <input type="radio" id="${radioId}" name="moduleSelection" value="${module.module_type}" onchange="updateOptionStyle(this)">
+      <label for="${radioId}">${module.module_name}</label>
+    `;
+    
+    optionsContainer.appendChild(optionDiv);
+  });
 }

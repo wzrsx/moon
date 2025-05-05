@@ -310,7 +310,6 @@ h3{
     border-bottom-left-radius: 15px; 
     border-bottom-right-radius: 15px; 
     border-top-left-radius: 15px; 
-    padding-top: 50px;
     padding-bottom: 50px;
     margin-right: 25px;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -338,7 +337,9 @@ h3{
 .dropdown-menu-btn:nth-child(4) {
     transition-delay: 0.4s;
 }
-
+.dropdown-menu-btn:nth-child(5) {
+    transition-delay: 0.5s;
+}
 .dropdown-menu-btn{
     display: flex;
     width: 70%;
@@ -760,4 +761,115 @@ h3{
   .distance-list li {
     margin-bottom: 3px;
     font-size: 13px;
+  }
+.main-buttons{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+}
+.zones-checkboxes{
+    display: none;
+    text-align: start;
+    padding-top: 10px;
+}
+.title-zones-checkboxes{
+    font-size: 24px;
+}
+.subtitle-zones-checkboxes{
+    font-size: 20px;
+}
+.dropdown-menu-checkbox-container{
+    width: 90%;
+    margin-left: 3%;
+}
+
+.zones-panel {
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .slope-control {
+    width: 100%;
+    margin-top: 15px;
+  }
+  
+  .slope-toggle-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background-color: #c0c0c0e0;
+    text-align: left;
+    padding: 0 10px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 20px;
+    transition: all 0.4s ease;
+    transform: translateX(0);
+    opacity: 1;
+    cursor: pointer;
+  }
+  
+  .slope-toggle-btn:hover {
+    box-shadow: 0 0 13px rgba(0, 0, 0, 0.8);
+  }
+  
+  .slope-toggle-btn:active {
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+  }
+  
+  .slope-arrow {
+    transition: transform 0.3s ease;
+    font-size: 14px;
+    margin-left: 10px;
+  }
+  
+  .slope-options {
+    max-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: max-height 0.4s ease-out;
+    width: 95%;
+    margin: 5px auto 0;
+  }
+  
+  .slope-control.expanded .slope-options {
+    max-height: 120px;
+  }
+  
+  .slope-control.expanded .slope-arrow {
+    transform: rotate(180deg);
+  }
+  
+  .slope-option {
+    display: flex;
+    align-items: center;
+    background-color: #d0d0d0e0;
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    font-size: 18px;
+  }
+  .slope-option.checked, .slope-toggle-btn.checked {
+    background-color: #a0a0a0e0;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  .slope-option input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .slope-option label {
+    cursor: pointer;
+  }
+  .slope-checkbox-custom {
+    position: relative;
+    height: 20px;
+    width: 20px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    transition: all 0.3s;
   }
