@@ -10,8 +10,10 @@ let safeSource = new ol.source.Vector();   // Зеленые зоны (разр�
 //Глобальные переменные для хранения зон
 let currentDangerZone = null;
 let currentSafeZone = null;
-// Функция загрузки модулей с сервера
 
+let onlyGreenInZone = false;
+
+// Функция загрузки модулей с сервера
 function loadModules() {
   fetch("http://localhost:5050/maps/redactor/page/take_modules")
     .then(response => response.json())
@@ -382,7 +384,6 @@ function backToTypes() {
 //перетаскивание фотки на карту
 let draggedItem = null;
 let isDragging = false; // Флаг перетаскивания
-let moveEndHandler = null; // Ссылка на обработчик
 let clone = null;
 let startX, startY;
 modules.forEach(module => {
@@ -406,9 +407,11 @@ modules.forEach(module => {
       await toggleExclusionRadius(true, cachedModules, moduleRequirements);
 
       if (moduleRequirements.module_type === 'medical_module' || moduleRequirements.module_type === 'repair_module') {
+        onlyGreenInZone = true;
         await updateClippedLayer();
       }else{
-        greenLayer.setOpacity(0.7);
+        onlyGreenInZone = false;
+        await updateClippedLayer();
       }
       // 4. Создаем drag-элемент
       const originalImg = this.querySelector('.photo-item-module');
@@ -457,18 +460,11 @@ modules.forEach(module => {
       document.addEventListener('mousemove', onMouseMove);
       isDragging = true;
     
-      // Добавляем обработчик moveend только при начале перетаскивания
-      moveEndHandler = map.on('moveend', async function() {
-        if (isDragging) {
-          await updateClippedLayer();
-        }
-      });
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
         isDragging = false;
         map.removeLayer(currentClippedLayer);
         toggleExclusionRadius(false);
-        greenLayer.setOpacity(0);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
         const coordinates = map.getCoordinateFromPixel(pixel);
@@ -647,7 +643,11 @@ const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
 greenLayer.set('name', 'greenLayer');
 // Создаем WMS-слой с возможностью обновления фильтра
 
-
+map.on('moveend', async function() {
+  if (isDragging) {
+    await updateClippedLayer();
+  }
+});
 
 // 4. Добавляем слои на карту
 map.addLayer(ldem);
@@ -916,8 +916,6 @@ async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, height
   }
   return true;
 }
-
-
 
 // Вспомогательная функция загрузки изображения
 function loadImage(url) {
@@ -1189,72 +1187,67 @@ function getGreenLayerBbox(bbox, typeModule, width, height) {
   return loadImage(imgUrl);
 }
 
-async function getClippedImage(layerZone, typeModule, meterPerPixel = 10) {
-  const mapSize = map.getSize(); // Получаем текущий размер карты в пикселях
-  const dpr = window.devicePixelRatio || 1; // Учёт плотности экрана
-
+async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 10) {
+  const mapSize = map.getSize();
+  const dpr = window.devicePixelRatio || 1;
   const width = Math.floor(mapSize[0] * dpr);
   const height = Math.floor(mapSize[1] * dpr);
 
-  // Получаем текущий BBOX из view
   const view = map.getView();
-  const bbox = view.calculateExtent(map.getSize()); // EPSG:3857
+  const bbox = view.calculateExtent(map.getSize());
   const [minX, minY, maxX, maxY] = bbox;
 
-  // 1. Запрашиваем изображение по текущему BBOX с нужным разрешением
+  // 1. Загружаем базовое изображение
   const image = await getGreenLayerBbox(bbox, typeModule, width, height);
 
-  // 2. Создаем canvas с учетом devicePixelRatio
+  // 2. Создаем canvas
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  ctx.setTransform(1, 0, 0, 1, 0, 0); // Сбрасываем трансформации
-  ctx.scale(dpr, dpr); // Масштабируем контекст под плотность экрана
-
-  // 3. Рисуем изображение
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  
+  // 3. Рисуем исходное изображение
   ctx.drawImage(image, 0, 0, mapSize[0], mapSize[1]);
 
-  // 4. Проекция геокоординат в координаты canvas
+  // 4. Функция проекции координат
   function projectToCanvas(x, y) {
-    const canvasX = ((x - minX) / (maxX - minX)) * mapSize[0];
-    const canvasY = mapSize[1] - ((y - minY) / (maxY - minY)) * mapSize[1];
-    //console.log(`Projecting: (${x}, ${y}) -> (${canvasX}, ${canvasY})`);
-    return [canvasX, canvasY];
+    return [
+      ((x - minX) / (maxX - minX)) * mapSize[0],
+      mapSize[1] - ((y - minY) / (maxY - minY)) * mapSize[1]
+    ];
   }
-  // 5. Накладываем маску
-  ctx.globalCompositeOperation = 'destination-in';
-  ctx.fillStyle = 'black';
-  ctx.beginPath();
-  if(layerZone.geometry.type === 'MultiPolygon'){
-    layerZone.geometry.coordinates.forEach(polygon => {
-      polygon.forEach(ring => {
-        ring.forEach((coord, index) => {
-          const [x, y] = projectToCanvas(coord[0], coord[1]);
-          if (index === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        });
-        ctx.closePath();
-      });
-    });
+
+  // 5. Сохраняем состояние
+  ctx.save();
+
+  if (onlyGreenInZone) {
+    // Режим только зеленые зоны - делаем прозрачным все вне зеленых зон
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(greenZone, ctx, projectToCanvas);
+    ctx.fill();
+  } else {
+    // Стандартный режим - затемняем зеленые зоны и вырезаем красные
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(0, 100, 0, 0.5)';
+    ctx.beginPath();
+    processCoordinates(greenZone, ctx, projectToCanvas);
+    ctx.fill();
+    
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(redZone, ctx, projectToCanvas);
+    ctx.fill();
   }
-  else if(layerZone.geometry.type === 'Polygon'){
-    coordinates.forEach(polygon => {
-      polygon.forEach((ring, ringIndex) => {
-        ring.forEach((coord, coordIndex) => {
-          const [x, y] = projectToCanvas(coord[0], coord[1]);
-          if (coordIndex === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-      });
-    });
-  }
-  ctx.fill();
-  // 6. Возвращаем слой OpenLayers
+
+  // Восстанавливаем состояние
+  ctx.restore();
+
+  // Возвращаем слой
   const clippedLayer = new ol.layer.Image({
     source: new ol.source.ImageStatic({
       url: canvas.toDataURL('image/png'),
@@ -1262,13 +1255,33 @@ async function getClippedImage(layerZone, typeModule, meterPerPixel = 10) {
       projection: 'EPSG:100000'
     }),
     opacity: 0.7,
-    zIndex: 5
+    zIndex: 4
   });
   clippedLayer.set('isClippedLayer', true);
   return clippedLayer;
 }
 let currentClippedLayer = null;
-
+function processCoordinates(zone, ctx, projectFn) {
+  if (zone.geometry.type === 'MultiPolygon') {
+    zone.geometry.coordinates.forEach(polygon => {
+      polygon.forEach(ring => {
+        ring.forEach((coord, i) => {
+          const [x, y] = projectFn(coord[0], coord[1]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+      });
+    });
+  } else {
+    zone.geometry.coordinates[0].forEach((coord, i) => {
+      const [x, y] = projectFn(coord[0], coord[1]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+  }
+}
 async function updateClippedLayer() {
   // Удаляем старый слой, если он есть
   if (currentClippedLayer) {
@@ -1277,7 +1290,7 @@ async function updateClippedLayer() {
   }
   console.log("currentSafeZone ", currentSafeZone);
   // Пересоздаем слой
-  const clippedLayer = await getClippedImage(currentSafeZone, 'compress_5deg', 10);
+  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone,  'compress_5deg');
 
   // Сохраняем ссылку на новый слой
   currentClippedLayer = clippedLayer;

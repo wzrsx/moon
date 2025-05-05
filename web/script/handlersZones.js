@@ -11,12 +11,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!radio) return;
     
         if (radio.checked) {
+          isDragging = true; //для updateClippedLayer при перемещении карты
           const moduleType = {
             module_type: radio.value,
           };
-    
-          console.log("Выбран модуль:", moduleType);
           await toggleExclusionRadius(true, cachedModules, moduleType);
+          
+          if (moduleType.module_type === 'medical_module' || moduleType.module_type === 'repair_module') {
+            onlyGreenInZone = true;
+            await updateClippedLayer();
+          }
+          else{
+            onlyGreenInZone = false;
+            await updateClippedLayer();
+          }
         }
       });
 });
