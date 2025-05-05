@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style/reset.css">
-    <link rel="stylesheet" href="/static/style/style.css">
+    <link rel="stylesheet" href="./static/style/reset.css">
+    <link rel="stylesheet" href="./static/style/style.css">
+    <link rel="stylesheet" href="./static/style/media-requests.css">
     <title>Moon</title>
 </head>
 <body>
@@ -37,7 +38,7 @@
                 <span class="error-message" id="loginSignInError" style="color: #a90000; display: none;">error message</span>
                 <input type="password" id="passwordSignIn" class="input-sign-in-dialog" placeholder="Введите пароль">
                 <span class="error-message" id="passwordSignInError" style="color: #a90000; display: none;">error message</span>
-                <button id="signInBtn" class="submitBtn">Войти</button>
+                <button id="signInBtn" class="submitBtnSignIn">Войти</button>
             </form>
             <div class="btns">
                 <button id="registrateBtnForm">Регистрация</button>
@@ -45,32 +46,32 @@
             </div>
         </div>
     </dialog>
-    <dialog class="sign-in-dialog" id="registrationDialog">
-        <div class="content-sign-in-dialog">
+    <dialog class="registration-dialog" id="registrationDialog">
+        <div class="content-registration-dialog">
             <div class="header-form">
                 <button class="close-modal-button">
                     &#x2715;
                 </button>
-                <p class="dialog-title">Регистрация</p>
+                <p class="registration-dialog-title">Регистрация</p>
             </div>
             <form action="">
-                <input type="text" id="loginRegistration" class="input-sign-in-dialog" placeholder="Введите логин">
+                <input type="text" id="loginRegistration" class="input-registration-dialog" placeholder="Введите логин">
                 <span class="error-message" id="loginRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="email" id="emailRegistration" class="input-sign-in-dialog" placeholder="Введите почту">
+                <input type="email" id="emailRegistration" class="input-registration-dialog" placeholder="Введите почту">
                 <span class="error-message" id="emailRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="passRegistration" class="input-sign-in-dialog" placeholder="Введите пароль">
+                <input type="password" id="passRegistration" class="input-registration-dialog" placeholder="Введите пароль">
                 <span class="error-message" id="passRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="repeatPassRegistration" class="input-sign-in-dialog" placeholder="Повторите пароль">
+                <input type="password" id="repeatPassRegistration" class="input-registration-dialog" placeholder="Повторите пароль">
                 <span class="error-message" id="repeatPassRegistrationError" style="color: #a90000; display: none;">error message</span> 
-                <button id="registrateBtn" class="submitBtn">Зарегистрироваться</button>
+                <button id="registrateBtn" class="submitBtnRegistration">Зарегистрироваться</button>
             </form>
             <div class="btns">
                 <button id="signInBtnForm">Войти</button>
             </div>
         </div>
     </dialog>
-    <dialog class="sign-in-dialog" id="forgetPassDialog">
-        <div class="content-sign-in-dialog">
+    <dialog class="forget-pass-dialog" id="forgetPassDialog">
+        <div class="content-forget-pass-dialog">
             <div class="header-form">
                 <button class="close-modal-button">
                     &#x2715;
@@ -78,15 +79,15 @@
                 <p class="dialog-title">Забыли пароль</p>
             </div>
             <form action="">
-                <input type="text" id="loginForgetPass" class="input-sign-in-dialog" placeholder="Введите логин или почту">
+                <input type="text" id="loginForgetPass" class="input-forget-pass-dialog" placeholder="Введите логин или почту">
                 <span class="error-message" id="forgetPassError" style="color: #a90000; display: none;">error message</span> 
-                <button id="recoverPassBtn" class="submitBtn">Восстановить</button>
+                <button id="recoverPassBtn" class="submitBtnForgetPass">Восстановить</button>
             </form>
             <div class="btns">
                 <button id="signInBtnForm2">Войти</button>
             </div>
         </div>
     </dialog>
-    <script src="/static/script/index.js"></script>
+    <script src="./static/script/index.js"></script>
 </body>
 </html>
