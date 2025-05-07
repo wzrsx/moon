@@ -212,6 +212,7 @@ function getColorByModuleType(type) {
 // кнопки
 const placeModulesBtn = document.getElementById("placeModulesBtn");
 const showZonesBtn = document.getElementById("showZonesBtn");
+const backMainButtons = document.getElementById("backMainButtons");
 const notificationsBtn = document.getElementById("notificationsBtn");
 const saveProjectBtn = document.getElementById("saveProjectBtn");
 const blurDiv = document.getElementById("blurDiv");
@@ -257,6 +258,24 @@ showZonesBtn.addEventListener('click', (e) => {
   const zonesCheckboxes = document.querySelector('.zones-checkboxes');
   mainButtons.style.display = 'none';
   zonesCheckboxes.style.display = 'block';
+});
+backMainButtons.addEventListener('click', (e) => {
+  e.preventDefault();
+  const mainButtons = document.querySelector('.main-buttons');
+  const zonesCheckboxes = document.querySelector('.zones-checkboxes');
+  mainButtons.style.display = 'flex';
+  zonesCheckboxes.style.display = 'none';
+  // Сбрасываем чекбоксы
+  document.querySelectorAll('input[type="checkbox"][data-layer]').forEach(checkbox => {
+    checkbox.checked = false;
+    updateOptionStyle(checkbox);
+  });
+  // Сбрасываем радиокнопки
+  document.querySelectorAll('#checkboxesModulesName input[type="radio"]').forEach(radio => {
+    radio.checked = false;
+    updateOptionStyle(radio);
+  });
+  hideAllLayers();
 });
 notificationsBtn.addEventListener('click', (e) => {
   e.preventDefault();
@@ -595,7 +614,7 @@ proj4.defs("EPSG:100000",
   'PARAMETER["scale_factor",1],' +
   'PARAMETER["false_easting",0],' +
   'PARAMETER["false_northing",0],' +
-  'UNIT["metre",1],' +
+  'UNIT["m",1],'  +
   'AUTHORITY["EPSG","100000"]]'
 );
 ol.proj.proj4.register(proj4);
@@ -612,7 +631,6 @@ const map = new ol.Map({
     maxZoom: 20 // максимальный уровень зума
   })
 });
-
 // 3. Функция создания полноэкранных слоев
 const createFullscreenLayer = (layerName, opacity, zIndex) => {
   return new ol.layer.Image({
@@ -650,12 +668,59 @@ map.on('moveend', async function() {
     await updateClippedLayer();
   }
 });
+/*зоны предпочтительных мест*/
+const malapertCenter = [29980, 148640];
+const malapertRadius = 72385 / 2;
+const malapertCircle = new ol.geom.Circle(malapertCenter, malapertRadius);
+const malapertFeature = new ol.Feature({ geometry: malapertCircle });
+const malapertLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({ features: [malapertFeature] }),
+  style: new ol.style.Style({
+    fill: new ol.style.Fill({ color: [158, 42, 255, 0.2] }),
+    stroke: new ol.style.Stroke({ color: [158, 42, 255, 1], width: 2 })
+  }),
+  opacity: 0,
+  zIndex: 7
+});
+malapertLayer.set('name', 'malapertLayer');
 
-// 4. Добавляем слои на карту
+const shackletonCenter = [7450, -6120];
+const shackletonRadius = 10462.5;
+const shackletonCircle = new ol.geom.Circle(shackletonCenter, shackletonRadius);
+const shackletonFeature = new ol.Feature({ geometry: shackletonCircle });
+const shackletonLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({ features: [shackletonFeature] }),
+  style: new ol.style.Style({
+    fill: new ol.style.Fill({ color: [0, 100, 255, 0.2] }),
+    stroke: new ol.style.Stroke({ color: [0, 50, 255, 1], width: 2 })
+  }),
+  opacity: 0,
+  zIndex: 7
+});
+shackletonLayer.set('name', 'shackletonLayer');
+
+const haworthCenter = [-6950, 76850];
+const haworthRadius = 25711.5;
+const haworthCircle = new ol.geom.Circle(haworthCenter, haworthRadius);
+const haworthFeature = new ol.Feature({ geometry: haworthCircle });
+const haworthLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({ features: [haworthFeature] }),
+  style: new ol.style.Style({
+    fill: new ol.style.Fill({ color: [50, 205, 50, 0.2] }),
+    stroke: new ol.style.Stroke({ color: [0, 100, 0, 1], width: 2 })
+  }),
+  opacity: 0,
+  zIndex: 7
+});
+haworthLayer.set('name', 'haworthLayer');
+
 map.addLayer(ldem);
 map.addLayer(ldsm);
 map.addLayer(hillshade);
 map.addLayer(greenLayer);
+map.addLayer(malapertLayer);
+map.addLayer(shackletonLayer);
+map.addLayer(haworthLayer);
 
 // Для базового слоя (яркость)
 ldem.on(['precompose', 'postcompose'], function (event) {
@@ -716,11 +781,67 @@ window.addEventListener('resize', () => {
 
 // Инициализация
 updateMapSize();
-/*map.on('click', function (evt) {
-  const rawCoords = evt.coordinate;
-  console.log('Координаты в проекции карты:', rawCoords);
-});*/
 
+function updateScaleBar() {
+  const resolution = map.getView().getResolution();
+  const units = map.getView().getProjection().getUnits();
+  const dpi = 96;
+  const inchesPerMeter = 39.37;
+  
+  // Рассчитываем масштаб
+  let scale = resolution * dpi * inchesPerMeter;
+  let scaleText, barWidth;
+  
+  // Определяем подходящие единицы (метры или километры)
+  if (scale >= 1000) {
+    scale = scale / 1000;
+    scaleText = Math.round(scale) + ' km';
+    barWidth = 100; // Фиксированная ширина линейки в пикселях
+  } else {
+    scaleText = Math.round(scale) + ' m';
+    barWidth = 100 * (scale / 1000); // Пропорционально уменьшаем для метров
+  }
+  
+  // Обновляем отображение
+  const container = document.getElementById('scaleDisplayContainer');
+  container.innerHTML = `
+    <div class="scale-line">
+      <div class="scale-bar" style="width: ${barWidth}px;"></div>
+      <div class="scale-text">${scaleText}</div>
+    </div>
+  `;
+}
+map.getView().on('change:resolution', updateScaleBar);
+function showPlacesZone(zoneName) {
+  let centerCoords;
+  let targetZoom = 10;
+
+  switch(zoneName.toLowerCase()) {
+    case 'malapert':
+      malapertLayer.setOpacity(1);
+      centerCoords = [malapertCenter[0], malapertCenter[1] - 3000]; //чтобы сверху карта полностью помещалась
+      break;
+    case 'shackleton':
+      shackletonLayer.setOpacity(1);
+      centerCoords = shackletonCenter;
+      targetZoom = 12;
+      break;
+    case 'haworth':
+      haworthLayer.setOpacity(1);
+      centerCoords = haworthCenter;
+      targetZoom = 11;
+      break;
+    default:
+      console.warn(`Unknown zone name: ${zoneName}`);
+      return; // Выходим, если зона неизвестна
+  }
+
+  map.getView().animate({
+    center: centerCoords,
+    zoom: targetZoom,
+    duration: 1000 // Длительность анимации в миллисекундах
+  });
+}
 const mousePositionElement = document.createElement('div');
 mousePositionElement.id = 'mouse-coordinates';
 mousePositionElement.style.position = 'absolute';
@@ -1302,22 +1423,9 @@ async function updateClippedLayer() {
     currentClippedLayer = null;
   }
 
-  // Если нет safeZone
-  /*if (!currentSafeZone) {
-    greenLayer.setOpacity(0.7); // Показываем
-    currentClippedLayer = greenLayer; // Запоминаем как активный слой
-    return;
-  }
-
-  // Если есть safeZone, скрываем greenLayer
-  greenLayer.setOpacity(0);*/
-
-  // Создаём clippedLayer (если есть зоны)
-  if (1) {
-    const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'compress_5deg');
-    currentClippedLayer = clippedLayer;
-    map.addLayer(clippedLayer);
-  }
+  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'compress_5deg');
+  currentClippedLayer = clippedLayer;
+  map.addLayer(clippedLayer);
 }
 
 function toggleSlopeOptions(header) {
@@ -1364,5 +1472,18 @@ function populateModuleCheckboxes() {
     `;
     
     optionsContainer.appendChild(optionDiv);
+  });
+}
+async function hideAllLayers() {
+  isDragging = false;
+  await toggleExclusionRadius(false);
+  const layers = map.getLayers().getArray();
+  layers.forEach(layer => {
+    if (layer.get("name") ) { // Проверяем, есть ли у слоя имя
+      layer.setOpacity(0); // Скрываем слой
+    }
+    else if(layer.get('isClippedLayer')){
+      map.removeLayer(layer); 
+    }
   });
 }

@@ -52,6 +52,29 @@ func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request)
 }
 
 // Отдельный обработчик для рендеринга HTML
+func (a *MapsHandlers) RenderChoosePlace(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
+		return
+	}
+
+	id_map, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("web/pages/choose_place.html"))
+	err := tmpl.Execute(rw, id_map)
+	if err != nil {
+		a.Logger.Error("Template error geoserver editor", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error geoserver editor"})
+		return
+	}
+}
 func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
@@ -75,7 +98,6 @@ func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request
 		return
 	}
 }
-
 func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {

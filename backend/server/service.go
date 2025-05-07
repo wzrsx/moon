@@ -41,7 +41,8 @@ func (s *MoonServiceServer) AddHandlers() *mux.Router {
 	r.HandleFunc("/auth/signin", auth_handlers.SignInHandler).Methods("POST")
 
 	r.Handle("/maps/redactor", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.OpenMapsRedactor))).Methods("GET")
-	r.Handle("/maps/redactor/page", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderMapRedactor))).Methods("GET")
+	r.Handle("/maps/redactor/page", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderChoosePlace))).Methods("GET")
+	r.Handle("/maps/redactor/page/map", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderMapRedactor))).Methods("GET")
 	r.Handle("/maps/redactor/page/take_modules", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModules))).Methods("GET")
 	r.Handle("/maps/redactor/page/save_module", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.SaveModule))).Methods("POST")
 	r.Handle("/maps/redactor/page/take_modules_requirements", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesRequirements))).Methods("GET")

@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const place = sessionStorage.getItem('temp_selected_place');
+  if (place) {
+      // Ждём, пока карта точно будет готова
+      const checkMapReady = setInterval(() => {
+          if (map && map.getView()) {
+              clearInterval(checkMapReady);
+              showPlacesZone(place);
+              sessionStorage.removeItem('temp_selected_place');
+          }
+      }, 100); // Проверяем каждые 100 мс
+  }
     getRequirements();
     document.querySelectorAll('input[type="checkbox"][data-layer]').forEach(checkbox => {
         checkbox.addEventListener('change', function () {
@@ -37,5 +48,9 @@ function toggleLayer(layerName, isVisible) {
         console.error("Layer not found:", layerName);
         return;
     }
-    layer.setOpacity(isVisible ? 0.7 : 0);
+    if(layer.get("name") !== 'greenLayer' && isVisible){
+      showPlacesZone(layer.get("name").replace("Layer", ""));
+    }else{
+      layer.setOpacity(isVisible ? 0.7 : 0)
+    }
 };

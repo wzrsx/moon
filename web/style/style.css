@@ -180,9 +180,20 @@ body{
     text-align: center;
 }
 #map {
+    position: relative;  /* Необходимо для абсолютного позиционирования внутри */
     width: 100%;
-    height: 100%;
-}
+    height: 100vh;
+  }
+  
+  #scaleDisplayContainer {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(255,255,255,0.8);
+    padding: 5px;
+    border-radius: 3px;
+    z-index: 1000;  /* Должен быть выше элементов карты */
+  }
 h1, h2, h3{
     text-align: center;
     line-height: 0.8;
@@ -873,3 +884,137 @@ h3{
     border-radius: 4px;
     transition: all 0.3s;
   }
+  .header-zones-checkboxes{
+    display: flex;
+    align-items: center;
+  }
+  /*choose page*/
+  .choose-place-body{
+    font-family: 'Jura';
+    background-image: url('photos/bg_choose.jpg');
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: #e7beff;
+  }
+  .choose-place-body header{
+    margin-top: 25px;
+    color: white;
+  }
+  .cards-places{
+    display: flex;
+    width: 95%;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-place {
+    border: 1px solid #5a189a;
+    width: 30%;
+    height: 52vh;
+    border-radius: 15px;
+    background-color: #070013;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.card-place:nth-child(1) {
+    box-shadow: 0px 0px 15px 10px #420b75;
+}
+.card-place:nth-child(2) {
+    box-shadow: 0px 0px 15px 10px #3c096c;
+}
+.card-place:nth-child(3) {
+    box-shadow: 0px 0px 15px 10px #380766;
+}
+.card-place:hover {
+    height: 80vh;
+    box-shadow: 0px 0px 15px 10px #5a189a;
+}
+
+.card-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+.hidden-text {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: all 0.6s ease-in;
+    display: block;
+    width: 95%;
+    margin: 0 auto;
+    color: #f0d6ff;
+}
+
+.card-place:hover .hidden-text {
+    opacity: 1;
+    height: auto;
+}
+
+.card-place-image {
+    display: block;
+    margin: 0 auto;
+    margin-top: 10px;
+    width: 95%;
+    border-radius: 10px;
+}
+
+.card-place-submit {
+    height: 50px;
+    width: 130px;
+    background: #240046;
+    margin-left: auto;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    color: #c77dff;
+    align-self: flex-end;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+.card-place-submit:hover {
+    color: #e0aaff;
+    background: #3c096c;
+}
+  .choose-place-main{
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  .choose-place-footer{
+    text-align: center;
+    height: 50px;
+  }
+  .footer-text{
+    position: relative;
+    display: inline-block;
+    color: #c77dff; /* Фиолетовый цвет текста */
+    cursor: pointer;
+    transition: color 0.3s ease;
+    font-size: 20px;
+  }
+.footer-text:hover {
+    color: #e0aaff; /* Более светлый оттенок при наведении */
+}
+
+.footer-text::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #e0aaff;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.footer-text:hover::after {
+    width: 100%;
+}
