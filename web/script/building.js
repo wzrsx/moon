@@ -43,13 +43,13 @@ function loadModules() {
         if (Math.abs(x) <= 216400 && Math.abs(y) <= 216400) {
           const feature = new ol.Feature({
             geometry: new ol.geom.Point([x, y]),
-            name: module.module_name,
             type: module.module_type,
+            habitation: module.habitation_type,
             id: module.id_module
           });
           vectorSource.addFeature(feature);
         } else {
-          console.warn(`Модуль ${module.module_name} вне зоны видимости`, [x, y]);
+          console.warn(`Модуль ${module.module_type} вне зоны видимости`, [x, y]);
         }
       });
 
@@ -69,11 +69,11 @@ function loadModules() {
 function createModuleStyleFunction() {
   return function (feature, resolution) {
     const zoom = map.getView().getZoom();
+    const habitationType = feature.get('habitation');
     const moduleType = feature.get('type');
-    const moduleName = feature.get('name');
     const styles = [];
     // Путь к иконке модуля
-    const iconPath = `/static/style/photos/modules_compressed/${moduleName}.png`; 
+    const iconPath = `/static/style/photos/modules_compressed/${moduleType}.png`; 
 
     const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
 
@@ -98,15 +98,15 @@ function createModuleStyleFunction() {
 
       return [
         new ol.style.Style({
-          fill: new ol.style.Fill({ color: getColorByModuleType(moduleType) }),
+          fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
         }),
         new ol.style.Style({
           geometry: new ol.geom.Polygon([squareCoords]),
-          fill: new ol.style.Fill({ color: getColorByModuleType(moduleType) }),
+          fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
         }),
         new ol.style.Style({
           text: new ol.style.Text({
-            text: moduleName,
+            text: moduleType,
             offsetY: -20,
             font: 'bold 12px Jura',
             fill: new ol.style.Fill({ color: '#fff' }),
@@ -123,7 +123,7 @@ function createModuleStyleFunction() {
           imgSize: [300, 300]
         }),
         text: new ol.style.Text({
-          text: moduleName,
+          text: moduleType,
           offsetY: 20,
           font: 'bold 12px Jura',
           fill: new ol.style.Fill({ color: '#fff' }),
@@ -136,7 +136,7 @@ function createModuleStyleFunction() {
         image: new ol.style.Circle({
           radius: 5 + (zoom * 0.2),
           fill: new ol.style.Fill({
-            color: getColorByModuleType(moduleType)
+            color: getColorByModuleType(habitationType)
           }),
           stroke: new ol.style.Stroke({
             color: '#fff',
@@ -144,7 +144,7 @@ function createModuleStyleFunction() {
           })
         }),
         text: new ol.style.Text({
-          text: moduleName,
+          text: moduleType,
           offsetY: -20,
           font: 'bold 12px Jura',
           fill: new ol.style.Fill({ color: '#fff' }),
@@ -184,15 +184,15 @@ function addModuleToMap(moduleData) {
   // Создаём новую точку
   const feature = new ol.Feature({
     geometry: new ol.geom.Point(moduleData.points),
-    name: moduleData.module_name,
     type: moduleData.module_type,
-    id: moduleData.id_module // если у вас есть этот ID
+    habitation: moduleData.habitation_type,
+    id: moduleData.id_module
   });
 
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
 
-  sendNotification(`Модуль "${moduleData.module_name}" добавлен`, true);
+  sendNotification(`Модуль "${moduleData.module_type}" добавлен`, true);
 }
 
 // Вызываем загрузку модулей при инициализации
@@ -463,15 +463,17 @@ modules.forEach(module => {
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
         isDragging = false;
-        map.removeLayer(currentClippedLayer);
+        if (currentClippedLayer && currentClippedLayer !== greenLayer) {
+          map.removeLayer(currentClippedLayer);
+      }
         toggleExclusionRadius(false);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
         const coordinates = map.getCoordinateFromPixel(pixel);
-        const nameEn = module.getAttribute('data-name-en-db');
+        const typeEn = module.getAttribute('data-name-en-db');
         const moduleData = {
-          module_name: nameEn,
-          module_type: currentModuleType,
+          module_type: typeEn,
+          habitation_type: currentModuleType,
           points: coordinates
         };
         //ЕСЛИ Жилой -> 15deg 
@@ -569,8 +571,8 @@ function saveModule(moduleData){
     .then(data => {
       cachedModules.push({
         points: moduleData.points,
-        module_name: moduleData.module_name,
         module_type: moduleData.module_type,
+        habitation_type: moduleData.habitation_type,
       });
       addModuleToMap(moduleData);
     })
@@ -876,7 +878,6 @@ function debounce(func, wait) {
   };
 }
 
-
 async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, heightMeters) {
   const minX = centerX - widthMeters / 2;
   const minY = centerY - heightMeters / 2;
@@ -967,7 +968,7 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
         continue;
       }
 
-      const pair = findModulePair(module.module_name, moduleToAdd.module_type);
+      const pair = findModulePair(module.module_type, moduleToAdd.module_type);
       // Создаем опасные зоны (min_distance)
       if (pair.min_distance > 0) {
         const polygon = fromCircle(module.points, pair.min_distance); // Используем нашу функцию преобразования
@@ -1196,9 +1197,9 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   const view = map.getView();
   const bbox = view.calculateExtent(map.getSize());
   const [minX, minY, maxX, maxY] = bbox;
-
-  // 1. Загружаем базовое изображение
   const image = await getGreenLayerBbox(bbox, typeModule, width, height);
+  console.log("image", image.src);
+  console.log("bbox", bbox);
 
   // 2. Создаем canvas
   const canvas = document.createElement('canvas');
@@ -1221,13 +1222,25 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
 
   // 5. Сохраняем состояние
   ctx.save();
-
-  if (onlyGreenInZone) {
+  if (!greenZone) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(redZone, ctx, projectToCanvas);
+    ctx.fill();
+  }
+  else if (onlyGreenInZone) {
     // Режим только зеленые зоны - делаем прозрачным все вне зеленых зон
     ctx.globalCompositeOperation = 'destination-in';
     ctx.fillStyle = 'black';
     ctx.beginPath();
     processCoordinates(greenZone, ctx, projectToCanvas);
+    ctx.fill();
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(redZone, ctx, projectToCanvas);
     ctx.fill();
   } else {
     // Стандартный режим - затемняем зеленые зоны и вырезаем красные
@@ -1283,20 +1296,28 @@ function processCoordinates(zone, ctx, projectFn) {
   }
 }
 async function updateClippedLayer() {
-  // Удаляем старый слой, если он есть
-  if (currentClippedLayer) {
+  // Удаляем старый clippedLayer (если он не greenLayer)
+  if (currentClippedLayer && currentClippedLayer !== greenLayer) {
     map.removeLayer(currentClippedLayer);
     currentClippedLayer = null;
   }
-  console.log("currentSafeZone ", currentSafeZone);
-  // Пересоздаем слой
-  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone,  'compress_5deg');
 
-  // Сохраняем ссылку на новый слой
-  currentClippedLayer = clippedLayer;
+  // Если нет safeZone
+  /*if (!currentSafeZone) {
+    greenLayer.setOpacity(0.7); // Показываем
+    currentClippedLayer = greenLayer; // Запоминаем как активный слой
+    return;
+  }
 
-  // Добавляем обратно
-  map.addLayer(clippedLayer);
+  // Если есть safeZone, скрываем greenLayer
+  greenLayer.setOpacity(0);*/
+
+  // Создаём clippedLayer (если есть зоны)
+  if (1) {
+    const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'compress_5deg');
+    currentClippedLayer = clippedLayer;
+    map.addLayer(clippedLayer);
+  }
 }
 
 function toggleSlopeOptions(header) {

@@ -10,8 +10,8 @@ import (
 type Module struct {
 	IdModule   string    `json:"id_module"`
 	MapId      string    `json:"id_map"`
+	HabitationType string    `json:"habitation_type"`
 	ModuleType string    `json:"module_type"`
-	ModuleName string    `json:"module_name"`
 	Points     []float64 `json:"points"`
 }
 type ModulesRequirements struct {
@@ -42,7 +42,7 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 
 	// Исправленный запрос:
 	rows, err := conn.Query(context.Background(),
-		"SELECT id, module_type, module_name, module_points_json FROM modules WHERE map_id = $1",
+		"SELECT id, habitation_type, module_type, module_points_json FROM modules WHERE map_id = $1",
 		idMap)
 	if err != nil {
 		return nil, err
@@ -57,8 +57,8 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 		// Правильное сканирование:
 		if err := rows.Scan(
 			&module.IdModule,
+			&module.HabitationType,
 			&module.ModuleType,
-			&module.ModuleName,
 			&pointsJSON,
 		); err != nil {
 			return nil, err
@@ -137,8 +137,8 @@ func (m *Module) SaveModule(pool *pgxpool.Pool) error {
 	defer conn.Release()
 
 	_, err = conn.Exec(context.Background(),
-		"INSERT INTO modules (map_id, module_type, module_name, module_points_json) VALUES ($1, $2, $3, $4)",
-		m.MapId, m.ModuleType, m.ModuleName, pointsJSON)
+		"INSERT INTO modules (map_id, habitation_type, module_type, module_points_json) VALUES ($1, $2, $3, $4)",
+		m.MapId, m.HabitationType, m.ModuleType, pointsJSON)
 	if err != nil {
 		return err
 	}

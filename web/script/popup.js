@@ -77,7 +77,7 @@ const popup = new ol.Overlay({
         }
         
         // Если клик по модулю - показываем/обновляем popup
-        if (feature && feature.get('name')) {
+        if (feature && feature.get('type')) {
             currentPopupFeature = feature;
             showPopupForFeature(feature);
         }
@@ -92,7 +92,7 @@ const popup = new ol.Overlay({
     const mapTarget = map.getTargetElement();
     
     // Всегда устанавливаем pointer при наведении на модуль
-    if (feature && feature.get('name')) {
+    if (feature && feature.get('type')) {
         mapTarget.style.cursor = 'pointer';
         
         // Если нет текущего открытого popup - показываем popup
@@ -120,11 +120,11 @@ const popup = new ol.Overlay({
 // Функция для отображения popup для конкретного feature
 function showPopupForFeature(feature) {
     const popupElement = popup.getElement();
-    const moduleInfo = cachedInfoModules.find(module => module.module_type === feature.get('name'));
-    const moduleDistances = cachedRadiusModules.find(module => module.module_type === feature.get('name'));
+    const moduleInfo = cachedInfoModules.find(module => module.module_type === feature.get('type'));
+    const moduleDistances = cachedRadiusModules.find(module => module.module_type === feature.get('type'));
     const coordinates = feature.getGeometry().getCoordinates();
     
-    popupElement.innerHTML = createPopupContent(moduleInfo, feature.get('type'), moduleDistances);
+    popupElement.innerHTML = createPopupContent(moduleInfo, feature.get('habitation'), moduleDistances);
     popup.setPosition(coordinates);
     popupElement.style.display = 'block';
     

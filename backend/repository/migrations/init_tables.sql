@@ -17,8 +17,8 @@ CREATE TABLE maps (
 CREATE TABLE modules(
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     map_id UUID NOT NULL,
+    habitation_type VARCHAR(40),
     module_type VARCHAR(40),
-    module_name VARCHAR(40),
     module_points_json JSONB,
     CONSTRAINT fk_modules_maps FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
 );
@@ -48,12 +48,12 @@ CREATE TABLE module_distance_rules
 
 ALTER TABLE modules ADD CONSTRAINT modules_module_name_check
 CHECK (
-    (module_type = 'inhabited' AND module_name = ANY(
+    (habitation_type = 'inhabited' AND module_type = ANY(
         ARRAY['living_module', 'sport_module', 'administrative_module', 
               'medical_module', 'research_module']
     ))
     OR
-    (module_type = 'technological' AND module_name = ANY(
+    (habitation_type = 'technological' AND module_type = ANY(
         ARRAY['repair_module', 'spaceport_module', 'communication_tower_module', 
               'plantation_module', 'landfill_module', 'production_module', 'astro_site_module', 
               'solar_power_module', 'mine_module']
