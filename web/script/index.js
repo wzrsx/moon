@@ -1,6 +1,7 @@
 const signInDialog = document.getElementById("signInDialog");
 const registrationDialog = document.getElementById("registrationDialog");
 const forgetPassDialog = document.getElementById("forgetPassDialog");
+const projectSelectionDialog = document.getElementById("projectSelectionDialog");
 const blurDiv = document.getElementById("blurDiv");
 const EMAIL_REGEXP = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 
@@ -27,7 +28,6 @@ const loginRegistration = document.getElementById("loginRegistration");
 const emailRegistration = document.getElementById("emailRegistration");
 const passRegistration = document.getElementById("passRegistration");
 const repeatPassRegistration = document.getElementById("repeatPassRegistration");
-
 //errors
 const loginSignInError = document.getElementById("loginSignInError");
 const passwordSignInError = document.getElementById("passwordSignInError");
@@ -36,9 +36,10 @@ const loginRegistrationError = document.getElementById("loginRegistrationError")
 const emailRegistrationError = document.getElementById("emailRegistrationError");
 const passRegistrationError = document.getElementById("passRegistrationError");
 const repeatPassRegistrationError = document.getElementById("repeatPassRegistrationError");
+const nameProjectError = document.getElementById("nameProjectError");
 let authHeader;
 
-    closeButtons.forEach(button => {
+closeButtons.forEach(button => {
   button.addEventListener('click', (e) => {
     e.preventDefault();
     const dialog = button.closest('dialog');
@@ -77,7 +78,9 @@ forgetPassDialog.addEventListener("close", () => {
     }
     isSwitching = false;
 });
-
+projectSelectionDialog.addEventListener("close", () => {
+    blurDiv.classList.remove("blur"); 
+});
 //переключение между диалогами
 registrateBtnForm.addEventListener('click', (e) => {
     e.preventDefault();
@@ -216,6 +219,10 @@ recoverPassBtn.addEventListener('click', (e) => {
     resetRecoverErrors();
     
 });
+function selectProject(){
+    blurDiv.classList.add("blur"); 
+    projectSelectionDialog.showModal();
+}
 function goBuilding() {
     fetch("http://localhost:5050/maps/redactor", {
         method: 'GET',
@@ -297,4 +304,48 @@ function isPassValid(value, field, input) {
       return false;
     }
     return true;
+  }
+  function showCreateProjectForm(){
+    projectSelectionDialog.style.height = '35%';
+    document.querySelector('.content-project-selection-dialog').style.display = 'none';
+    document.querySelector('.create-project-section').style.display = 'flex';
+  }
+  function createNewProject(){
+    let nameProj = document.getElementById('nameProject').value; //+валидация to do
+    const requestData = {
+        name_map: nameProj 
+    };
+    fetch("http://localhost:5050/maps/create", {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
+                });
+            }
+
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+                });
+            }
+
+            return response.json();
+        })
+        .then(data => {
+            window.location.href = `/maps/redactor/page`;
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+  }
+  function showProjects(){
+
   }

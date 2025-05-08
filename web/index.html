@@ -11,7 +11,7 @@
     <div id="blurDiv"></div>
     <header>
     <ul class="header-menu">
-        <li class="nav-item" id="buildingPageBtn" onclick="goBuilding()" >Режим строительства</li>
+        <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
         <li class="nav-item" id="authBtn">Вход/Регистрация</li>
     </ul>
     </header>
@@ -85,6 +85,23 @@
             <div class="btns">
                 <button id="signInBtnForm2">Войти</button>
             </div>
+        </div>
+    </dialog>
+    <dialog class="project-selection-dialog" id="projectSelectionDialog">
+        <div class="header-form">
+            <button class="close-modal-button">
+                &#x2715;
+            </button>
+            <p class="project-selection-title">Начните свой проект</p>
+        </div>
+        <div class="content-project-selection-dialog">
+            <button class="project-selection-btn btn-new" onclick="showCreateProjectForm()">Создать новый проект</button>
+            <button class="project-selection-btn btn-open" onclick="showProjects()">Открыть существующий проект</button>
+        </div>
+        <div class="create-project-section" style="display: none;">
+            <input type="text" placeholder="Введите название проекта" id="nameProject" class="input-sign-in-dialog">
+            <span class="error-message" id="nameProjectError" style="color: #a90000; display: none;">error message</span> 
+            <button class="create-project-btn btn-new" onclick="createNewProject()">Приступить</button>
         </div>
     </dialog>
     <script src="/static/script/index.js"></script>

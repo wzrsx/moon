@@ -28,7 +28,41 @@ func CreateMapsHandlers(cfg_db *config_db.ConfigDB, logger *zap.Logger, pool *pg
 		Pool:       pool,
 	}
 }
+func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request){
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
+		return
+	}
 
+	userID, ok := claims["user_id"].(string)
+    if !ok {
+        a.Logger.Error("User ID not found in claims")
+        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+        return
+    }
+	var request struct {
+        Name string `json:"name_map"`
+    }
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        a.Logger.Error("Invalid request body:", zap.Error(err))
+        respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+        return
+    }
+	newMap, err := queries_maps.CreateMap(userID, request.Name, a.Pool)
+    if err != nil {
+        a.Logger.Error("Failed to create map:", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Map creation failed"})
+        return
+    }
+
+    // 6. Успешный ответ
+    respondWithJSON(rw, http.StatusCreated, map[string]string{
+        "map_id":       newMap.MapID,
+        "redirect_url": "/maps/redactor?map_id=" + newMap.MapID,
+    })
+}
 func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {

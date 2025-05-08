@@ -92,6 +92,66 @@ body{
 .btns button{
     filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));/*уdo hover*/
 }
+.project-selection-dialog{
+    font-family: 'Jura';
+    width: 33%;/*do adaptiv*/
+    height: 45%;/*do adaptiv*/
+    border-radius: 20px;
+    padding-bottom: 35px;/*do adaptiv*/
+    padding-left: 50px;/*do adaptiv*/
+    padding-right: 50px;/*do adaptiv*/
+    background: linear-gradient(to bottom, #B2A2B3, #6F6470);
+    overflow: hidden;
+    animation: dialogFadeIn 0.3s ease-out forwards;
+    transition: height 0.3s ease;
+}
+.project-selection-btn{
+    display: block;
+    margin: 0 auto;
+    font-size: 30px;
+    width: 95%;
+    border-radius: 15px;
+    height: 80px;
+}
+.content-project-selection-dialog{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+.btn-new {
+    background-color: #c1ffe8; 
+    transition: all 0.3s ease-in;
+}
+.btn-open {
+    background-color: #bfdbf1; 
+    transition: all 0.3s ease-in;
+}
+.btn-new:hover {
+    background-color: #5faa7e; 
+}
+.btn-open:hover {
+    background-color: #6188a7; 
+}
+.project-selection-title{
+    font-size: 50px;
+    text-align: center;
+}
+.create-project-section{
+    margin-top: 15px;
+    flex-direction: column;
+    gap: 20px;
+}
+.create-project-btn{
+    display: block;
+    margin: 0 auto;
+    font-size: 30px;
+    width: 75%;
+    border-radius: 10px;
+    height: 50px;
+}
 .header-menu {
     list-style: none;
     display: flex;
@@ -228,6 +288,7 @@ h3{
     z-index: 1000;
 }
 .close-modal-button{
+    display: block;
     width: 50px;
     height: 50px;
     background: transparent;
