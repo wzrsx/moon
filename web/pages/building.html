@@ -289,15 +289,34 @@
     <dialog class="confirm-dialog" id="confirmDialog">
         <div class="content-confirm-dialog">
             <div class="header-form">
-                <button class="close-modal-button" onclick="closeconfirmDialog()" style="display: block;">
+                <button class="close-modal-button" onclick="closeConfirmDialog()" style="display: block;">
                     &#x2715;
                 </button>
                 <p id="titleDialog">Вы уверены что хотите выйти?</p>
             </div>
             <span>Текущие изменения сохранены</span>
             <div class="confirm-dialog-btns btns">
-                <button id="cancelBtn" onclick="closeconfirmDialog()">Отмена</button>
+                <button id="cancelBtn" onclick="closeConfirmDialog()">Отмена</button>
                 <button id="confirmBtn">Выйти</button>
+            </div>
+        </div>
+    </dialog>
+    <dialog class="confirm-dialog" id="saveDialog">
+        <div class="content-confirm-dialog">
+            <div class="header-form">
+                <button class="close-modal-button" onclick="closeSaveDialog()" style="display: block;">
+                    &#x2715;
+                </button>
+                <p>Выберите формат</p>
+            </div>
+            <div class="formats-files">
+                <button class="format-file-btn png-btn"></button>
+                <button class="format-file-btn json-btn"></button>
+                <button class="format-file-btn pdf-btn"></button>
+            </div>
+            <div class="confirm-dialog-btns btns">
+                <button id="cancelSaveBtn" onclick="closeSaveDialog()">Отмена</button>
+                <button id="saveBtn">Сохранить</button>
             </div>
         </div>
     </dialog>

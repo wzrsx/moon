@@ -218,8 +218,9 @@ const saveProjectBtn = document.getElementById("saveProjectBtn");
 const blurDiv = document.getElementById("blurDiv");
 const exitToMainBtn = document.getElementById("exitToMainBtn");
 const confirmBtn = document.getElementById("confirmBtn");
-//диалог
-const dialog = document.getElementById("confirmDialog");
+//диалоги
+const confirmDialog = document.getElementById("confirmDialog");
+const saveDialog = document.getElementById("saveDialog");
 //боковая панель
 const sidebar = document.getElementById("modulesSidebar");
 
@@ -289,19 +290,30 @@ notificationsBtn.addEventListener('click', (e) => {
 });
 saveProjectBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  /*to do ОТВЕТ ОТ СЕРВЕРА*/
-  //sendNotification("Изменения успешно сохранены", 1);
-  code = 404;//пример
-  sendNotification(`Возникла ошибка: ${code}`, 0);
+  blurDiv.classList.add("blur");
+  saveDialog.showModal();
+});
+function closeSaveDialog() {
+  blurDiv.classList.remove("blur");
+  document.querySelectorAll('.format-file-btn').forEach(btn => {
+    btn.classList.remove('clicked');
+  });
+  saveDialog.close();
+}
+saveDialog.addEventListener("close", () => {
+  blurDiv.classList.remove("blur");
+  document.querySelectorAll('.format-file-btn').forEach(btn => {
+    btn.classList.remove('clicked');
+});
 });
 exitToMainBtn.addEventListener('click', (e) => {
   e.preventDefault();
   blurDiv.classList.add("blur");
-  dialog.showModal();
+  confirmDialog.showModal();
 });
-function closeconfirmDialog() {
+function closeConfirmDialog() {
   blurDiv.classList.remove("blur");
-  dialog.close();
+  confirmDialog.close();
 }
 confirmBtn.addEventListener('click', (e) => {
   e.preventDefault();
@@ -322,7 +334,7 @@ confirmBtn.addEventListener('click', (e) => {
     sendNotification('Ошибка при выходе', 0);
   });
 });
-dialog.addEventListener("close", () => {
+confirmDialog.addEventListener("close", () => {
   blurDiv.classList.remove("blur");
 });
 /*to do ПРИМЕНИТЬ НА ВСЕ БОКОВЫЕ ПО КЛАССУ*/
@@ -359,6 +371,17 @@ function openTechnologicalModules() {
   currentModuleType = 'technological';
   showModules();
 }
+//диалог сохранить
+document.querySelectorAll('.format-file-btn').forEach(button => {
+  button.addEventListener('click', function() {
+      // Удаляем класс у всех кнопок (если нужно только одна активная)
+      document.querySelectorAll('.format-file-btn').forEach(btn => {
+          btn.classList.remove('clicked');
+      });
+      // Добавляем класс к текущей кнопке
+      this.classList.add('clicked');
+  });
+});
 function showModules() {
   typeModulesTitle.innerText = currentModuleType === 'inhabited'
     ? "Обитаемые модули"
