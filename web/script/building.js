@@ -305,8 +305,22 @@ function closeconfirmDialog() {
 }
 confirmBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  blurDiv.classList.remove("blur");
-  window.location.href = "../index.html"
+  fetch('http://localhost:5050/maps/exit', {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(response => {
+    if (response.ok) {
+      blurDiv.classList.remove("blur");
+      window.location.href = "/";
+    } else {
+      throw new Error('Exit failed');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    sendNotification('Ошибка при выходе', 0);
+  });
 });
 dialog.addEventListener("close", () => {
   blurDiv.classList.remove("blur");

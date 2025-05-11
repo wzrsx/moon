@@ -44,3 +44,27 @@ func CreateTokenWithMapID(r *http.Request, mapID string) (string, error) {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaims)
     return token.SignedString(jwtSecretKey)
 }
+// CreateTokenWithoutMapID создает новый токен без map_id (для выхода с карты)
+func CreateTokenWithoutMapID(r *http.Request) (string, error) {
+    // Получаем текущие claims из контекста
+    claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+    if !ok {
+        return "", errors.New("no claims in context")
+    }
+
+    // Создаем копию claims, чтобы не изменять оригинал
+    newClaims := jwt.MapClaims{}
+    for key, val := range claims {
+        // Копируем все поля, кроме map_id
+        if key != "map_id" {
+            newClaims[key] = val
+        }
+    }
+
+    // Обновляем срок действия токена
+    newClaims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+    // Создаем новый токен
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaims)
+    return token.SignedString(jwtSecretKey)
+}

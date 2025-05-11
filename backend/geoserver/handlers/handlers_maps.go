@@ -274,6 +274,28 @@ func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Reque
         "requirements_json": distances,
     })
 }
+func (a *MapsHandlers) ClearMapToken(rw http.ResponseWriter, r *http.Request) {
+    // Генерируем новый токен без map_id
+    tokenString, err := jwt_logic.CreateTokenWithoutMapID(r)
+    if err != nil {
+        a.Logger.Error("Failed to create cleared token", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to clear map token"})
+        return
+    }
+
+    // Устанавливаем новый токен в куки
+    http.SetCookie(rw, &http.Cookie{
+        Name:     "jwt_token",
+        Value:    tokenString,
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   false, //для http
+        SameSite: http.SameSiteStrictMode,
+    })
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+        "message": "Success exit",
+    })
+}
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
