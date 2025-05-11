@@ -454,23 +454,23 @@ modules.forEach(module => {
       // Позиция курсора при зажатии
       startX = e.clientX;
       startY = e.clientY;
-  
-      // Позиция клона (рассчитываем относительно изображения)
+
+      // Позиция клона
       const rect = originalImg.getBoundingClientRect();
       clone.style.left = rect.left + 'px';
       clone.style.top = rect.top + 'px';
-  
+
       document.body.appendChild(clone);
-  
-      // Смещаем клон относительно курсора
-      const shiftX = e.clientX - rect.left;
-      const shiftY = e.clientY - rect.top;
-  
+
+      // Новый расчет смещения 
+      const shiftX = rect.width / 2; 
+      const shiftY = rect.height / 2;
+
       function moveAt(pageX, pageY) {
         clone.style.left = pageX - shiftX + 'px';
         clone.style.top = pageY - shiftY + 'px';
       }
-  
+      
       function onMouseMove(e) {
         moveAt(e.clientX, e.clientY);
       }
