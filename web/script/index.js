@@ -451,7 +451,7 @@ function addMapEventListeners() {
 }
 
 function selectMap(mapId) {
-    fetch(`/maps/redactor?map_id=${mapId}`, {
+    fetch(`/maps/redactor?map_id=${mapId}&is_first_launch=false`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

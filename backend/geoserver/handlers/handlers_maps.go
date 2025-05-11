@@ -62,7 +62,7 @@ func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request)
     // 6. Успешный ответ
     respondWithJSON(rw, http.StatusCreated, map[string]string{
         "map_id":       newMap.MapID,
-        "redirect_url": "/maps/redactor?map_id=" + newMap.MapID,
+        "redirect_url": "/maps/redactor?map_id=" + newMap.MapID + "?is_first_launch=true",
     })
 }
 func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
@@ -73,7 +73,8 @@ func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request)
         respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Map ID is required"})
         return
     }
-
+	isFirstLaunch := r.URL.Query().Get("is_first_launch")
+	firstLaunch := isFirstLaunch == "true"
     // Создаем новый JWT с map_id или обновляем существующий
     tokenString, err := jwt_logic.CreateTokenWithMapID(r, id_map)
     if err != nil {
@@ -93,10 +94,16 @@ func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request)
         Expires:  time.Now().Add(time.Hour * 72), // Явно устанавливаем срок действия
     })
 
-    // Перенаправляем на выбор места
-	respondWithJSON(rw, http.StatusOK, map[string]string{
-        "redirect_url": "/maps/redactor/page",
-    })
+    // Перенаправляем на выбор места или сразу карту
+	if firstLaunch {
+        respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+            "redirect_url": "/maps/redactor/page",
+        })
+    } else {
+        respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+            "redirect_url": "/maps/redactor/page/map",
+        })
+    }
 }
 func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
