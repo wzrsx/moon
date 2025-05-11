@@ -88,3 +88,42 @@ func CreateMap(user_id string, name_map string, pool *pgxpool.Pool) (Map, error)
         MapCreated: created_at.Format(time.RFC3339),
     }, nil
 }
+
+func TakeMaps(user_id string, pool *pgxpool.Pool) ([]Map, error) {
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	// Исправленный запрос:
+	rows, err := conn.Query(context.Background(),
+		"SELECT id, name_map, created_at FROM maps WHERE user_id = $1",
+		user_id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var maps []Map
+	for rows.Next() {
+		var m Map
+		var tempTime time.Time
+		if err := rows.Scan(
+			&m.MapID,
+			&m.MapName,
+			&tempTime,
+		); err != nil {
+			return nil, err
+		}
+		m.UserID = user_id
+		m.MapCreated = tempTime.Format(time.RFC3339)
+		maps = append(maps, m)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return maps, nil
+}

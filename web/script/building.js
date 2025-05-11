@@ -1343,12 +1343,16 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
 
   // 5. Сохраняем состояние
   ctx.save();
-  if (!greenZone) {
+  if (!greenZone && redZone) {
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = 'black';
     ctx.beginPath();
     processCoordinates(redZone, ctx, projectToCanvas);
     ctx.fill();
+  }
+  else if (!greenZone) {
+    // Если нет зеленой зоны (и возможно нет красной) - просто оставляем изображение как есть
+    // Ничего не делаем, уже нарисовали исходное изображение
   }
   else if (onlyGreenInZone) {
     // Режим только зеленые зоны - делаем прозрачным все вне зеленых зон

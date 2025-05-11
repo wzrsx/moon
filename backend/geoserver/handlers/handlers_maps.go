@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 
@@ -64,50 +66,37 @@ func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request)
     })
 }
 func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
-	if !ok {
-		a.Logger.Error("No claims in context")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
-		return
-	}
+    // Получаем ID карты из query параметров, а не из JWT
+    id_map := r.URL.Query().Get("map_id")
+    if id_map == "" {
+        a.Logger.Error("Map ID not provided")
+        respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Map ID is required"})
+        return
+    }
 
-	id_map, ok := claims["map_id"].(string)
-	if !ok {
-		a.Logger.Error("User ID not found in claims")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
-		return
-	}
+    // Создаем новый JWT с map_id или обновляем существующий
+    tokenString, err := jwt_logic.CreateTokenWithMapID(r, id_map)
+    if err != nil {
+        a.Logger.Error("Failed to create token", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to create token"})
+        return
+    }
 
-	// Возвращаем JSON с ID карты
+    // Устанавливаем токен в куки
+    http.SetCookie(rw, &http.Cookie{
+        Name:     "jwt_token",
+        Value:    tokenString,
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   false, //для http
+        SameSite: http.SameSiteStrictMode,
+        Expires:  time.Now().Add(time.Hour * 72), // Явно устанавливаем срок действия
+    })
+
+    // Перенаправляем на выбор места
 	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"map_id":       id_map,
-		"redirect_url": "/geoserver/redactor", // Добавляем URL для редиректа
-	})
-}
-
-// Отдельный обработчик для рендеринга HTML
-func (a *MapsHandlers) RenderChoosePlace(rw http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
-	if !ok {
-		a.Logger.Error("No claims in context")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
-		return
-	}
-
-	id_map, ok := claims["map_id"].(string)
-	if !ok {
-		a.Logger.Error("Map ID not found in claims")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
-		return
-	}
-
-	tmpl := template.Must(template.ParseFiles("web/pages/choose_place.html"))
-	err := tmpl.Execute(rw, id_map)
-	if err != nil {
-		a.Logger.Error("Template error geoserver editor", zap.Error(err))
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error geoserver editor"})
-		return
-	}
+        "redirect_url": "/maps/redactor/page",
+    })
 }
 func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
@@ -132,6 +121,57 @@ func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request
 		return
 	}
 }
+func (a *MapsHandlers) TakeMaps(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		return
+	}
+
+	id_user, ok := claims["user_id"].(string)
+	if !ok {
+		a.Logger.Error("User ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
+
+	maps, err := queries_maps.TakeMaps(id_user, a.Pool)
+	if err != nil {
+		a.Logger.Error("Error querying maps", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Error query to get maps: %v", err),
+		})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, maps)
+}
+// Отдельный обработчик для рендеринга HTML
+func (a *MapsHandlers) RenderChoosePlace(rw http.ResponseWriter, r *http.Request) {
+    claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+    if !ok {
+        a.Logger.Error("No claims in context")
+        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
+        return
+    }
+
+    id_map, ok := claims["map_id"].(string)
+    if !ok {
+        a.Logger.Error("Map ID not found in claims")
+        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+        return
+    }
+
+    tmpl := template.Must(template.ParseFiles("web/pages/choose_place.html"))
+    err := tmpl.Execute(rw, id_map)
+    if err != nil {
+        a.Logger.Error("Template error", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error"})
+        return
+    }
+}
+
 func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
@@ -173,7 +213,6 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
 		return
 	}
-
 	module := queries_maps.NewModule()
 	err := json.NewDecoder(r.Body).Decode(&module)
 
@@ -209,7 +248,6 @@ func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.R
         })
         return
     }
-	log.Println(requirements)
     
     // Отправляем успешный ответ
     respondWithJSON(rw, http.StatusOK, map[string]interface{}{

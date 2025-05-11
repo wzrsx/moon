@@ -152,6 +152,38 @@ body{
     border-radius: 10px;
     height: 50px;
 }
+.show-projects-section{
+    overflow-y: auto;
+    height: 75%;
+    margin-top: 5px;
+}
+.project-item{
+    width: 95%;
+    border-radius: 15px;
+    height: 70px;
+    background-color: #eef6fd;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+}
+.project-item:hover{
+    background-color: #cecece;
+}
+.project-name{
+
+}
+.project-date{
+
+}
+.project-delete{
+}
 .header-menu {
     list-style: none;
     display: flex;
