@@ -31,10 +31,13 @@ function loadModules() {
       const vectorSource = new ol.source.Vector();
       const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
-        style: createModuleStyleFunction(),
+        style: function (feature, resolution) {
+          const currentZoom = map.getView().getZoom(); // <-- Получаем текущий зум карты
+          return createModuleStyleFunction(currentZoom)(feature, resolution);
+        },
         zIndex: 5
       });
-
+      vectorLayer.set('name', 'modules_layer');
       modules.forEach(module => {
         // Координаты уже в метрах (EPSG:100000)
         const [x, y] = module.points;
@@ -66,16 +69,16 @@ function loadModules() {
     .catch(console.error);
 }
 // Функция создания стиля для модулей
-function createModuleStyleFunction() {
+function createModuleStyleFunction(zoom) {
+  console.log("zoom in createModuleStyleFunction", zoom);
   return function (feature, resolution) {
-    const zoom = map.getView().getZoom();
     const habitationType = feature.get('habitation');
     const moduleType = feature.get('type');
     const styles = [];
     // Путь к иконке модуля
     const iconPath = `/static/style/photos/modules_compressed/${moduleType}.png`; 
 
-    const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
+      const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
 
     if (zoom >= 17) {
       // Создание стиля для зоны вокруг модуля
@@ -170,7 +173,10 @@ function addModuleToMap(moduleData) {
     const vectorSource = new ol.source.Vector();
     const vectorLayer = new ol.layer.Vector({
       source: vectorSource,
-      style: createModuleStyleFunction(),
+      style: function (feature, resolution) {
+        const currentZoom = map.getView().getZoom(); // <-- Получаем текущий зум карты
+        return createModuleStyleFunction(currentZoom)(feature, resolution);
+      },
       zIndex: 5
     });
     
