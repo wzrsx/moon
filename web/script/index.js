@@ -345,7 +345,7 @@ function isPassValid(value, field, input) {
             return response.json();
         })
         .then(data => {
-            selectMap(data.map_id);
+            selectMap(data.map_id, true);
         })
         .catch(error => {
             console.error('Ошибка:', error);
@@ -434,7 +434,7 @@ function addMapEventListeners() {
             // Проверяем, что клик не по кнопке удаления
             if (!e.target.closest('.project-delete')) {
                 const mapId = item.dataset.mapId;
-                selectMap(mapId); // Ваша функция для открытия карты
+                selectMap(mapId, false); // Ваша функция для открытия карты
             }
         });
 
@@ -450,8 +450,8 @@ function addMapEventListeners() {
     });
 }
 
-function selectMap(mapId) {
-    fetch(`/maps/redactor?map_id=${mapId}&is_first_launch=false`, {
+function selectMap(mapId, is_first_launch) {
+    fetch(`/maps/redactor?map_id=${mapId}&is_first_launch=${is_first_launch}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
