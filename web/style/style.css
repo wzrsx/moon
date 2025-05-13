@@ -10,6 +10,7 @@
     font-weight: 400; 
     font-style: normal;
 }
+
 .forget-pass-dialog{
     font-family: 'Jura';
     width: 100%;
@@ -409,15 +410,19 @@ h3{
     display: flex;
     flex-direction: column;
     width: 20%;
-    background-color: rgba(255, 255, 255, 0.55);
+    background-color: white;
     align-items: center;
     border-bottom-left-radius: 15px; 
     border-bottom-right-radius: 15px; 
     border-top-left-radius: 15px; 
     padding-top: 50px;
     padding-bottom: 50px;
-    margin-right: 25px;
+    margin-right: 70px;
+    margin-top: 5px;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dropdown-menu:hover {
+    background-color: #ff8a8a; /* Цвет фона при наведении */
 }
 /*появление меню*/
 .burger-checkbox:checked ~ .dropdown-menu {
@@ -446,7 +451,7 @@ h3{
 .dropdown-menu-btn{
     display: flex;
     width: 70%;
-    background-color: #c0c0c0e0;
+    background-color: #948b99e0;
     text-align: left; 
     align-items: center;
     margin-top: 15px;
@@ -667,6 +672,7 @@ h3{
     margin: 1% 5%;
     transition: all 0.4s ease-out;
     overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .modules-back-button {
@@ -680,27 +686,43 @@ h3{
 }
 
 .modules-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 колонки одинаковой ширины */
-    grid-template-rows: repeat(3, 1fr);
-    gap: 20px;
-    overflow-y: auto;
-    max-height: calc(100% - 30px);
+    display: flex; /* Используем Flexbox */
+    flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
+    gap: 20px; /* Промежуток между элементами */
+    overflow-y: auto; /* Вертикальная прокрутка, если содержимое превышает высоту */
+    max-height: calc(100% - 30px); /* Максимальная высота */
 }
 
-.item-module{
-    padding: 7px;
+.item-module {
+    display: flex; /* Используем Flexbox для центрирования содержимого */
+    flex-direction: column; /* Вертикальное расположение содержимого */
+    align-items: center; /* Центрирование по горизонтали */
+    justify-content: center; /* Центрирование по вертикали */
+    width: calc(33.33% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    padding: 10px;
+    aspect-ratio: 4/3.3;
     background-color: #F8FEFF;
     border-radius: 10px;
-    aspect-ratio: 4/3.3;
     cursor: pointer;
+    min-width: 0; /* Позволяет элементу сжиматься */
 }
-.photo-item-module{
+
+.photo-item-module {
     border-radius: 5px;
+    width: 100%; /* Задает ширину изображения 100% от родительского элемента */
+    height: 90%;
+    object-fit: cover;
 }
-.name-module{
+
+.name-module {
+    display: flex; /* Используем Flexbox */
+    align-items: flex-end; /* Выравнивание по вертикали к низу */
     font-size: 20px;
+    word-wrap: break-word; /* Позволяет переносить длинные слова */
+    overflow-wrap: break-word; /* Современный аналог word-wrap */
+    white-space: normal; /* Убедитесь, что текст может переноситься */
 }
+
 
 /*уведы список*/
 .notification-item{
