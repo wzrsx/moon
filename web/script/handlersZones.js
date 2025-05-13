@@ -1,5 +1,32 @@
+
+let checkboxBbox;
+let toggleBtn;
+let inputsExtent;
+let arrow;
+let inputsBbox;
 document.addEventListener('DOMContentLoaded', function() {
   const place = sessionStorage.getItem('temp_selected_place');
+  checkboxBbox = document.getElementById('bboxUserMapExport');
+  toggleBtn = document.getElementById('toggleExtentButton');
+  inputsExtent = document.getElementById('customExtentInputs');
+  arrow = toggleBtn.querySelector('.toggle-extent-arrow');
+  inputsBbox = document.getElementById('customBboxInputs');
+
+  checkboxBbox.addEventListener('change', function () {
+    inputsBbox.style.display = this.checked ? 'block' : 'none';
+    toggleBtn.style.display = this.checked ? 'none' : 'flex';
+    if (!this.checked) {
+        arrow.classList.remove('collapsed');
+    }
+    inputsExtent.style.display = 'none';
+    updateDialogHeight();
+});
+  toggleBtn.addEventListener('click', () => {
+    const isVisible = inputsExtent.style.display === 'block';
+    inputsExtent.style.display = isVisible ? 'none' : 'block';
+    updateDialogHeight();
+    arrow.classList.toggle('collapsed', !isVisible);
+});
   if (place) {
       // Ждём, пока карта точно будет готова
       const checkMapReady = setInterval(() => {
@@ -54,3 +81,18 @@ function toggleLayer(layerName, isVisible) {
       layer.setOpacity(isVisible ? 0.7 : 0)
     }
 };
+
+function updateDialogHeight() {
+  const bboxVisible = checkboxBbox.checked;
+  const extentVisible = inputsExtent.style.display === 'block';
+
+  if (bboxVisible && extentVisible) {
+      saveDialog.style.height = '80%';
+  } else if (bboxVisible) {
+      saveDialog.style.height = '60%';
+  } else if(extentVisible){
+      saveDialog.style.height = '60%'; 
+  }else{
+    saveDialog.style.height = ''; // или '50%' как базовое значение
+}
+}

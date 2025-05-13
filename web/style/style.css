@@ -521,6 +521,7 @@ h3{
     padding-top: 10px;
     box-sizing: border-box;
     animation: dialogFadeIn 0.3s ease-out forwards;
+    transition: height 0.5s ease;
 }
 .content-confirm-dialog{
     height: 100%;
@@ -1164,4 +1165,103 @@ h3{
 
 .pdf-btn {
     background-image: url('logo/pdf.png');
+}
+.parametrs-to-export p{
+    font-size: 18px;
+    color: white;
+}
+.save-inputs-group {
+    border: 2px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background-color: transparent;
+}   
+.save-inputs-group label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+.extent-inputs-row {
+    display: grid;
+    grid-template-columns: 1fr auto; 
+    gap: 10px;
+    align-items: center;
+    margin: 0 auto;
+    width: 95%;
+}
+.input-wrapper {
+    width: 45%;
+}
+.input-wrapper input {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+}
+.bbox-inputs-row input::placeholder, .extent-inputs-row input::placeholder {
+    color: white; 
+    opacity: 1;
+}
+.bbox-inputs-row input::-webkit-input-placeholder, .extent-inputs-row input::-webkit-input-placeholder {
+    color: white;
+}
+.toggle-extent-arrow{
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 10px;
+    vertical-align: middle;
+    padding: 0 !important;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid #ffffff;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.collapsed .toggle-arrow {
+    transform: rotate(180deg);
+}
+.checkbox-user-bbox{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.extent-label-text{
+    text-align: left !important;
+}
+.checkbox-user-bbox label{
+    color: black;
+}
+.checkbox-user-bbox input[type="checkbox"] {
+    margin-right: 5px;
+}
+.percent-value {
+    display: inline-block;
+    font-family: monospace; /* выравнивание цифр */
+}
+.bbox-inputs-row span, .extent-inputs-row span{
+    padding: 0;
+}
+.bbox-inputs-row label, .extent-inputs-row label{
+    width: 50%;
+    text-align: end;
+}
+.label-value {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr; 
+    gap: 2px;
+}
+.bbox-inputs-row {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-around;
 }

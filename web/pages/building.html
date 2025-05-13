@@ -310,13 +310,90 @@
                 <p>Выберите формат</p>
             </div>
             <div class="formats-files">
-                <button class="format-file-btn png-btn"></button>
-                <button class="format-file-btn json-btn"></button>
-                <button class="format-file-btn pdf-btn"></button>
+                <button class="format-file-btn png-btn" onclick="showParametrsPNG()"></button>
+                <button class="format-file-btn json-btn" onclick="selectJSON()"></button>
+                <button class="format-file-btn pdf-btn" onclick="showParametrsPDF()"></button>
             </div>
+            <div class="parametrs-to-export" style="display: none;" id="parametrsToExportPNG">
+                <p>Карта будет сохранена по крайним точкам модулей</p>
+                <div class="checkbox-user-bbox">
+                    <input type="checkbox" name="" id="bboxUserMapExport" class="user-bbox">
+                    <label for="bboxUserMapExport">Использовать свои границы</label>
+                </div>
+                <div id="customBboxInputs" style="display: none; margin-top: 15px;">
+                    <div class="save-inputs-group">
+                        <label>Координаты X</label>
+                        <div class="bbox-inputs-row">
+                            <div class="input-wrapper">
+                                <input type="number" id="x1Input" name="x1" placeholder="X1">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="x2Input" name="x2" placeholder="X2">
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="save-inputs-group">
+                        <label>Координаты Y</label>
+                        <div class="bbox-inputs-row">
+                            <div class="input-wrapper">
+                                <input type="number" id="y1Input" name="y1" placeholder="Y1">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="y2Input" name="y2" placeholder="Y2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; cursor: pointer; justify-content: center; margin-bottom: 10px;" id="toggleExtentButton">
+                    <p style="margin: 0;">Вы можете настроить отступ до края изображения</p>
+                    <span class="toggle-extent-arrow"></span>
+                </div>
+            
+                    <div id="customExtentInputs" style="display: none; margin-top: 15px;">
+                        <div class="save-inputs-group">
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ сверху:</span>
+                                    <span class="percent-value" id="topVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginTop">
+                            </div>
+                        
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ снизу:</span>
+                                    <span class="percent-value" id="bottomVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginBottom">
+                            </div>
+                        </div>
+                    
+                        <div class="save-inputs-group">
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ справа:</span>
+                                    <span class="percent-value" id="rightVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginRight">
+                            </div>
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ слева:</span>
+                                    <span class="percent-value" id="leftVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginLeft">
+                            </div>
+                        </div>
+                    </div>
+            </div>       
             <div class="confirm-dialog-btns btns">
                 <button id="cancelSaveBtn" onclick="closeSaveDialog()">Отмена</button>
-                <button id="saveBtn">Сохранить</button>
+                <button id="saveBtn" onclick="exportMapToSelectedFormat()">Сохранить</button>
             </div>
         </div>
     </dialog>

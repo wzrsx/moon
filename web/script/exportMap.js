@@ -1,35 +1,42 @@
 let loadedImagesCache = {};
+let extent;
+let selectedFormat;
 async function exportMapToPNG() {
-    // Проверяем, есть ли модули
-    if (!cachedModules || cachedModules.length === 0) {
+  extent = map.getView().get('extent');
+  // Проверяем, есть ли модули
+  if (!cachedModules || cachedModules.length === 0) {
       alert('Нет модулей для экспорта');
       return;
-    }
-  
-    // Находим границы всех модулей
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-  
-    cachedModules.forEach(module => {
+  }
+
+  // Находим границы всех модулей
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  cachedModules.forEach(module => {
       const [x, y] = module.points;
       minX = Math.min(minX, x);
       minY = Math.min(minY, y);
       maxX = Math.max(maxX, x);
       maxY = Math.max(maxY, y);
-    });
-  
-    // Добавляем буфер
-    const buffer = 10000; // 10 км
-    minX -= buffer;
-    minY -= buffer;
-    maxX += buffer;
-    maxY += buffer;
-  
-    const width = 2000;
-    const height = Math.round(width * (maxY - minY) / (maxX - minX));
-    const extent = [minX, minY, maxX, maxY];
+  });
+
+  // 1. Свои границы (координаты X1, X2, Y1, Y2)
+  if (checkboxBbox && checkboxBbox.checked) {
+      extent = getUserBboxValues();
+  } 
+  // 2. Отступы в процентах (если блок видим)
+  else if (inputsExtent && inputsExtent.style.display === 'block') {
+      extent = calculateExtentWithMargins(minX, minY, maxX, maxY);
+  } 
+  // 3. Стандартный буфер
+  else {
+      const buffer = 1000; // 1 км
+      extent = [minX - buffer, minY - buffer, maxX + buffer, maxY + buffer];
+  }
+
+  // Вычисляем размеры изображения
+  const width = 2000;
+  const height = Math.round(width * (extent[3] - extent[1]) / (extent[2] - extent[0]));
     try {
       // Загружаем слои как изображения
       const ldem_img = await getImageMap('LDEM_83S_10MPP_ADJ', extent);
@@ -49,16 +56,29 @@ async function exportMapToPNG() {
   
       const source = modulesLayer.getSource();
       const features = source.getFeatures();
-  
-      const view = map.getView();
-      const exportZoom = 14;
-      const resolution = (extent[2] - extent[0]) / width;
-  
-      // Предзагрузка иконок
-      await preloadIcons(features, createModuleStyleFunction, exportZoom, resolution);
-  
-      // Отрисовываем векторные объекты
-      drawVectorLayerOnCanvas(resultCanvas, map, extent);
+      // Проверяем, есть ли объекты, пересекающиеся с текущим extent
+      const hasIntersectingFeature = features.some(feature => {
+        const geometry = feature.getGeometry();
+        if (!geometry) return false;
+
+        // Пример грубой проверки: бокс пересечения
+        const featureExtent = geometry.getExtent();
+        return ol.extent.intersects(extent, featureExtent);
+      });
+      if (hasIntersectingFeature) {
+        // Только если есть пересекающиеся модули — рисуем
+        const view = map.getView();
+        const exportZoom = 14;
+        const resolution = (extent[2] - extent[0]) / width;
+
+        // Предзагрузка иконок
+        await preloadIcons(features, createModuleStyleFunction, exportZoom, resolution);
+
+        // Отрисовываем векторные объекты
+        drawVectorLayerOnCanvas(resultCanvas, map, extent);
+      } else {
+        console.log('Нет модулей в указанном охвате — слой модулей не рисуется');
+      }
   
       // Скачиваем результат
       const link = document.createElement('a');
@@ -154,18 +174,17 @@ function drawVectorLayerOnCanvas(canvas, map, extent) {
   const source = modulesLayer.getSource();
   const features = source.getFeatures();
 
-  const mapExtent = extent;
   const canvasWidth = canvas.width;
   const canvasHeight = canvas.height;
   // Простое проецирование: преобразование координат в пиксели
   function coordinateToPixel(coord) {
-    const x = ((coord[0] - mapExtent[0]) / (mapExtent[2] - mapExtent[0])) * canvasWidth;
-    const y = ((mapExtent[3] - coord[1]) / (mapExtent[3] - mapExtent[1])) * canvasHeight;
+    const x = ((coord[0] - extent[0]) / (extent[2] - extent[0])) * canvasWidth;
+    const y = ((extent[3] - coord[1]) / (extent[3] - extent[1])) * canvasHeight;
     return [x, y];
   }
 
   // Текущее разрешение (для выбора стиля)
-  const resolution = (mapExtent[2] - mapExtent[0]) / canvasWidth;
+  const resolution = (extent[2] - extent[0]) / canvasWidth;
   const zoom = Math.round(view.getZoomForResolution(resolution));
   console.log("zoom", zoom);
   features.forEach(feature => {
@@ -342,3 +361,232 @@ function preloadIcons(features, createStyleFunction, zoom, resolution) {
 
   return Promise.all(promises);
 }
+    // Элементы отступов
+const ranges = {
+    marginTop: { valEl: document.getElementById('topVal') },
+    marginRight: { valEl: document.getElementById('rightVal') },
+    marginBottom: { valEl: document.getElementById('bottomVal') },
+    marginLeft: { valEl: document.getElementById('leftVal') }
+};
+Object.keys(ranges).forEach(id => {
+  const input = document.getElementById(id);
+  input.addEventListener('input', function () {
+      ranges[id].valEl.textContent = parseFloat(this.value).toFixed(1);
+  });
+});
+
+function getUserBboxValues() {
+  const MAX_ABS_VALUE = Math.max.apply(Math, extent);
+  const inputs = [
+      { id: 'x1Input', name: 'Min X' },
+      { id: 'x2Input', name: 'Max X' },
+      { id: 'y1Input', name: 'Min Y' },
+      { id: 'y2Input', name: 'Max Y' }
+  ];
+
+  const values = {};
+  let isValid = true;
+
+  // Проверка всех инпутов
+  inputs.forEach(inputConfig => {
+      const inputElement = document.getElementById(inputConfig.id);
+      const value = parseFloat(inputElement.value);
+      values[inputConfig.id] = value;
+
+      // Проверка на число
+      if (isNaN(value)) {
+          showError(inputElement, 'Введите число');
+          isValid = false;
+          return;
+      }
+
+      // Проверка глобального охвата карты
+      if (Math.abs(value) > MAX_ABS_VALUE) {
+          showError(inputElement, `Значение должно быть между ${-MAX_ABS_VALUE} и ${MAX_ABS_VALUE}`);
+          isValid = false;
+          return;
+      }
+      // Проверка текущего охвата карты
+      if (inputConfig.id === 'x1Input' && value < extent[0]) {
+          showError(inputElement, `Min X не может быть меньше ${extent[0]}`);
+          isValid = false;
+          return;
+      }
+
+      if (inputConfig.id === 'x2Input' && value > extent[2]) {
+          showError(inputElement, `Max X не может быть больше ${extent[2]}`);
+          isValid = false;
+          return;
+      }
+
+      if (inputConfig.id === 'y1Input' && value < extent[1]) {
+          showError(inputElement, `Min Y не может быть меньше ${extent[1]}`);
+          isValid = false;
+          return;
+      }
+
+      if (inputConfig.id === 'y2Input' && value > extent[3]) {
+          showError(inputElement, `Max Y не может быть больше ${extent[3]}`);
+          isValid = false;
+          return;
+      }
+
+      hideError(inputElement);
+  });
+
+  // Проверка соотношений Min/Max
+  if (values.x1Input >= values.x2Input) {
+      showError(document.getElementById('x1Input'), 'Min X должен быть меньше Max X');
+      showError(document.getElementById('x2Input'), 'Max X должен быть больше Min X');
+      isValid = false;
+  }
+
+  if (values.y1Input >= values.y2Input) {
+      showError(document.getElementById('y1Input'), 'Min Y должен быть меньше Max Y');
+      showError(document.getElementById('y2Input'), 'Max Y должен быть больше Min Y');
+      isValid = false;
+  }
+
+  if (!isValid) return null;
+
+  return [
+      values.x1Input,
+      values.y1Input,
+      values.x2Input,
+      values.y2Input
+  ];
+}
+// Функция для отображения ошибки под инпутом
+function showError(inputElement, message) {
+    const wrapper = inputElement.closest('.input-wrapper');
+    let errorDiv = wrapper.querySelector('.input-error');
+    inputElement.style.borderColor = '#8b0000';
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.className = 'input-error';
+        errorDiv.style.cssText = 'color: #8b0000; font-size: 14px; height: 12px;';
+        wrapper.appendChild(errorDiv);
+    }
+
+    errorDiv.textContent = message;
+}
+
+// Функция для скрытия ошибки
+function hideError(inputElement) {
+  const wrapper = inputElement.closest('.input-wrapper');
+  let errorDiv = wrapper.querySelector('.input-error');
+  if (errorDiv) {
+    errorDiv.textContent = '';
+  }
+  inputElement.style.borderColor = 'white';
+}
+function calculateExtentWithMargins(minX, minY, maxX, maxY) {
+  // Получаем значения отступов
+  const top = parseFloat(document.getElementById('marginTop').value);
+  const right = parseFloat(document.getElementById('marginRight').value);
+  const bottom = parseFloat(document.getElementById('marginBottom').value);
+  const left = parseFloat(document.getElementById('marginLeft').value);
+
+  // Вычисляем размеры исходного прямоугольника
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  // Применяем отступы
+  const newMinX = minX - (width * left / 100);
+  const newMinY = minY - (height * bottom / 100);
+  const newMaxX = maxX + (width * right / 100);
+  const newMaxY = maxY + (height * top / 100);
+
+  // Ограничиваем полученные значения
+  const clampedExtent = [
+      Math.max(extent[0], newMinX),
+      Math.max(extent[1], newMinY),
+      Math.min(extent[2], newMaxX),
+      Math.min(extent[3], newMaxY)
+  ];
+
+  return clampedExtent;
+}
+
+//для JSON экспорта
+function exportMapToJSON(){
+  if(!cachedInfoModules){
+    alert("Не удалось получить информацию о модулях");
+    return;
+  }
+  if(!cachedModules){
+    alert("Сначала разместите хотя бы 1 модуль");
+    return;
+  }
+  const jsonStr = JSON.stringify(mergeModuleData(), null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'modules_export.json';
+  link.click();
+}
+function mergeModuleData() {
+  const infoMap = new Map();
+  cachedInfoModules.forEach(info => {
+      infoMap.set(info.module_type, info);
+  });
+  // Объединяем данные
+  const modules = cachedModules.map(module => {
+    const info = infoMap.get(module.module_type);
+
+    if (!info) {
+        console.warn(`Нет информации для module_type: ${module.module_type}`);
+        return null;
+    }
+
+    return {
+        module_type: module.module_type,
+        habitation_type: module.habitation_type,
+        points: module.points,
+        module_name: info.module_name,
+        description: info.description,
+        length_meters: info.length_meters,
+        width_meters: info.width_meters,
+        max_slope_degrees: info.max_slope_degrees
+    };
+  }).filter(Boolean); // Убираем null
+  return {
+    name_map: "mapName",//to do
+    modules: modules
+  }
+};
+
+// Функции для выбора формата
+function selectJSON() {
+  document.getElementById('parametrsToExportPNG').style.display = 'none';
+  selectedFormat = 'json';
+}
+//to do
+function showParametrsPDF() {
+  selectedFormat = 'pdf';
+}
+function showParametrsPNG(){
+    selectedFormat = 'png';
+    document.getElementById('parametrsToExportPNG').style.display = 'block';
+}
+function exportMapToSelectedFormat(){
+  if (!selectedFormat) {
+    alert('Пожалуйста, выберите формат для экспорта');
+    return;
+  }
+
+  switch(selectedFormat) {
+      case 'png':
+          exportMapToPNG();
+          break;
+      case 'json':
+          exportMapToJSON();
+          break;
+      case 'pdf':
+          exportMapToPDF();
+          break;
+      default:
+          alert('Выбран неизвестный формат');
+  }
+}
+
