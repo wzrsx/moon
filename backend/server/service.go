@@ -46,6 +46,7 @@ func (s *MoonServiceServer) AddHandlers() *mux.Router {
 	r.Handle("/maps/redactor/page/save_module", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.SaveModule))).Methods("POST")
 	r.Handle("/maps/redactor/page/take_modules_requirements", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesRequirements))).Methods("POST")
 	r.Handle("/maps/redactor/page/take_modules_distance", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesDistance))).Methods("POST")
+	r.Handle("/maps/redactor/page/composite-render", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.CompositeRender))).Methods("GET")
 
 	// Статические файлы (если Nginx не обрабатывает)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",

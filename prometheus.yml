@@ -1,0 +1,6 @@
+scrape_configs:
+  - job_name: 'geoserver'
+    static_configs:
+      - targets: ['geoserver:8081']
+    scrape_interval: 15s
+    metrics_path: '/metrics'

@@ -554,6 +554,12 @@ proj4.defs("EPSG:100000",
   'UNIT["metre",1],' +
   'AUTHORITY["EPSG","100000"]]'
 );
+const moonProjection = ol.proj.get('EPSG:100000') || new ol.proj.Projection({
+  code: 'EPSG:100000',
+  extent: [-216400, -216400, 216400, 216400],
+  worldExtent: [-216400, -216400, 216400, 216400]
+});
+ol.proj.addProjection(moonProjection);
 ol.proj.proj4.register(proj4);
 
 // 2. Настройка полноэкранной карты
@@ -570,22 +576,21 @@ const map = new ol.Map({
 });
 
 // 3. Функция создания полноэкранных слоев
-const createFullscreenLayer = (layerName, opacity, zIndex) => {
-  return new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'http://localhost:8080/geoserver/moon_workspace/wms',
+const createCompositeLayer = (layerName, opacity = 1.0, zIndex = 0) => {
+  return new ol.layer.Tile({
+    source: new ol.source.TileWMS({
+      url: '/maps/redactor/page/composite-render',
       params: {
-        'LAYERS': `moon_workspace:${layerName}`,
-        'VERSION': '1.3.0',
-        'CRS': 'EPSG:100000',
+        'LAYERS': layerName,
+        'VERSION': '1.1.1',
         'FORMAT': 'image/png',
         'TRANSPARENT': true,
-        'WIDTH': Math.floor(window.innerWidth * 1.5),
-        'HEIGHT': Math.floor(window.innerHeight * 1.5)
+        'SRS': 'EPSG:100000'
       },
       serverType: 'geoserver',
-      ratio: 1,
-      hidpi: false
+      crossOrigin: 'anonymous',
+      tileSize: 512, // Оптимальный размер тайла
+      cacheSize: 100 // Кэширование тайлов
     }),
     opacity: opacity,
     zIndex: zIndex
@@ -594,10 +599,10 @@ const createFullscreenLayer = (layerName, opacity, zIndex) => {
 
 // 4. Создание и добавление слоев
 // Слои в правильном порядке:
-const ldem = createFullscreenLayer('ldem-83s', 1.0, 1);
-const ldsm = createFullscreenLayer('ldsm-83s', 0.3, 2);
-const hillshade = createFullscreenLayer('ldem-hill', 0.6, 3);
-const greenLayer = createFullscreenLayer('cmps_5deg', 0, 4);
+const ldem = createCompositeLayer('ldem-83s', 1.0, 1);
+const ldsm = createCompositeLayer('ldsm-83s', 0.3, 2);
+const hillshade = createCompositeLayer('ldem-hill', 0.6, 3);
+const greenLayer = createCompositeLayer('cmps_5deg', 0, 4);
 
 // 4. Добавляем слои на карту
 map.addLayer(ldem);
@@ -762,7 +767,7 @@ const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
   fetch(url, { signal: lastElevationController.signal })
     .then(response => {
       if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
+      return response.blob();
     })
     .then(data => {
       let elevationText;

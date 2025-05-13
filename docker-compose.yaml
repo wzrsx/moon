@@ -26,12 +26,19 @@ services:
       - GEOSERVER_ADMIN_PASSWORD=geoserver
       - GEOSERVER_ADMIN_USER=admin
       - GEOWEBCACHE_CACHE_DIR=/opt/geoserver/data_dir/gwc
+      - "JAVA_TOOL_OPTIONS=-javaagent:/opt/jmx-exporter.jar=8081:/opt/config.yml -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+      - "GEOSERVER_JAVA_OPTS=-Xms512m -Xmx2048m -XX:MaxMetaspaceSize=512m" #GEOSERVER_JAVA_OPTS=-Xms2G -Xmx4G -XX:SoftRefLRUPolicyMSPerMB=36000
+      - ENABLE_JSONP=true
+      - DISABLE_GWC=true # Отключить GeoWebCache если не используется
     volumes:
+      - ./config.yml:/opt/config.yml
+      - ./jmx_prometheus_javaagent-0.17.2.jar:/opt/jmx-exporter.jar
       - geoserver_data:/opt/geoserver/data_dir
       - ./maps:/maps  # Подключаем вашу папку с картами
       - ./backend/geoserver/customization/epsg.properties:/opt/geoserver/data_dir/user_projections/epsg.properties
     ports:
       - "8080:8080"
+      - "8081:8081"  # Порт для JMX Exporter
     depends_on:
       postgis:
         condition: service_healthy
@@ -75,6 +82,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 15
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Установите пароль для администратора
+    depends_on:
+      - prometheus
+    restart: unless-stopped
 
 
 volumes:

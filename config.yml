@@ -1,0 +1,10 @@
+rules:
+- pattern: '.*'  # Базовые JVM-метрики
+
+# Специфичные для GeoServer метрики
+- pattern: 'org.geoserver<name=global>(.*):'
+  name: 'geoserver_$1'
+
+# Tomcat метрики (если используется)
+- pattern: 'Catalina<type=ThreadPool, name="(.*)">(.*):'
+  name: 'tomcat_$1_$2'
