@@ -11,6 +11,111 @@
     font-style: normal;
 }
 
+.forget-pass-dialog{
+    font-family: 'Jura';
+    width: 100%;
+    height: 75%;
+    border-radius: 15px;
+    padding: 10px;
+    background: linear-gradient(to bottom, #B2A2B3, #6F6470);
+    overflow: hidden;
+    animation: dialogFadeIn 0.3s ease-out forwards;
+    box-sizing: border-box;
+    margin: auto;
+}
+.forget-pass-dialog form button{
+    background-color: #E1EDF9;
+    border-radius: 15px;
+    height: 80px;
+    font-size: 44px;
+}
+.submitBtnForgetPass{
+    margin: 0 auto;
+    margin-top: 2vh;
+}
+.forget-pass-dialog button{
+    display: block;
+}
+.content-forget-pass-dialog{
+    margin: 0 auto;
+    width: 95%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.content-forget-pass-dialog form .input-forget-pass-dialog:first-child{
+    margin-top: 0;
+}
+.content-forget-pass-dialog form .input-forget-pass-dialog{
+    margin-top: 1.5vh;
+}
+.input-forget-pass-dialog{
+    background-color: #D9D9D9;
+    border-radius: 15px;
+    height: 65px;
+    width: 100%;
+    padding-left: 20px;
+    font-size: 25px;
+    border: 1px solid transparent;
+    display: block;
+    margin: 0 auto;
+}
+
+.registration-dialog{
+    font-family: 'Jura';
+    width: 100%;
+    height: 75%;
+    border-radius: 15px;
+    padding: 10px;
+    background: linear-gradient(to bottom, #B2A2B3, #6F6470);
+    overflow: hidden;
+    animation: dialogFadeIn 0.3s ease-out forwards;
+    box-sizing: border-box;
+    margin: auto;
+}
+.registration-dialog-title {
+    font-size: 60px;
+    text-align: center;
+}
+
+.content-registration-dialog{
+    margin: 0 auto;
+    width: 95%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.content-registration-dialog form .input-registration-dialog:first-child{
+    margin-top: 0;
+}
+.content-registration-dialog form .input-registration-dialog{
+    margin-top: 1.5vh;
+}
+.input-registration-dialog{
+    background-color: #D9D9D9;
+    border-radius: 15px;
+    height: 65px;
+    width: 100%;
+    padding-left: 20px;
+    font-size: 25px;
+    border: 1px solid transparent;
+    display: block;
+    margin: 0 auto;
+}
+.registration-dialog form button{
+    background-color: #E1EDF9;
+    border-radius: 15px;
+    height: 80px;
+    font-size: 44px;
+}
+
+.submitBtnRegistration{
+    margin: 0 auto;
+    margin-top: 2vh;
+}
+
 body{
     width: 95%;
     font-family: 'Jacoby';
@@ -65,10 +170,56 @@ body{
     flex-direction: column;
     justify-content: space-between;
 }
-.submitBtn{
+.submitBtnSignIn{
     margin: 0 auto;
     margin-top: 2vh;
 }
+/*ввод кода подтверждения*/
+.content-check-code-dialog{
+    margin: 0 auto;
+    width: 95%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.check-code-dialog{
+    font-family: 'Jura';
+    width: 100%;
+    height: 75%;
+    border-radius: 15px;
+    padding: 10px;
+    background: linear-gradient(to bottom, #B2A2B3, #6F6470);
+    overflow: hidden;
+    animation: dialogFadeIn 0.3s ease-out forwards;
+    box-sizing: border-box;
+    margin: auto;
+}
+.code-input-block{
+    height: 12%;
+    width: 80%;
+    display: none;
+    justify-content: center;
+    margin-top: 1.25vh;
+}
+.code-input{
+    width: 10%;
+    height: 100%;
+    border-radius: 10px;
+    background-color: #e9f7d6;
+    border: 1px solid green;
+    outline: none;
+    color: black;
+    font-size: min(28px, 2vw);
+    text-align: center;
+    margin: 0 3px;
+}
+.dialog-subtitle{
+    font-size: 30px;
+    text-align: center;
+}
+
 .content-sign-in-dialog form .input-sign-in-dialog:first-child{
     margin-top: 0;
 }
@@ -305,15 +456,19 @@ h3{
     display: flex;
     flex-direction: column;
     width: 20%;
-    background-color: rgba(255, 255, 255, 0.55);
+    background-color: white;
     align-items: center;
     border-bottom-left-radius: 15px; 
     border-bottom-right-radius: 15px; 
     border-top-left-radius: 15px; 
     padding-top: 50px;
     padding-bottom: 50px;
-    margin-right: 25px;
+    margin-right: 70px;
+    margin-top: 5px;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dropdown-menu:hover {
+    background-color: #ff8a8a; /* Цвет фона при наведении */
 }
 /*появление меню*/
 .burger-checkbox:checked ~ .dropdown-menu {
@@ -342,7 +497,7 @@ h3{
 .dropdown-menu-btn{
     display: flex;
     width: 70%;
-    background-color: #c0c0c0e0;
+    background-color: #948b99e0;
     text-align: left; 
     align-items: center;
     margin-top: 15px;
@@ -562,6 +717,8 @@ h3{
     height: 90%;
     margin: 1% 5%;
     transition: all 0.4s ease-out;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .modules-back-button {
@@ -575,38 +732,45 @@ h3{
 }
 
 .modules-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 колонки одинаковой ширины */
-    grid-template-rows: repeat(3, 1fr);
-    gap: 20px;
-    overflow: auto;
-    max-height: calc(100% - 30px);
+    display: flex; /* Используем Flexbox */
+    flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
+    gap: 20px; /* Промежуток между элементами */
+    overflow-y: auto; /* Вертикальная прокрутка, если содержимое превышает высоту */
+    max-height: calc(100% - 30px); /* Максимальная высота */
+    padding-bottom: 100px;
 }
 
 .item-module {
-    padding: 7px;
+    display: flex; /* Используем Flexbox для центрирования содержимого */
+    flex-direction: column; /* Вертикальное расположение содержимого */
+    align-items: center; /* Центрирование по горизонтали */
+    justify-content: center; /* Центрирование по вертикали */
+    width: calc(33.33% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    padding: 10px;
+    aspect-ratio: 4/3.3;
     background-color: #F8FEFF;
     border-radius: 10px;
-    aspect-ratio: 4/3.3;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    position: relative; /* Для абсолютного позиционирования фото */
+    min-width: 0; /* Позволяет элементу сжиматься */
 }
 
 .photo-item-module {
     border-radius: 5px;
-    width: 100%;
-    max-height: 308px;
-    object-fit: contain;
-    object-position: center;
-    margin: auto 0; 
+    width: 100%; /* Задает ширину изображения 100% от родительского элемента */
+    height: 90%;
+    object-fit: cover;
 }
 
 .name-module {
+    display: flex; /* Используем Flexbox */
+    align-items: flex-end; /* Выравнивание по вертикали к низу */
     font-size: 20px;
-    margin-top: auto;
+    word-wrap: break-word; /* Позволяет переносить длинные слова */
+    overflow-wrap: break-word; /* Современный аналог word-wrap */
+    white-space: normal; /* Убедитесь, что текст может переноситься */
 }
+
+
 /*уведы список*/
 .notification-item{
     opacity: 0;
