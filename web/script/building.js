@@ -540,7 +540,7 @@ modules.forEach(module => {
         };
         //ЕСЛИ Жилой -> 15deg 
         if (currentModuleType === 'inhabited') {
-          checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
+          checkAreaAllOnes("cmps_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
             .then(async result => {
               if (!result) {
                 sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
@@ -565,7 +565,7 @@ modules.forEach(module => {
         }
         //ЕСЛИ Производство -> 5deg
         else if(currentModuleType === 'technological'){
-          checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
+          checkAreaAllOnes("cmps_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
           .then(async result => {
             if (!result) {
               sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
@@ -678,9 +678,9 @@ const map = new ol.Map({
 const createFullscreenLayer = (layerName, opacity, zIndex) => {
   return new ol.layer.Image({
     source: new ol.source.ImageWMS({
-      url: 'http://localhost:8080/geoserver/moon_workspace/wms',
+      url: 'http://localhost:8080/geoserver/moon-workspace/wms',
       params: {
-        'LAYERS': `moon_workspace:${layerName}`,
+        'LAYERS': `moon-workspace:${layerName}`,
         'VERSION': '1.3.0',
         'CRS': 'EPSG:100000',
         'FORMAT': 'image/png',
@@ -699,10 +699,10 @@ const createFullscreenLayer = (layerName, opacity, zIndex) => {
 
 // 4. Создание и добавление слоев
 // Слои в правильном порядке:
-const ldem = createFullscreenLayer('LDEM_83S_10MPP_ADJ', 1.0, 1);
-const ldsm = createFullscreenLayer('LDSM_83S_10MPP_ADJ', 0.3, 2);
-const hillshade = createFullscreenLayer('LDEM_83S_10MPP_ADJ_HILL', 0.6, 3);
-const greenLayer = createFullscreenLayer('compress_5deg', 0, 4);
+const ldem = createFullscreenLayer('ldem-83s', 1.0, 1);
+const ldsm = createFullscreenLayer('ldsm-83s', 0.3, 2);
+const hillshade = createFullscreenLayer('ldem-hill', 0.6, 3);
+const greenLayer = createFullscreenLayer('cmps_5deg', 0, 4);
 greenLayer.set('name', 'greenLayer');
 // Создаем WMS-слой с возможностью обновления фильтра
 
@@ -1341,7 +1341,7 @@ function getGreenLayerBbox(bbox, typeModule, width, height) {
   console.log(bbox);
   const imgUrl = `http://localhost:8080/geoserver/wms?` +
     `service=WMS&version=1.1.0&request=GetMap&` +
-    `layers=moon_workspace:${typeModule}&` +
+    `layers=moon-workspace:${typeModule}&` +
     `bbox=${bbox.join(',')}&` + 
     `width=${width}&height=${height}&` +
     `srs=EPSG:100000&` +
@@ -1470,7 +1470,7 @@ async function updateClippedLayer() {
     currentClippedLayer = null;
   }
 
-  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'compress_5deg');
+  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'cmps_5deg');
   currentClippedLayer = clippedLayer;
   map.addLayer(clippedLayer);
 }
