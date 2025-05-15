@@ -57,6 +57,9 @@
     .sign-in-dialog {
         width: 77%;
     }
+    .dialog-title {
+        margin-bottom: 10px;
+    }
     .btns {
         flex-direction: row;
     }
@@ -65,6 +68,10 @@
     }
     .content-sign-in-dialog .btns button {
         font-size: 30px;
+    }
+    .close-modal-button{
+        width: 30px !important;
+        height: 30px !important;
     }
 }
 
@@ -258,6 +265,25 @@
 
 @media (min-height: 900px) and (min-width: 700px)  {
     .registration-dialog{
+        height: 65%;
+    }
+    .registration-dialog-title {
+        font-size: 57px;
+    }
+    .input-registration-dialog{
+        font-size: 30px ;
+    }
+    .submitBtnRegistration{
+        font-size: 40px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 26px;
+    }
+
+}
+
+@media (min-height: 1200px) and (min-width: 700px)  {
+    .registration-dialog{
         height: 55%;
     }
     .registration-dialog-title {
@@ -337,10 +363,10 @@
 
 }
 
-@media (min-width: 1300px) and (min-height: 1100px) {
+@media (min-width: 1300px) and (min-height: 1000px) {
     .registration-dialog {
         width: 36% !important;
-        height: 45%;
+        height: 65%;
     }
     .registration-dialog-title {
         font-size: 77px;
