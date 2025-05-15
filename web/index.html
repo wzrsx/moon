@@ -12,7 +12,7 @@
     <div id="blurDiv"></div>
     <header>
     <ul class="header-menu">
-        <li class="nav-item" id="buildingPageBtn" onclick="goBuilding()" >Режим строительства</li>
+        <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
         <li class="nav-item" id="authBtn">Вход/Регистрация</li>
     </ul>
     </header>
@@ -95,6 +95,36 @@
             </div>
         </div>
     </dialog>
+    <dialog class="project-selection-dialog" id="projectSelectionDialog">
+        <div class="header-form">
+            <button class="close-modal-button">
+                &#x2715;
+            </button>
+            <p class="project-selection-title">Начните свой проект</p>
+        </div>
+        <div class="content-project-selection-dialog">
+            <button class="project-selection-btn btn-new" onclick="showCreateProjectForm()">Создать новый проект</button>
+            <button class="project-selection-btn btn-open" onclick="showProjects()">Открыть существующий проект</button>
+        </div>
+        <div class="create-project-section" style="display: none;">
+            <input type="text" placeholder="Введите название проекта" id="nameProject" class="input-sign-in-dialog">
+            <span class="error-message" id="nameProjectError" style="color: #a90000; display: none;">error message</span> 
+            <button class="create-project-btn btn-new" onclick="createNewProject()">Приступить</button>
+        </div>
+        <div class="show-projects-section" style="display: none;">
+            <div class="project-item">
+                <div class="project-info">
+                    <p class="project-name">Лунная база</p>
+                    <p class="project-date">08-05-2025</p>
+                </div>
+                <button class="project-delete">
+                    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </dialog>
     <dialog class="check-code-dialog" id="checkCodeRegistrationDialog">
         <div class="content-check-code-dialog">
             <div class="header-form">
@@ -143,6 +173,6 @@
             </form>
         </div>
     </dialog>
-    <script src="./static/script/index.js"></script>
+    <script src="/static/script/index.js"></script>
 </body>
 </html>

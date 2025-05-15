@@ -42,13 +42,16 @@ func (s *MoonServiceServer) AddHandlers() *mux.Router {
 	r.HandleFunc("/auth/check_code_recover", auth_handlers.CheckCodeRecoverHandler).Methods("POST")
 	r.HandleFunc("/auth/signin", auth_handlers.SignInHandler).Methods("POST")
 
+	r.Handle("/maps/create", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.CreateMapHandler))).Methods("POST")
+	r.Handle("/maps/exit", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.ClearMapToken))).Methods("GET")
+	r.Handle("/maps/get_maps", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeMaps))).Methods("GET")
 	r.Handle("/maps/redactor", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.OpenMapsRedactor))).Methods("GET")
-	r.Handle("/maps/redactor/page", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderMapRedactor))).Methods("GET")
+	r.Handle("/maps/redactor/page", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderChoosePlace))).Methods("GET")
+	r.Handle("/maps/redactor/page/map", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.RenderMapRedactor))).Methods("GET")
 	r.Handle("/maps/redactor/page/take_modules", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModules))).Methods("GET")
 	r.Handle("/maps/redactor/page/save_module", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.SaveModule))).Methods("POST")
-	r.Handle("/maps/redactor/page/take_modules_requirements", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesRequirements))).Methods("POST")
-	r.Handle("/maps/redactor/page/take_modules_distance", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesDistance))).Methods("POST")
-
+	r.Handle("/maps/redactor/page/take_modules_requirements", jwt_logic.JWTMiddleware(http.HandlerFunc(maps_handlers.TakeModulesRequirements))).Methods("GET")
+	r.Handle("/maps/redactor/page/take_modules_distance", http.HandlerFunc(maps_handlers.TakeModulesDistance)).Methods("GET")
 	// Статические файлы (если Nginx не обрабатывает)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
 		http.FileServer(http.Dir("./web"))))

@@ -243,6 +243,98 @@ body{
 .btns button{
     filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));/*уdo hover*/
 }
+.project-selection-dialog{
+    font-family: 'Jura';
+    width: 33%;/*do adaptiv*/
+    height: 45%;/*do adaptiv*/
+    border-radius: 20px;
+    padding-bottom: 35px;/*do adaptiv*/
+    padding-left: 50px;/*do adaptiv*/
+    padding-right: 50px;/*do adaptiv*/
+    background: linear-gradient(to bottom, #B2A2B3, #6F6470);
+    overflow: hidden;
+    animation: dialogFadeIn 0.3s ease-out forwards;
+    transition: height 0.3s ease;
+}
+.project-selection-btn{
+    display: block;
+    margin: 0 auto;
+    font-size: 30px;
+    width: 95%;
+    border-radius: 15px;
+    height: 80px;
+}
+.content-project-selection-dialog{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+.btn-new {
+    background-color: #c1ffe8; 
+    transition: all 0.3s ease-in;
+}
+.btn-open {
+    background-color: #bfdbf1; 
+    transition: all 0.3s ease-in;
+}
+.btn-new:hover {
+    background-color: #5faa7e; 
+}
+.btn-open:hover {
+    background-color: #6188a7; 
+}
+.project-selection-title{
+    font-size: 50px;
+    text-align: center;
+}
+.create-project-section{
+    margin-top: 15px;
+    flex-direction: column;
+    gap: 20px;
+}
+.create-project-btn{
+    display: block;
+    margin: 0 auto;
+    font-size: 30px;
+    width: 75%;
+    border-radius: 10px;
+    height: 50px;
+}
+.show-projects-section{
+    overflow-y: auto;
+    height: 75%;
+    margin-top: 5px;
+}
+.project-item{
+    width: 95%;
+    border-radius: 15px;
+    height: 70px;
+    background-color: #eef6fd;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+}
+.project-item:hover{
+    background-color: #cecece;
+}
+.project-name{
+
+}
+.project-date{
+
+}
+.project-delete{
+}
 .header-menu {
     list-style: none;
     display: flex;
@@ -331,9 +423,20 @@ body{
     text-align: center;
 }
 #map {
+    position: relative;  /* Необходимо для абсолютного позиционирования внутри */
     width: 100%;
-    height: 100%;
-}
+    height: 100vh;
+  }
+  
+  #scaleDisplayContainer {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(255,255,255,0.8);
+    padding: 5px;
+    border-radius: 3px;
+    z-index: 1000;  /* Должен быть выше элементов карты */
+  }
 h1, h2, h3{
     text-align: center;
     line-height: 0.8;
@@ -368,6 +471,7 @@ h3{
     z-index: 1000;
 }
 .close-modal-button{
+    display: block;
     width: 50px;
     height: 50px;
     background: transparent;
@@ -461,7 +565,6 @@ h3{
     border-bottom-left-radius: 15px; 
     border-bottom-right-radius: 15px; 
     border-top-left-radius: 15px; 
-    padding-top: 50px;
     padding-bottom: 50px;
     margin-right: 70px;
     margin-top: 5px;
@@ -493,7 +596,9 @@ h3{
 .dropdown-menu-btn:nth-child(4) {
     transition-delay: 0.4s;
 }
-
+.dropdown-menu-btn:nth-child(5) {
+    transition-delay: 0.5s;
+}
 .dropdown-menu-btn{
     display: flex;
     width: 70%;
@@ -571,6 +676,7 @@ h3{
     padding-top: 10px;
     box-sizing: border-box;
     animation: dialogFadeIn 0.3s ease-out forwards;
+    transition: height 0.5s ease;
 }
 .content-confirm-dialog{
     height: 100%;
@@ -839,4 +945,487 @@ h3{
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+}
+
+/*popup модуля*/
+.module-popup {
+    font-family: 'Jura', sans-serif;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+.module-popup-header {
+    color: white;
+    padding: 5px 10px;
+    font-weight: bold;
+    text-align: center;
+}
+.module-popup-content{
+    padding: 5px;
+}
+.module-popup-image {
+    padding: 10px;
+    text-align: center;
+}
+.ol-popup {
+    position: absolute;
+    background-color: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    padding: 0;
+    border-radius: 5px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -50px;
+    min-width: 220px;
+}
+
+/* Стили для раскрывающегося блока */
+.expandable-section {
+    margin-bottom: 5px;
+  }
+  
+  .expandable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .expand-hint {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 14px;
+    color: #424242;
+    text-align: right;
+    margin-top: 2px;
+    transition: all 0.3s ease;
+    text-align: left;
+  } 
+  .expand-icon {
+    display: inline-block;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+  }
+  
+  
+  .expandable-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding-left: 15px;
+  }
+  
+  .expandable-section.expanded .expandable-content {
+    max-height: 300px; /* Достаточно для содержимого */
+  }
+  
+  .expandable-section.expanded .expand-icon {
+    transform: rotate(180deg);
+  }
+  
+  .distance-list {
+    margin: 5px 0 0 0;
+    padding-left: 15px;
+  }
+  
+  .distance-list li {
+    margin-bottom: 3px;
+    font-size: 13px;
+  }
+.main-buttons{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+}
+.zones-checkboxes{
+    display: none;
+    text-align: start;
+    padding-top: 10px;
+}
+.title-zones-checkboxes{
+    font-size: 24px;
+}
+.subtitle-zones-checkboxes{
+    font-size: 20px;
+}
+.dropdown-menu-checkbox-container{
+    width: 90%;
+    margin-left: 3%;
+}
+
+.zones-panel {
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .slope-control {
+    width: 100%;
+    margin-top: 15px;
+  }
+  
+  .slope-toggle-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background-color: #c0c0c0e0;
+    text-align: left;
+    padding: 0 10px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 20px;
+    transition: all 0.4s ease;
+    transform: translateX(0);
+    opacity: 1;
+    cursor: pointer;
+  }
+  
+  .slope-toggle-btn:hover {
+    box-shadow: 0 0 13px rgba(0, 0, 0, 0.8);
+  }
+  
+  .slope-toggle-btn:active {
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+  }
+  
+  .slope-arrow {
+    transition: transform 0.3s ease;
+    font-size: 14px;
+    margin-left: 10px;
+  }
+  
+  .slope-options {
+    max-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: max-height 0.4s ease-out;
+    width: 95%;
+    margin: 5px auto 0;
+  }
+  
+  .slope-control.expanded .slope-options {
+    max-height: 120px;
+  }
+  
+  .slope-control.expanded .slope-arrow {
+    transform: rotate(180deg);
+  }
+  
+  .slope-option {
+    display: flex;
+    align-items: center;
+    background-color: #d0d0d0e0;
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    font-size: 18px;
+  }
+  .slope-option.checked, .slope-toggle-btn.checked {
+    background-color: #a0a0a0e0;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  .slope-option input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .slope-option label {
+    cursor: pointer;
+  }
+  .slope-checkbox-custom {
+    position: relative;
+    height: 20px;
+    width: 20px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    transition: all 0.3s;
+  }
+  .header-zones-checkboxes{
+    display: flex;
+    align-items: center;
+  }
+  /*choose page*/
+  .choose-place-body{
+    font-family: 'Jura';
+    background-image: url('photos/bg_choose.jpg');
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: #e7beff;
+  }
+  .choose-place-body header{
+    margin-top: 25px;
+    color: white;
+  }
+  .cards-places{
+    display: flex;
+    width: 95%;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-place {
+    border: 1px solid #5a189a;
+    width: 30%;
+    height: 52vh;
+    border-radius: 15px;
+    background-color: #070013;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.card-place:nth-child(1) {
+    box-shadow: 0px 0px 15px 10px #420b75;
+}
+.card-place:nth-child(2) {
+    box-shadow: 0px 0px 15px 10px #3c096c;
+}
+.card-place:nth-child(3) {
+    box-shadow: 0px 0px 15px 10px #380766;
+}
+.card-place:hover {
+    height: 80vh;
+    box-shadow: 0px 0px 15px 10px #5a189a;
+}
+
+.card-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+.hidden-text {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: all 0.6s ease-in;
+    display: block;
+    width: 95%;
+    margin: 0 auto;
+    color: #f0d6ff;
+}
+
+.card-place:hover .hidden-text {
+    opacity: 1;
+    height: auto;
+}
+
+.card-place-image {
+    display: block;
+    margin: 0 auto;
+    margin-top: 10px;
+    width: 95%;
+    border-radius: 10px;
+}
+
+.card-place-submit {
+    height: 50px;
+    width: 130px;
+    background: #240046;
+    margin-left: auto;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    color: #c77dff;
+    align-self: flex-end;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+.card-place-submit:hover {
+    color: #e0aaff;
+    background: #3c096c;
+}
+  .choose-place-main{
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  .choose-place-footer{
+    text-align: center;
+    height: 50px;
+  }
+  .footer-text{
+    position: relative;
+    display: inline-block;
+    color: #c77dff; /* Фиолетовый цвет текста */
+    cursor: pointer;
+    transition: color 0.3s ease;
+    font-size: 20px;
+  }
+.footer-text:hover {
+    color: #e0aaff; /* Более светлый оттенок при наведении */
+}
+
+.footer-text::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #e0aaff;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.footer-text:hover::after {
+    width: 100%;
+}
+
+/*диалог сохранить*/
+
+#cancelSaveBtn{
+    background-color: #c0c0c0e0;
+}
+#saveBtn{
+    color: #D9D9D9;
+    font-weight: 700;
+    background: linear-gradient(to bottom, #2f9102, #049c2a);
+}
+#saveBtn:hover, #cancelSaveBtn:hover, .format-file-btn:hover{
+    transform: scale(1.025);
+}
+.formats-files{
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0 auto;
+    margin-top: auto;
+}
+.format-file-btn {
+    width: 70px; 
+    height: 70px;
+    border: none;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: all 0.3s ease-in;
+}
+.format-file-btn:hover{
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 3px white);
+}
+.format-file-btn:active{
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 3px white);
+}
+.format-file-btn.clicked{
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 4px rgb(0, 255, 0));
+}
+.png-btn {
+    background-image: url('logo/png.png');
+}
+
+.json-btn {
+    background-image: url('logo/json.png');
+}
+
+.pdf-btn {
+    background-image: url('logo/pdf.png');
+}
+.parametrs-to-export p{
+    font-size: 18px;
+    color: white;
+}
+.save-inputs-group {
+    border: 2px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background-color: transparent;
+}   
+.save-inputs-group label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+.extent-inputs-row {
+    display: grid;
+    grid-template-columns: 1fr auto; 
+    gap: 10px;
+    align-items: center;
+    margin: 0 auto;
+    width: 95%;
+}
+.input-wrapper {
+    width: 45%;
+}
+.input-wrapper input {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+}
+.bbox-inputs-row input::placeholder, .extent-inputs-row input::placeholder {
+    color: white; 
+    opacity: 1;
+}
+.bbox-inputs-row input::-webkit-input-placeholder, .extent-inputs-row input::-webkit-input-placeholder {
+    color: white;
+}
+.toggle-extent-arrow{
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 10px;
+    vertical-align: middle;
+    padding: 0 !important;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid #ffffff;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.collapsed .toggle-arrow {
+    transform: rotate(180deg);
+}
+.checkbox-user-bbox{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.extent-label-text{
+    text-align: left !important;
+}
+.checkbox-user-bbox label{
+    color: black;
+}
+.checkbox-user-bbox input[type="checkbox"] {
+    margin-right: 5px;
+}
+.percent-value {
+    display: inline-block;
+    font-family: monospace; /* выравнивание цифр */
+}
+.bbox-inputs-row span, .extent-inputs-row span{
+    padding: 0;
+}
+.bbox-inputs-row label, .extent-inputs-row label{
+    width: 50%;
+    text-align: end;
+}
+.label-value {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr; 
+    gap: 2px;
+}
+.bbox-inputs-row {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-around;
 }

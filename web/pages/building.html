@@ -30,33 +30,134 @@
                 </label>
     
                 <div class="dropdown-menu">
-                    <button class="dropdown-menu-btn" id="placeModulesBtn">
-                        <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Разместить модули</span>
-                    </button>
-                    <button class="dropdown-menu-btn" id="notificationsBtn">
-                        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Уведомления</span>
-                    </button>
-                    <button class="dropdown-menu-btn" id="saveProjectBtn">
-                        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Сохранить</span>
-                    </button>
-                    <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
-                        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Выйти</span>
-                    </button>
+                    <div class="main-buttons">
+                        <button class="dropdown-menu-btn" id="placeModulesBtn">
+                            <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Разместить модули</span>
+                        </button>
+                        <button class="dropdown-menu-btn" id="showZonesBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_167_50)">
+                                <path d="M1.45833 17.4999C1.45833 17.4999 7.29167 5.83325 17.5 5.83325C27.7083 5.83325 33.5417 17.4999 33.5417 17.4999C33.5417 17.4999 27.7083 29.1666 17.5 29.1666C7.29167 29.1666 1.45833 17.4999 1.45833 17.4999Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17.5 21.8749C19.9162 21.8749 21.875 19.9162 21.875 17.4999C21.875 15.0837 19.9162 13.1249 17.5 13.1249C15.0838 13.1249 13.125 15.0837 13.125 17.4999C13.125 19.9162 15.0838 21.8749 17.5 21.8749Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_167_50">
+                                <rect width="35" height="35" fill="white"/>
+                                </clipPath>
+                            </defs>
+                            </svg>
+                            <span>Отображение зон</span>
+                        </button>
+                        <button class="dropdown-menu-btn" id="notificationsBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Уведомления</span>
+                        </button>
+                        <button class="dropdown-menu-btn" id="saveProjectBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Сохранить</span>
+                        </button>
+                        <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
+                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Выйти</span>
+                        </button>
+                    </div>
+                    <div class="zones-checkboxes">
+                        <div class="header-zones-checkboxes">
+                            <button id="backMainButtons">
+                                <svg width="20" height="20" viewBox="0 0 26.676 26.676" fill="#000000" style="margin-right: 8px; vertical-align: middle;">
+                                    <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59
+                                        c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815
+                                        C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029
+                                        c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562
+                                        C26.18,21.891,26.141,21.891,26.105,21.891z"/>
+                                </svg>
+                            </button>
+                            <span class="title-zones-checkboxes">Отображение зон</span>
+                        </div>
+                        
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
+                                <span class="slope-title">Допустимые уклоны</span>
+                                <span class="slope-arrow">▼</span>
+                              </div>
+                              <div class="slope-options">
+                                <div class="slope-option">
+                                  <input type="checkbox" id="habitableModulesCheckbox" data-layer="greenLayer" onchange="updateOptionStyle(this)">
+                                  <label for="habitableModulesCheckbox">Для обитаемых</label>
+                                </div>
+                                <div class="slope-option">
+                                  <input type="checkbox" id="technicalModulesCheckbox" data-layer="greenLayer" onchange="updateOptionStyle(this)">
+                                  <label for="technicalModulesCheckbox">Для технологических</label>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
+                                <span class="slope-title">Предпочтительные места</span>
+                                <span class="slope-arrow">▼</span>
+                              </div>
+                              <div class="slope-options">
+                                <div class="slope-option">
+                                  <input type="checkbox" id="malapertCheckbox" data-layer="malapertLayer" onchange="updateOptionStyle(this)">
+                                  <label for="malapertCheckbox">Малаперт</label>
+                                </div>
+                                <div class="slope-option">
+                                  <input type="checkbox" id="shackletonCheckbox" data-layer="shackletonLayer" onchange="updateOptionStyle(this)">
+                                  <label for="shackletonCheckbox">Шеклтон</label>
+                                </div>
+                                <div class="slope-option">
+                                    <input type="checkbox" id="haworthCheckbox" data-layer="haworthLayer" onchange="updateOptionStyle(this)">
+                                    <label for="haworthCheckbox">Хауорт</label>
+                                  </div>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
+                                <span class="slope-title">Для расположения модуля</span>
+                                <span class="slope-arrow">▼</span>
+                              </div>
+                              <div class="slope-options" id="checkboxesModulesName">
+                              </div>
+                            </div>
+                        </div>      
+                        <div class="zones-panel">
+                            <div class="slope-control">
+                              <label class="slope-toggle-btn"> <!-- Обернули в <label>, чтобы клик по тексту тоже работал -->
+                                <span>Карта высот</span>
+                                <span class="slope-checkbox-label">
+                                  <input type="checkbox" id="heightMapToggle" class="slope-checkbox" onchange="updateOptionStyle(this)">
+                                  <span class="slope-checkbox-custom"></span>
+                                </span>
+                              </label>
+                            </div>
+                            
+                        </div>      
+                    </div>
                 </div>
             </nav>
-            <div id="map"></div>
+            <div id="map">
+                <div id="scaleDisplayContainer">
+                  <div class="scale-line">
+                    <div class="scale-bar" style="width: 100px;"></div>
+                    <div class="scale-text">1 km</div>
+                  </div>                        
+                </div>
+              </div>
+            
         </div>
     </main>
     <aside class="modules-sidebar" id="modulesSidebar">
@@ -189,15 +290,111 @@
     <dialog class="confirm-dialog" id="confirmDialog">
         <div class="content-confirm-dialog">
             <div class="header-form">
-                <button class="close-modal-button" onclick="closeconfirmDialog()" style="display: block;">
+                <button class="close-modal-button" onclick="closeConfirmDialog()" style="display: block;">
                     &#x2715;
                 </button>
                 <p id="titleDialog">Вы уверены что хотите выйти?</p>
             </div>
-            <span>Текущие изменения будут сохранены</span>
+            <span>Текущие изменения сохранены</span>
             <div class="confirm-dialog-btns btns">
-                <button id="cancelBtn" onclick="closeconfirmDialog()">Отмена</button>
+                <button id="cancelBtn" onclick="closeConfirmDialog()">Отмена</button>
                 <button id="confirmBtn">Выйти</button>
+            </div>
+        </div>
+    </dialog>
+    <dialog class="confirm-dialog" id="saveDialog">
+        <div class="content-confirm-dialog">
+            <div class="header-form">
+                <button class="close-modal-button" onclick="closeSaveDialog()" style="display: block;">
+                    &#x2715;
+                </button>
+                <p>Выберите формат</p>
+            </div>
+            <div class="formats-files">
+                <button class="format-file-btn png-btn" onclick="showParametrsPNG()"></button>
+                <button class="format-file-btn json-btn" onclick="selectJSON()"></button>
+                <button class="format-file-btn pdf-btn" onclick="showParametrsPDF()"></button>
+            </div>
+            <div class="parametrs-to-export" style="display: none;" id="parametrsToExportPNG">
+                <p>Карта будет сохранена по крайним точкам модулей</p>
+                <div class="checkbox-user-bbox">
+                    <input type="checkbox" name="" id="bboxUserMapExport" class="user-bbox">
+                    <label for="bboxUserMapExport">Использовать свои границы</label>
+                </div>
+                <div id="customBboxInputs" style="display: none; margin-top: 15px;">
+                    <div class="save-inputs-group">
+                        <label>Координаты X</label>
+                        <div class="bbox-inputs-row">
+                            <div class="input-wrapper">
+                                <input type="number" id="x1Input" name="x1" placeholder="X1">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="x2Input" name="x2" placeholder="X2">
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="save-inputs-group">
+                        <label>Координаты Y</label>
+                        <div class="bbox-inputs-row">
+                            <div class="input-wrapper">
+                                <input type="number" id="y1Input" name="y1" placeholder="Y1">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="y2Input" name="y2" placeholder="Y2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; cursor: pointer; justify-content: center; margin-bottom: 10px;" id="toggleExtentButton">
+                    <p style="margin: 0;">Вы можете настроить отступ до края изображения</p>
+                    <span class="toggle-extent-arrow"></span>
+                </div>
+            
+                    <div id="customExtentInputs" style="display: none; margin-top: 15px;">
+                        <div class="save-inputs-group">
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ сверху:</span>
+                                    <span class="percent-value" id="topVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginTop">
+                            </div>
+                        
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ снизу:</span>
+                                    <span class="percent-value" id="bottomVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginBottom">
+                            </div>
+                        </div>
+                    
+                        <div class="save-inputs-group">
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ справа:</span>
+                                    <span class="percent-value" id="rightVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginRight">
+                            </div>
+                            <div class="extent-inputs-row">
+                                <div class="label-value">
+                                    <span class="extent-label-text">Отступ слева:</span>
+                                    <span class="percent-value" id="leftVal">5.0</span>
+                                    <span>%</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginLeft">
+                            </div>
+                        </div>
+                    </div>
+            </div>       
+            <div class="confirm-dialog-btns btns">
+                <button id="cancelSaveBtn" onclick="closeSaveDialog()">Отмена</button>
+                <button id="saveBtn" onclick="exportMapToSelectedFormat()">Сохранить</button>
             </div>
         </div>
     </dialog>
@@ -206,7 +403,10 @@
     <!-- Подключение библиотек -->
     <script src="https://cdn.jsdelivr.net/npm/proj4@2.7.5/dist/proj4.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@7.3.0/dist/ol.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
     <script src="/static/script/building.js"></script>
     <script src="/static/script/popup.js"></script>
+    <script src="/static/script/handlersZones.js"></script>
+    <script src="/static/script/exportMap.js"></script>
 </body>
 </html>

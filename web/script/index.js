@@ -1,6 +1,7 @@
 const signInDialog = document.getElementById("signInDialog");
 const registrationDialog = document.getElementById("registrationDialog");
 const forgetPassDialog = document.getElementById("forgetPassDialog");
+const projectSelectionDialog = document.getElementById("projectSelectionDialog");
 const blurDiv = document.getElementById("blurDiv");
 const EMAIL_REGEXP = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 
@@ -27,7 +28,6 @@ const loginRegistration = document.getElementById("loginRegistration");
 const emailRegistration = document.getElementById("emailRegistration");
 const passRegistration = document.getElementById("passRegistration");
 const repeatPassRegistration = document.getElementById("repeatPassRegistration");
-
 //errors
 const loginSignInError = document.getElementById("loginSignInError");
 const passwordSignInError = document.getElementById("passwordSignInError");
@@ -36,16 +36,17 @@ const loginRegistrationError = document.getElementById("loginRegistrationError")
 const emailRegistrationError = document.getElementById("emailRegistrationError");
 const passRegistrationError = document.getElementById("passRegistrationError");
 const repeatPassRegistrationError = document.getElementById("repeatPassRegistrationError");
+const nameProjectError = document.getElementById("nameProjectError");
 let authHeader;
 
 closeButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-        e.preventDefault();
-        const dialog = button.closest('dialog');
-        dialog.close();
-        blurDiv.classList.remove("blur");
-        isSwitching = false;
-    });
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
+    const dialog = button.closest('dialog');
+    dialog.close();
+    blurDiv.classList.remove("blur");
+    isSwitching = false;
+  });
 });
 
 let isSwitching = false; //переключение 
@@ -77,7 +78,14 @@ forgetPassDialog.addEventListener("close", () => {
     }
     isSwitching = false;
 });
-
+projectSelectionDialog.addEventListener("close", () => {
+    blurDiv.classList.remove("blur"); 
+    document.querySelector('.content-project-selection-dialog').style.display = '';
+    projectSelectionDialog.style.height = '';
+    document.querySelector('.create-project-section').style.display = 'none';
+    document.querySelector('.show-projects-section').style.display = 'none';
+    document.querySelector('.project-selection-title').innerText = 'Начните свой проект';
+});
 //переключение между диалогами
 registrateBtnForm.addEventListener('click', (e) => {
     e.preventDefault();
@@ -216,7 +224,10 @@ recoverPassBtn.addEventListener('click', (e) => {
     resetRecoverErrors();
 
 });
-
+function selectProject(){
+    blurDiv.classList.add("blur"); 
+    projectSelectionDialog.showModal();
+}
 function goBuilding() {
     fetch("http://localhost:5050/maps/redactor", {
         method: 'GET',
@@ -294,4 +305,181 @@ function isPassValid(value, field, input) {
         return false;
     }
     return true;
+  }
+  function showCreateProjectForm(){
+    projectSelectionDialog.style.height = '35%';
+    document.querySelector('.content-project-selection-dialog').style.display = 'none';
+    document.querySelector('.create-project-section').style.display = 'flex';
+  }
+  function createNewProject(){
+    let nameProj = document.getElementById('nameProject').value; //+валидация to do
+    const requestData = {
+        name_map: nameProj 
+    };
+    fetch("http://localhost:5050/maps/create", {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
+                });
+            }
+
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+                });
+            }
+
+            return response.json();
+        })
+        .then(data => {
+            selectMap(data.map_id, true);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+  }
+  function showProjects(){
+    document.querySelector('.content-project-selection-dialog').style.display = 'none';
+    document.querySelector('.show-projects-section').style.display = 'block';
+    document.querySelector('.project-selection-title').innerText = 'Мои проекты';
+    loadMaps();
+  }
+  function loadMaps() {
+    fetch("http://localhost:5050/maps/get_maps", {
+        method: 'GET',
+        credentials: 'include',
+    })
+    .then(response => {
+        const contentType = response.headers.get('content-type');
+
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
+            });
+        }
+
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+            });
+        }
+
+        return response.json();
+    })
+    .then(data => {
+        const projectsSection = document.querySelector('.show-projects-section');
+        projectsSection.innerHTML = ''; // Очищаем секцию перед заполнением
+
+        // Проверяем, что данные есть и это массив
+        if (Array.isArray(data) && data.length > 0) {
+            renderMaps(data);
+            // Показываем секцию
+            projectsSection.style.display = 'block';
+        } else {
+            projectsSection.innerHTML = '<p>Нет доступных проектов</p>';
+            projectsSection.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        const projectsSection = document.querySelector('.show-projects-section');
+        projectsSection.innerHTML = `<p>Ошибка загрузки: ${error.message}</p>`;
+        projectsSection.style.display = 'block';
+    });
+}
+function renderMaps(maps) {
+    const projectsSection = document.querySelector('.show-projects-section');
+    projectsSection.innerHTML = '';
+
+    maps.forEach(map => {
+        const projectItem = document.createElement('div');
+        projectItem.className = 'project-item';
+        projectItem.dataset.mapId = map.map_id; // Сохраняем ID в data-атрибуте
+        
+        projectItem.innerHTML = `
+            <div class="project-info">
+                <p class="project-name">${map.map_name || 'Без названия'}</p>
+                <p class="project-date">${formatDate(new Date(map.map_created))}</p>
+            </div>
+            <button class="project-delete">
+                <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        `;
+        
+        projectsSection.appendChild(projectItem);
+    });
+
+    // Добавляем обработчики событий
+    addMapEventListeners();
+}
+function addMapEventListeners() {
+    document.querySelectorAll('.project-item').forEach(item => {
+        // Обработчик для всей карточки (если нужно)
+        item.addEventListener('click', (e) => {
+            // Проверяем, что клик не по кнопке удаления
+            if (!e.target.closest('.project-delete')) {
+                const mapId = item.dataset.mapId;
+                selectMap(mapId, false); // Ваша функция для открытия карты
+            }
+        });
+
+        // Обработчик для кнопки удаления
+        const deleteBtn = item.querySelector('.project-delete');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Предотвращаем всплытие
+                const mapId = item.dataset.mapId;
+                deleteMap(mapId); // Ваша функция для удаления
+            });
+        }
+    });
+}
+
+function selectMap(mapId, is_first_launch) {
+    fetch(`/maps/redactor?map_id=${mapId}&is_first_launch=${is_first_launch}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Перенаправляем на страницу выбора места
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+    });
+}
+//to do
+function deleteMap(mapId) {
+
+}
+// Функция для форматирования даты в формат DD-MM-YYYY
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
 }

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 
@@ -28,11 +30,7 @@ func CreateMapsHandlers(cfg_db *config_db.ConfigDB, logger *zap.Logger, pool *pg
 		Pool:       pool,
 	}
 }
-
-func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Accept") != "application/json" {
-		return
-	}
+func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request){
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
 		a.Logger.Error("No claims in context")
@@ -40,21 +38,73 @@ func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	id_map, ok := claims["map_id"].(string)
-	if !ok {
-		a.Logger.Error("User ID not found in claims")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
-		return
-	}
+	userID, ok := claims["user_id"].(string)
+    if !ok {
+        a.Logger.Error("User ID not found in claims")
+        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+        return
+    }
+	var request struct {
+        Name string `json:"name_map"`
+    }
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        a.Logger.Error("Invalid request body:", zap.Error(err))
+        respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+        return
+    }
+	newMap, err := queries_maps.CreateMap(userID, request.Name, a.Pool)
+    if err != nil {
+        a.Logger.Error("Failed to create map:", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Map creation failed"})
+        return
+    }
 
-	// Возвращаем JSON с ID карты
-	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"map_id":       id_map,
-		"redirect_url": "/maps/redactor/page", // Добавляем URL для редиректа
-	})
+    // 6. Успешный ответ
+    respondWithJSON(rw, http.StatusCreated, map[string]string{
+        "map_id":       newMap.MapID,
+        "redirect_url": "/maps/redactor?map_id=" + newMap.MapID + "?is_first_launch=true",
+    })
 }
+func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
+    // Получаем ID карты из query параметров, а не из JWT
+    id_map := r.URL.Query().Get("map_id")
+    if id_map == "" {
+        a.Logger.Error("Map ID not provided")
+        respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Map ID is required"})
+        return
+    }
+	isFirstLaunch := r.URL.Query().Get("is_first_launch")
+	firstLaunch := isFirstLaunch == "true"
+    // Создаем новый JWT с map_id или обновляем существующий
+    tokenString, err := jwt_logic.CreateTokenWithMapID(r, id_map)
+    if err != nil {
+        a.Logger.Error("Failed to create token", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to create token"})
+        return
+    }
 
-// Отдельный обработчик для рендеринга HTML
+    // Устанавливаем токен в куки
+    http.SetCookie(rw, &http.Cookie{
+        Name:     "jwt_token",
+        Value:    tokenString,
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   false, //для http
+        SameSite: http.SameSiteStrictMode,
+        Expires:  time.Now().Add(time.Hour * 72), // Явно устанавливаем срок действия
+    })
+
+    // Перенаправляем на выбор места или сразу карту
+	if firstLaunch {
+        respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+            "redirect_url": "/maps/redactor/page",
+        })
+    } else {
+        respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+            "redirect_url": "/maps/redactor/page/map",
+        })
+    }
+}
 func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
@@ -77,6 +127,56 @@ func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error geoserver editor"})
 		return
 	}
+}
+func (a *MapsHandlers) TakeMaps(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		return
+	}
+
+	id_user, ok := claims["user_id"].(string)
+	if !ok {
+		a.Logger.Error("User ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
+
+	maps, err := queries_maps.TakeMaps(id_user, a.Pool)
+	if err != nil {
+		a.Logger.Error("Error querying maps", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Error query to get maps: %v", err),
+		})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, maps)
+}
+// Отдельный обработчик для рендеринга HTML
+func (a *MapsHandlers) RenderChoosePlace(rw http.ResponseWriter, r *http.Request) {
+    claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+    if !ok {
+        a.Logger.Error("No claims in context")
+        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
+        return
+    }
+
+    id_map, ok := claims["map_id"].(string)
+    if !ok {
+        a.Logger.Error("Map ID not found in claims")
+        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+        return
+    }
+
+    tmpl := template.Must(template.ParseFiles("web/pages/choose_place.html"))
+    err := tmpl.Execute(rw, id_map)
+    if err != nil {
+        a.Logger.Error("Template error", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error"})
+        return
+    }
 }
 
 func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
@@ -120,7 +220,6 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
 		return
 	}
-
 	module := queries_maps.NewModule()
 	err := json.NewDecoder(r.Body).Decode(&module)
 
@@ -147,63 +246,26 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 	})
 }
 func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
-	type CredentialModulesRequirements struct {
-		ModuleType string `json:"module_type"`
-	}
-	var creds CredentialModulesRequirements
+// Получаем данные о расстоянии
+    requirements, err := queries_maps.TakeModulesRequirements(a.Pool)
+    if err != nil {
+        a.Logger.Sugar().Errorf("Error getting modules requirements: %v", err)
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+            "error": fmt.Sprintf("Failed to get modules requirements: %v", err),
+        })
+        return
+    }
+    
+    // Отправляем успешный ответ
+    respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+        "message": "Success response",
+        "requirements_json": requirements,
+    })
 
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
-		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"error": fmt.Sprintf("Error take module requirements: %v", err),
-		})
-		return
-	}
-	requirements, err := queries_maps.TakeModulesRequirements(creds.ModuleType, a.Pool)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Quering take module requirements: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error take module requirements: %v", err),
-		})
-		return
-	}
-	log.Println(requirements)
-	respondWithJSON(rw, http.StatusAccepted, map[string]interface{}{
-		"message":           "Success response",
-		"requirements_json": requirements,
-	})
 }
 func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Request) {
-    // Определяем структуру для входящего запроса
-    type Request struct {
-        ModuleType1 string `json:"module_type_1"`
-        ModuleType2 string `json:"module_type_2"`
-    }
-    
-    var req Request
-    
-    // Декодируем тело запроса
-    err := json.NewDecoder(r.Body).Decode(&req)
-    if err != nil {
-        a.Logger.Sugar().Errorf("Error decoding request: %v", err)
-        respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-            "error": fmt.Sprintf("Invalid request format: %v", err),
-        })
-        return
-    }
-    
-    // Проверяем обязательные поля
-    if req.ModuleType1 == "" || req.ModuleType2 == "" {
-        a.Logger.Sugar().Error("Empty module types provided")
-        respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-            "error": "Both module_type_1 and module_type_2 are required",
-        })
-        return
-    }
-    
     // Получаем данные о расстоянии
-    requirements, err := queries_maps.TakeModulesDistance(req.ModuleType1, req.ModuleType2, a.Pool)
+    distances, err := queries_maps.TakeModulesDistance(a.Pool)
     if err != nil {
         a.Logger.Sugar().Errorf("Error getting module distance: %v", err)
         respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
@@ -211,12 +273,34 @@ func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Reque
         })
         return
     }
-	log.Println(requirements)
+	log.Println(distances)
     
     // Отправляем успешный ответ
     respondWithJSON(rw, http.StatusOK, map[string]interface{}{
         "message": "Success response",
-        "requirements_json": requirements,
+        "requirements_json": distances,
+    })
+}
+func (a *MapsHandlers) ClearMapToken(rw http.ResponseWriter, r *http.Request) {
+    // Генерируем новый токен без map_id
+    tokenString, err := jwt_logic.CreateTokenWithoutMapID(r)
+    if err != nil {
+        a.Logger.Error("Failed to create cleared token", zap.Error(err))
+        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to clear map token"})
+        return
+    }
+
+    // Устанавливаем новый токен в куки
+    http.SetCookie(rw, &http.Cookie{
+        Name:     "jwt_token",
+        Value:    tokenString,
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   false, //для http
+        SameSite: http.SameSiteStrictMode,
+    })
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+        "message": "Success exit",
     })
 }
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

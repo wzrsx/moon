@@ -10,17 +10,21 @@ import (
 type Module struct {
 	IdModule   string    `json:"id_module"`
 	MapId      string    `json:"id_map"`
+	HabitationType string    `json:"habitation_type"`
 	ModuleType string    `json:"module_type"`
-	ModuleName string    `json:"module_name"`
 	Points     []float64 `json:"points"`
 }
-type ModuleRequirements struct {
+type ModulesRequirements struct {
 	ModuleType                string `json:"module_type"`
+	ModuleName                string `json:"module_name"`
 	MaxSlopeDegrees           int    `json:"max_slope_degrees"`
 	WidthMeters               int    `json:"width_meters"`
 	LengthMeters              int    `json:"length_meters"`
+	Description               string `json:"description"`
 }
 type ModulesDistance struct {
+	ModuleType1 string `json:"module_type1"`
+	ModuleType2 string `json:"module_type2"`
 	MinDistance 		*int `json:"min_distance,omitempty"`
 	MaxDistance 		*int `json:"max_distance,omitempty"`
 }
@@ -38,7 +42,7 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 
 	// Исправленный запрос:
 	rows, err := conn.Query(context.Background(),
-		"SELECT id, module_type, module_name, module_points_json FROM modules WHERE map_id = $1",
+		"SELECT id, habitation_type, module_type, module_points_json FROM modules WHERE map_id = $1",
 		idMap)
 	if err != nil {
 		return nil, err
@@ -53,8 +57,8 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 		// Правильное сканирование:
 		if err := rows.Scan(
 			&module.IdModule,
+			&module.HabitationType,
 			&module.ModuleType,
-			&module.ModuleName,
 			&pointsJSON,
 		); err != nil {
 			return nil, err
@@ -78,35 +82,40 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 
 	return modules, nil
 }
-func TakeModulesRequirements(moduleType string, pool *pgxpool.Pool) (*ModuleRequirements, error) {
+func TakeModulesRequirements(pool *pgxpool.Pool) ([]ModulesRequirements, error) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Release()
-	row := conn.QueryRow(context.Background(),
+	rows, err := conn.Query(context.Background(),
 		`SELECT 
 			module_type, 
+			module_name,
 			max_slope_degrees, 
 			width_meters, 
-			length_meters
-		FROM module_requirements 
-		WHERE module_type = $1`,
-		moduleType)
-
-	var req ModuleRequirements
-	err = row.Scan(
-		&req.ModuleType,
-		&req.MaxSlopeDegrees,
-		&req.WidthMeters,
-		&req.LengthMeters,
-	)
+			length_meters,
+			description
+		FROM module_requirements`)
+	if err != nil{
+		return nil, err
+	}
+	defer rows.Close()
+	var req []ModulesRequirements
+	for rows.Next() {
+		var module ModulesRequirements
+		err = rows.Scan(&module.ModuleType, &module.ModuleName, &module.MaxSlopeDegrees, &module.WidthMeters, &module.LengthMeters, &module.Description)
+		if err != nil{
+			return nil, err
+		}
+		req = append(req, module)
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &req, nil
+	return req, nil
 }
 func (m *Module) SaveModule(pool *pgxpool.Pool) error {
 	// Всегда сохраняем в формате {"points": [...]}
@@ -128,36 +137,38 @@ func (m *Module) SaveModule(pool *pgxpool.Pool) error {
 	defer conn.Release()
 
 	_, err = conn.Exec(context.Background(),
-		"INSERT INTO modules (map_id, module_type, module_name, module_points_json) VALUES ($1, $2, $3, $4)",
-		m.MapId, m.ModuleType, m.ModuleName, pointsJSON)
+		"INSERT INTO modules (map_id, habitation_type, module_type, module_points_json) VALUES ($1, $2, $3, $4)",
+		m.MapId, m.HabitationType, m.ModuleType, pointsJSON)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-func TakeModulesDistance(moduleType1 string, moduleType2 string, pool *pgxpool.Pool) (*ModulesDistance, error) {
+func TakeModulesDistance(pool *pgxpool.Pool) ([]ModulesDistance, error) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Release()
-	row := conn.QueryRow(context.Background(),
-		`SELECT min_distance, max_distance FROM module_distance_rules 
-   		WHERE (module_type_1 = $1 AND module_type_2 = $2)
-    	OR (module_type_1 = $2 AND module_type_2 = $1)
-		LIMIT 1`,
-		moduleType1, moduleType2)
-
-	var req ModulesDistance
-	err = row.Scan(
-		&req.MinDistance,
-		&req.MaxDistance,
-	)
-
+	rows, err := conn.Query(context.Background(),
+		`SELECT module_type_1, module_type_2, min_distance, max_distance FROM module_distance_rules`)
+	if err != nil{
+		return nil, err
+	}
+	defer rows.Close()
+	var resp []ModulesDistance
+	for rows.Next() {
+		var module ModulesDistance
+		err = rows.Scan(&module.ModuleType1, &module.ModuleType2, &module.MinDistance, &module.MaxDistance)
+		if err != nil{
+			return nil, err
+		}
+		resp = append(resp, module)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	return &req, nil
+	return resp, nil
 }
