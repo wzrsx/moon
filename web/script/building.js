@@ -1,16 +1,16 @@
 // модули
 // Глобальная переменная для хранения слоев модулей
 let moduleLayers = [];
-let cachedModules = [];//данные о модулях
+let cachedModules = []; //данные о модулях
 const dangerSource = new ol.source.Vector(); // Красные зоны (запретные)
-const safeSource = new ol.source.Vector();   // Зеленые зоны (разрешенные)
+const safeSource = new ol.source.Vector(); // Зеленые зоны (разрешенные)
 // Функция загрузки модулей с сервера
 
 function loadModules() {
   fetch("http://localhost:5050/maps/redactor/page/take_modules")
-    .then(response => response.json())
-    .then(modules => {
-       // Гарантированно инициализируем как массив
+    .then((response) => response.json())
+    .then((modules) => {
+      // Гарантированно инициализируем как массив
       cachedModules = Array.isArray(modules) ? modules : [];
       clearModuleLayers();
       if (!modules || modules.length === 0) {
@@ -24,10 +24,10 @@ function loadModules() {
       const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
         style: createModuleStyleFunction(),
-        zIndex: 5
+        zIndex: 5,
       });
 
-      modules.forEach(module => {
+      modules.forEach((module) => {
         // Координаты уже в метрах (EPSG:100000)
         const [x, y] = module.points;
 
@@ -37,11 +37,14 @@ function loadModules() {
             geometry: new ol.geom.Point([x, y]),
             name: module.module_name,
             type: module.module_type,
-            id: module.id_module
+            id: module.id_module,
           });
           vectorSource.addFeature(feature);
         } else {
-          console.warn(`Модуль ${module.module_name} вне зоны видимости`, [x, y]);
+          console.warn(`Модуль ${module.module_name} вне зоны видимости`, [
+            x,
+            y,
+          ]);
         }
       });
 
@@ -61,11 +64,11 @@ function loadModules() {
 function createModuleStyleFunction() {
   return function (feature, resolution) {
     const zoom = map.getView().getZoom();
-    const moduleType = feature.get('type');
-    const moduleName = feature.get('name');
+    const moduleType = feature.get("type");
+    const moduleName = feature.get("name");
     const styles = [];
     // Путь к иконке модуля
-    const iconPath = `/static/style/photos/modules_compressed/${moduleName}.png`; 
+    const iconPath = `/static/style/photos/modules_compressed/${moduleName}.png`;
 
     const iconScale = 0.1 * Math.pow(0.8, 16 - zoom); // Экспоненциальное уменьшение
 
@@ -100,9 +103,9 @@ function createModuleStyleFunction() {
           text: new ol.style.Text({
             text: moduleName,
             offsetY: -20,
-            font: 'bold 12px Jura',
-            fill: new ol.style.Fill({ color: '#fff' }),
-            stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
+            font: "bold 12px Jura",
+            fill: new ol.style.Fill({ color: "#fff" }),
+            stroke: new ol.style.Stroke({ color: "#000", width: 2 }),
           }),
         }),
       ];
@@ -112,36 +115,36 @@ function createModuleStyleFunction() {
           src: iconPath,
           scale: iconScale,
           anchor: [0.5, 0.5],
-          imgSize: [300, 300]
+          imgSize: [300, 300],
         }),
         text: new ol.style.Text({
           text: moduleName,
           offsetY: 20,
-          font: 'bold 12px Jura',
-          fill: new ol.style.Fill({ color: '#fff' }),
-          stroke: new ol.style.Stroke({ color: '#000', width: 2 })
-        })
+          font: "bold 12px Jura",
+          fill: new ol.style.Fill({ color: "#fff" }),
+          stroke: new ol.style.Stroke({ color: "#000", width: 2 }),
+        }),
       });
     } else {
       // Стиль для отдаленного вида (цветная точка)
       return new ol.style.Style({
         image: new ol.style.Circle({
-          radius: 5 + (zoom * 0.2),
+          radius: 5 + zoom * 0.2,
           fill: new ol.style.Fill({
-            color: getColorByModuleType(moduleType)
+            color: getColorByModuleType(moduleType),
           }),
           stroke: new ol.style.Stroke({
-            color: '#fff',
-            width: 1
-          })
+            color: "#fff",
+            width: 1,
+          }),
         }),
         text: new ol.style.Text({
           text: moduleName,
           offsetY: -20,
-          font: 'bold 12px Jura',
-          fill: new ol.style.Fill({ color: '#fff' }),
-          stroke: new ol.style.Stroke({ color: '#000', width: 2 })
-        })
+          font: "bold 12px Jura",
+          fill: new ol.style.Fill({ color: "#fff" }),
+          stroke: new ol.style.Stroke({ color: "#000", width: 2 }),
+        }),
       });
     }
   };
@@ -149,7 +152,7 @@ function createModuleStyleFunction() {
 
 // Функция очистки слоев модулей
 function clearModuleLayers() {
-  moduleLayers.forEach(layer => {
+  moduleLayers.forEach((layer) => {
     map.removeLayer(layer);
   });
   moduleLayers = [];
@@ -163,9 +166,9 @@ function addModuleToMap(moduleData) {
     const vectorLayer = new ol.layer.Vector({
       source: vectorSource,
       style: createModuleStyleFunction(),
-      zIndex: 5
+      zIndex: 5,
     });
-    
+
     map.addLayer(vectorLayer);
     moduleLayers.push(vectorLayer);
   }
@@ -178,7 +181,7 @@ function addModuleToMap(moduleData) {
     geometry: new ol.geom.Point(moduleData.points),
     name: moduleData.module_name,
     type: moduleData.module_type,
-    id: moduleData.id_module // если у вас есть этот ID
+    id: moduleData.id_module, // если у вас есть этот ID
   });
 
   // Добавляем точку в векторный источник
@@ -190,14 +193,13 @@ function addModuleToMap(moduleData) {
 // Вызываем загрузку модулей при инициализации
 loadModules();
 
-
 // Вспомогательная функция для цветов по типу модуля
 function getColorByModuleType(type) {
   const colors = {
-    'inhabited': '#2196F3', // Синий
-    'technological': '#ff4f00' // Оранжевый
+    inhabited: "#2196F3", // Синий
+    technological: "#ff4f00", // Оранжевый
   };
-  return colors[type] || '#FF5722'; // Оранжевый по умолчанию
+  return colors[type] || "#FF5722"; // Оранжевый по умолчанию
 }
 
 // кнопки
@@ -214,52 +216,58 @@ const sidebar = document.getElementById("modulesSidebar");
 
 const modulesChoiceType = document.getElementById("modulesChoiceType");
 
-const modulesContainerInhabited = document.getElementById('modulesContainerInhabited');
-const modulesContainerTechnological = document.getElementById('modulesContainerTechnological');
+const modulesContainerInhabited = document.getElementById(
+  "modulesContainerInhabited"
+);
+const modulesContainerTechnological = document.getElementById(
+  "modulesContainerTechnological"
+);
 
 const modulesList = document.getElementById("modulesList");
-const modules = document.querySelectorAll('.item-module');
+const modules = document.querySelectorAll(".item-module");
 const typeModulesTitle = document.getElementById("typeModulesTitle");
-const notificationsContainer = document.getElementById("notificationsContainer");
+const notificationsContainer = document.getElementById(
+  "notificationsContainer"
+);
 
-const checkboxDropMenu = document.getElementById('burger-checkbox');
+const checkboxDropMenu = document.getElementById("burger-checkbox");
 //уведы всплывающие
 const notification = document.getElementById("customNotification");
 let currentModuleType = null;
 let isOpenAside = null;
 //обработчики
-placeModulesBtn.addEventListener('click', (e) => {
+placeModulesBtn.addEventListener("click", (e) => {
   e.preventDefault();
-  modulesChoiceType.style.display = 'grid';
-  modulesContainerInhabited.style.display = 'none'; // Добавляем скрытие контейнера модулей
-  modulesContainerTechnological.style.display = 'none'; 
-  notificationsContainer.style.display = 'none'; // Скрываем уведомления
+  modulesChoiceType.style.display = "grid";
+  modulesContainerInhabited.style.display = "none"; // Добавляем скрытие контейнера модулей
+  modulesContainerTechnological.style.display = "none";
+  notificationsContainer.style.display = "none"; // Скрываем уведомления
   typeModulesTitle.innerText = "Выбор модулей";
   if (currentModuleType) {
     showModules();
   }
-  sidebar.classList.add('visible');
+  sidebar.classList.add("visible");
   isOpenAside = true;
 });
 
-notificationsBtn.addEventListener('click', (e) => {
+notificationsBtn.addEventListener("click", (e) => {
   e.preventDefault();
-  modulesChoiceType.style.display = 'none';
-  modulesContainerInhabited.style.display = 'none'; // Добавляем скрытие контейнера модулей
-  modulesContainerTechnological.style.display = 'none'; 
+  modulesChoiceType.style.display = "none";
+  modulesContainerInhabited.style.display = "none"; // Добавляем скрытие контейнера модулей
+  modulesContainerTechnological.style.display = "none";
   typeModulesTitle.innerText = "Уведомления";
-  notificationsContainer.style.display = 'block';
-  sidebar.classList.add('visible');
+  notificationsContainer.style.display = "block";
+  sidebar.classList.add("visible");
   isOpenAside = true;
 });
-saveProjectBtn.addEventListener('click', (e) => {
+saveProjectBtn.addEventListener("click", (e) => {
   e.preventDefault();
   /*to do ОТВЕТ ОТ СЕРВЕРА*/
   //sendNotification("Изменения успешно сохранены", 1);
-  code = 404;//пример
+  code = 404; //пример
   sendNotification(`Возникла ошибка: ${code}`, 0);
 });
-exitToMainBtn.addEventListener('click', (e) => {
+exitToMainBtn.addEventListener("click", (e) => {
   e.preventDefault();
   blurDiv.classList.add("blur");
   dialog.showModal();
@@ -268,23 +276,22 @@ function closeconfirmDialog() {
   blurDiv.classList.remove("blur");
   dialog.close();
 }
-confirmBtn.addEventListener('click', (e) => {
+confirmBtn.addEventListener("click", (e) => {
   e.preventDefault();
   blurDiv.classList.remove("blur");
-  window.location.href = "../index.html"
+  window.location.href = "../index.html";
 });
 dialog.addEventListener("close", () => {
   blurDiv.classList.remove("blur");
 });
 /*to do ПРИМЕНИТЬ НА ВСЕ БОКОВЫЕ ПО КЛАССУ*/
-document.addEventListener('keydown', event => {
+document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" || event.keyCode === 27) {
     closeAside();
-
   }
 });
 function closeAside() {
-  sidebar.classList.remove('visible');
+  sidebar.classList.remove("visible");
   isOpenAside = false;
 }
 function sendNotification(text, success) {
@@ -294,48 +301,51 @@ function sendNotification(text, success) {
     notification.style.backgroundColor = "#4CAF50";
   }
   notification.innerText = `${text}`;
-  notification.classList.add('show');
+  notification.classList.add("show");
   setTimeout(() => {
-    notification.classList.remove('show');
+    notification.classList.remove("show");
   }, 1500);
 }
 /*можно будет с бд подтянуть модули*/
 function openInhabitedModules() {
   // Сохраняем тип выбранных модулей
-  currentModuleType = 'inhabited';
+  currentModuleType = "inhabited";
   showModules();
 }
 function openTechnologicalModules() {
   // Сохраняем тип выбранных модулей
-  currentModuleType = 'technological';
+  currentModuleType = "technological";
   showModules();
 }
 function showModules() {
-  typeModulesTitle.innerText = currentModuleType === 'inhabited'
-    ? "Обитаемые модули"
-    : "Технологические объекты";
+  typeModulesTitle.innerText =
+    currentModuleType === "inhabited"
+      ? "Обитаемые модули"
+      : "Технологические объекты";
 
-  modulesChoiceType.style.opacity = '0';
-  modulesChoiceType.style.transform = 'translateY(20px)';
-  modulesChoiceType.style.transition = 'all 0.3s ease-out';
+  modulesChoiceType.style.opacity = "0";
+  modulesChoiceType.style.transform = "translateY(20px)";
+  modulesChoiceType.style.transition = "all 0.3s ease-out";
 
   setTimeout(() => {
-    modulesChoiceType.style.display = 'none';
-    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'block' : 'none';
-    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'block' : 'none';
-    notificationsContainer.style.display = 'none'; // Скрываем уведомления
+    modulesChoiceType.style.display = "none";
+    modulesContainerInhabited.style.display =
+      currentModuleType === "inhabited" ? "block" : "none";
+    modulesContainerTechnological.style.display =
+      currentModuleType === "technological" ? "block" : "none";
+    notificationsContainer.style.display = "none"; // Скрываем уведомления
 
-    modules.forEach(module => {
-      module.style.opacity = '0';
-      module.style.transform = 'translateY(20px)';
+    modules.forEach((module) => {
+      module.style.opacity = "0";
+      module.style.transform = "translateY(20px)";
     });
 
     setTimeout(() => {
       modules.forEach((module, index) => {
         setTimeout(() => {
-          module.style.opacity = '1';
-          module.style.transform = 'translateY(0)';
-          module.style.transition = 'all 0.3s ease-out';
+          module.style.opacity = "1";
+          module.style.transform = "translateY(0)";
+          module.style.transition = "all 0.3s ease-out";
         }, index * 100);
       });
     }, 50);
@@ -344,22 +354,24 @@ function showModules() {
 
 function backToTypes() {
   typeModulesTitle.innerText = "Выбор модулей";
-  modules.forEach(module => {
-    module.style.opacity = '0';
-    module.style.transform = 'translateY(20px)';
-    module.style.transition = 'all 0.2s ease-out';
+  modules.forEach((module) => {
+    module.style.opacity = "0";
+    module.style.transform = "translateY(20px)";
+    module.style.transition = "all 0.2s ease-out";
   });
 
   setTimeout(() => {
-    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'none' : 'block';
-    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'none' : 'block';
-    notificationsContainer.style.display = 'none'; // Скрываем уведомления
-    modulesChoiceType.style.display = 'grid';
+    modulesContainerInhabited.style.display =
+      currentModuleType === "inhabited" ? "none" : "block";
+    modulesContainerTechnological.style.display =
+      currentModuleType === "technological" ? "none" : "block";
+    notificationsContainer.style.display = "none"; // Скрываем уведомления
+    modulesChoiceType.style.display = "grid";
 
     setTimeout(() => {
-      modulesChoiceType.style.opacity = '1';
-      modulesChoiceType.style.transform = 'translateY(0)';
-      modulesChoiceType.style.transition = 'all 0.3s ease-out 0.1s';
+      modulesChoiceType.style.opacity = "1";
+      modulesChoiceType.style.transform = "translateY(0)";
+      modulesChoiceType.style.transition = "all 0.3s ease-out 0.1s";
     }, 50);
   }, 200);
   currentModuleType = null;
@@ -369,10 +381,10 @@ function backToTypes() {
 let draggedItem = null;
 let clone = null;
 let startX, startY;
-modules.forEach(module => {
-  module.addEventListener('mousedown', async function (e) {
-     const moduleType = {
-      module_type: module.getAttribute('data-name-en-db')
+modules.forEach((module) => {
+  module.addEventListener("mousedown", async function (e) {
+    const moduleType = {
+      module_type: module.getAttribute("data-name-en-db"),
     };
 
     //Получаем требования к модулю
@@ -382,107 +394,121 @@ modules.forEach(module => {
       console.log("Требования модуля:", moduleRequirements);
 
       // 2. Прячем sidebar и т.д.
-      sidebar.classList.remove('visible');
+      sidebar.classList.remove("visible");
       isOpenAside = false;
       checkboxDropMenu.checked = false;
-      sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
+      sendNotification(
+        "Зоны для размещения модуля выделены зеленым цветом.",
+        1
+      );
       // 3. Показываем радиусы и уклоны (?)
       toggleExclusionRadius(true, cachedModules, moduleRequirements);
-      greenLayer.setOpacity(0.7)
+      greenLayer.setOpacity(0.7);
       // 4. Создаем drag-элемент
-      const originalImg = this.querySelector('.photo-item-module');
+      const originalImg = this.querySelector(".photo-item-module");
       clone = originalImg.cloneNode(true);
 
-      clone.style.transform = 'scale(0.3)';
-      clone.style.transition = 'transform 0.2s';
-  
-      // Стили для клона (только изображение)
-      clone.style.position = 'absolute';
-      clone.style.zIndex = '1000';
-      clone.style.pointerEvents = 'none';
-      clone.style.width = originalImg.offsetWidth + 'px';
-      clone.style.height = originalImg.offsetHeight + 'px';
-      clone.style.objectFit = 'contain';
+      clone.style.transform = "scale(0.3)";
+      clone.style.transition = "transform 0.2s";
 
-  
+      // Стили для клона (только изображение)
+      clone.style.position = "absolute";
+      clone.style.zIndex = "1000";
+      clone.style.pointerEvents = "none";
+      clone.style.width = originalImg.offsetWidth + "px";
+      clone.style.height = originalImg.offsetHeight + "px";
+      clone.style.objectFit = "contain";
+
       // Запоминаем оригинальный элемент
       draggedItem = this;
-  
+
       // Позиция курсора при зажатии
       startX = e.clientX;
       startY = e.clientY;
-  
+
       // Позиция клона (рассчитываем относительно изображения)
       const rect = originalImg.getBoundingClientRect();
-      clone.style.left = rect.left + 'px';
-      clone.style.top = rect.top + 'px';
-  
+      clone.style.left = rect.left + "px";
+      clone.style.top = rect.top + "px";
+
       document.body.appendChild(clone);
-  
+
       // Смещаем клон относительно курсора
       const shiftX = e.clientX - rect.left;
       const shiftY = e.clientY - rect.top;
-  
+
       function moveAt(pageX, pageY) {
-        clone.style.left = pageX - shiftX + 'px';
-        clone.style.top = pageY - shiftY + 'px';
+        clone.style.left = pageX - shiftX + "px";
+        clone.style.top = pageY - shiftY + "px";
       }
-  
+
       function onMouseMove(e) {
         moveAt(e.clientX, e.clientY);
       }
-  
+
       // Перемещаем клон при движении мыши
-      document.addEventListener('mousemove', onMouseMove);
-  
+      document.addEventListener("mousemove", onMouseMove);
+
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
         const coordinates = map.getCoordinateFromPixel(pixel);
-        const nameEn = module.getAttribute('data-name-en-db');
+        const nameEn = module.getAttribute("data-name-en-db");
         const moduleData = {
           module_name: nameEn,
           module_type: currentModuleType,
-          points: coordinates
+          points: coordinates,
         };
-        
-        //ЕСЛИ Жилой -> 15deg 
-        if(currentModuleType === 'inhabited'){
-          checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
-          .then(result => {
+
+        //ЕСЛИ Жилой -> 15deg
+        if (currentModuleType === "inhabited") {
+          checkAreaAllOnes(
+            "compress_5deg",
+            coordinates[0],
+            coordinates[1],
+            moduleRequirements.width_meters,
+            moduleRequirements.length_meters
+          ).then((result) => {
             console.log(result);
             if (!result) {
-              sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
-            }
-            else if(isInDangerZone(coordinates)){
+              sendNotification(
+                "В области есть несоответсвие уклона - размещение запрещено!",
+                0
+              );
+            } else if (isInDangerZone(coordinates)) {
               sendNotification("Запрещенная зона!", 0);
-            }
-            else{
+            } else {
               saveModule(moduleData);
             }
-          })
+          });
         }
         //ЕСЛИ Производство -> 5deg
-        else if(currentModuleType === 'technological'){
-          checkAreaAllOnes("compress_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
-          .then(result => {
+        else if (currentModuleType === "technological") {
+          checkAreaAllOnes(
+            "compress_5deg",
+            coordinates[0],
+            coordinates[1],
+            moduleRequirements.width_meters,
+            moduleRequirements.length_meters
+          ).then((result) => {
             console.log(result);
             if (!result) {
-              sendNotification("В области есть несоответсвие уклона - размещение запрещено!", 0);
-            }
-            else if(isInDangerZone(coordinates)){
+              sendNotification(
+                "В области есть несоответсвие уклона - размещение запрещено!",
+                0
+              );
+            } else if (isInDangerZone(coordinates)) {
               sendNotification("Запрещенная зона!", 0);
-            }
-            else{
+            } else {
               saveModule(moduleData);
             }
-          })
+          });
         }
-        
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        greenLayer.setOpacity(0); 
+
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        greenLayer.setOpacity(0);
         toggleExclusionRadius(false);
         if (clone) {
           clone.remove();
@@ -490,30 +516,30 @@ modules.forEach(module => {
           draggedItem = null;
         }
       }
-  
-      document.addEventListener('mouseup', onMouseUp);
+
+      document.addEventListener("mouseup", onMouseUp);
       module.ondragstart = () => false;
     } catch (error) {
-      sendNotification('Ошибка при получении требований модуля', 0);
+      sendNotification("Ошибка при получении требований модуля", 0);
       console.error(error);
     }
   });
-  module.addEventListener('dragstart', (e) => {
+  module.addEventListener("dragstart", (e) => {
     e.preventDefault();
     return false;
   });
 });
 
-function saveModule(moduleData){
+function saveModule(moduleData) {
   fetch("http://localhost:5050/maps/redactor/page/save_module", {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'content-type': 'application/json'
+      "content-type": "application/json",
     },
-    body: JSON.stringify(moduleData)
+    body: JSON.stringify(moduleData),
   })
     .then((response) => {
-      return response.json().then(data => {
+      return response.json().then((data) => {
         if (!response.ok) {
           console.log(data.error);
           if (data.error) {
@@ -524,7 +550,7 @@ function saveModule(moduleData){
         return data; // Возвращаем успешно полученные данные
       });
     })
-    .then(data => {
+    .then((data) => {
       cachedModules.push({
         points: moduleData.points,
         module_name: moduleData.module_name,
@@ -532,77 +558,88 @@ function saveModule(moduleData){
       });
       addModuleToMap(moduleData);
     })
-    .catch(error => {
-      console.error('Ошибка сохранения модуля:', error);
+    .catch((error) => {
+      console.error("Ошибка сохранения модуля:", error);
       // Здесь можно также обработать другие ошибки, если нужно
     });
 }
 // 1. Регистрация проекции
-proj4.defs("EPSG:100000",
+proj4.defs(
+  "EPSG:100000",
   'PROJCS["Moon_2015_South_Polar_Stereographic",' +
-  'GEOGCS["Moon_2015",' +
-  'DATUM["D_Moon_2015",' +
-  'SPHEROID["Moon_2015_IAU_IAG",1737400,0]],' +
-  'PRIMEM["Reference_Meridian",0],' +
-  'UNIT["degree",0.0174532925199433]],' +
-  'PROJECTION["Polar_Stereographic"],' +
-  'PARAMETER["latitude_of_origin",-90],' +
-  'PARAMETER["central_meridian",0],' +
-  'PARAMETER["scale_factor",1],' +
-  'PARAMETER["false_easting",0],' +
-  'PARAMETER["false_northing",0],' +
-  'UNIT["metre",1],' +
-  'AUTHORITY["EPSG","100000"]]'
+    'GEOGCS["Moon_2015",' +
+    'DATUM["D_Moon_2015",' +
+    'SPHEROID["Moon_2015_IAU_IAG",1737400,0]],' +
+    'PRIMEM["Reference_Meridian",0],' +
+    'UNIT["degree",0.0174532925199433]],' +
+    'PROJECTION["Polar_Stereographic"],' +
+    'PARAMETER["latitude_of_origin",-90],' +
+    'PARAMETER["central_meridian",0],' +
+    'PARAMETER["scale_factor",1],' +
+    'PARAMETER["false_easting",0],' +
+    'PARAMETER["false_northing",0],' +
+    'UNIT["metre",1],' +
+    'AUTHORITY["EPSG","100000"]]'
 );
-const moonProjection = ol.proj.get('EPSG:100000') || new ol.proj.Projection({
-  code: 'EPSG:100000',
-  extent: [-216400, -216400, 216400, 216400],
-  worldExtent: [-216400, -216400, 216400, 216400]
-});
+const moonProjection =
+  ol.proj.get("EPSG:100000") ||
+  new ol.proj.Projection({
+    code: "EPSG:100000",
+    extent: [-216400, -216400, 216400, 216400],
+    worldExtent: [-216400, -216400, 216400, 216400],
+  });
 ol.proj.addProjection(moonProjection);
 ol.proj.proj4.register(proj4);
 
 // 2. Настройка полноэкранной карты
 const map = new ol.Map({
-  target: 'map',
+  renderer: "canvas",
+  target: "map",
   view: new ol.View({
-    projection: 'EPSG:100000',
+    projection: "EPSG:100000",
     center: [0, 0],
     extent: [-216400, -216400, 216400, 216400],
-    zoom: 1, // начальный уровень зума
+    zoom: 3, // начальный уровень зума
     minZoom: 1, // минимальный уровень зума
-    maxZoom: 20 // максимальный уровень зума
-  })
+    maxZoom: 20, // максимальный уровень зума
+  }),
 });
 
 // 3. Функция создания полноэкранных слоев
-const createCompositeLayer = (layerName, opacity = 1.0, zIndex = 0) => {
-  return new ol.layer.Tile({
-    source: new ol.source.TileWMS({
-      url: '/maps/redactor/page/composite-render',
+const createFullscreenLayer = (layerName, opacity, zIndex) => {
+  return new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+      url: "http://localhost:8080/geoserver/wms",
       params: {
-        'LAYERS': layerName,
-        'VERSION': '1.1.1',
-        'FORMAT': 'image/png',
-        'TRANSPARENT': true,
-        'SRS': 'EPSG:100000'
+        LAYERS: `moon-workspace:${layerName}`,
+        VERSION: "1.3.0",
+        CRS: "EPSG:100000",
+        FORMAT: "image/png",
+        TRANSPARENT: true,
       },
-      serverType: 'geoserver',
-      crossOrigin: 'anonymous',
-      tileSize: 512, // Оптимальный размер тайла
-      cacheSize: 100 // Кэширование тайлов
+      serverType: "geoserver",
+      ratio: 1.5,
+      maxSize: 2048, // или 2048
+      imageLoadFunction: (image, src) => {
+        const img = image.getImage();
+        img.src = src;
+      },
+      updateWhileInteracting: true,
+      // Добавь это:
+      attributions: [], // если хочешь скрыть attribution
     }),
     opacity: opacity,
-    zIndex: zIndex
+    zIndex: zIndex,
+    updateWhileInteracting: true,
   });
 };
 
 // 4. Создание и добавление слоев
 // Слои в правильном порядке:
-const ldem = createCompositeLayer('ldem-83s', 1.0, 1);
-const ldsm = createCompositeLayer('ldsm-83s', 0.3, 2);
-const hillshade = createCompositeLayer('ldem-hill', 0.6, 3);
-const greenLayer = createCompositeLayer('cmps_5deg', 0, 4);
+const ldem = createFullscreenLayer("ldem-83s", 1.0, 1);
+const ldsm = createFullscreenLayer("ldsm-83s", 0.3, 2);
+const hillshade = createFullscreenLayer("ldem-hill", 0.6, 3);
+const greenLayer = createFullscreenLayer("cmps_5deg", 0, 4);
 
 // 4. Добавляем слои на карту
 map.addLayer(ldem);
@@ -611,14 +648,14 @@ map.addLayer(hillshade);
 map.addLayer(greenLayer);
 
 // Для базового слоя (яркость)
-ldem.on(['precompose', 'postcompose'], function (event) {
+ldem.on(["precompose", "postcompose"], function (event) {
   const context = event.context;
   const canvas = context.canvas;
 
-  if (event.type === 'precompose') {
+  if (event.type === "precompose") {
     // Сохраняем оригинальное состояние
     context.save();
-    context.filter = 'brightness(1.2)';
+    context.filter = "brightness(1.2)";
   } else {
     // Восстанавливаем после отрисовки
     context.restore();
@@ -626,24 +663,24 @@ ldem.on(['precompose', 'postcompose'], function (event) {
 });
 
 // Для hillshade (multiply)
-hillshade.on(['precompose', 'postcompose'], function (event) {
+hillshade.on(["precompose", "postcompose"], function (event) {
   const context = event.context;
 
-  if (event.type === 'precompose') {
+  if (event.type === "precompose") {
     context.save();
-    context.globalCompositeOperation = 'multiply';
+    context.globalCompositeOperation = "multiply";
   } else {
     context.restore();
   }
 });
 
 // Для ldsm (screen)
-ldsm.on(['precompose', 'postcompose'], function (event) {
+ldsm.on(["precompose", "postcompose"], function (event) {
   const context = event.context;
 
-  if (event.type === 'precompose') {
+  if (event.type === "precompose") {
     context.save();
-    context.globalCompositeOperation = 'screen';
+    context.globalCompositeOperation = "screen";
   } else {
     context.restore();
   }
@@ -663,61 +700,63 @@ function updateMapSize() {
   });*/
 }
 
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   setTimeout(updateMapSize, 100);
 });
 
 // Инициализация
 updateMapSize();
-map.on('click', function (evt) {
+map.on("click", function (evt) {
   const rawCoords = evt.coordinate;
-  console.log('Координаты в проекции карты:', rawCoords);
+  console.log("Координаты в проекции карты:", rawCoords);
 });
 
-const mousePositionElement = document.createElement('div');
-mousePositionElement.id = 'mouse-coordinates';
-mousePositionElement.style.position = 'absolute';
-mousePositionElement.style.backgroundColor = 'white';
-mousePositionElement.style.padding = '5px';
-mousePositionElement.style.border = '1px solid #ccc';
-mousePositionElement.style.borderRadius = '3px';
-mousePositionElement.style.pointerEvents = 'none';
-mousePositionElement.style.zIndex = '1000';
-mousePositionElement.style.display = 'none';
-mousePositionElement.style.fontFamily = 'Jura';
-mousePositionElement.style.fontWeight = '700';
+const mousePositionElement = document.createElement("div");
+mousePositionElement.id = "mouse-coordinates";
+mousePositionElement.style.position = "absolute";
+mousePositionElement.style.backgroundColor = "white";
+mousePositionElement.style.padding = "5px";
+mousePositionElement.style.border = "1px solid #ccc";
+mousePositionElement.style.borderRadius = "3px";
+mousePositionElement.style.pointerEvents = "none";
+mousePositionElement.style.zIndex = "1000";
+mousePositionElement.style.display = "none";
+mousePositionElement.style.fontFamily = "Jura";
+mousePositionElement.style.fontWeight = "700";
 document.body.appendChild(mousePositionElement);
 
 //Вывод координат
-const dropdownMenu = document.querySelector('.dropdown-menu');
-const zoomItems = document.querySelector('.ol-zoom');
-const navElement = document.querySelector('nav');
+const dropdownMenu = document.querySelector(".dropdown-menu");
+const zoomItems = document.querySelector(".ol-zoom");
+const navElement = document.querySelector("nav");
 
-checkboxDropMenu.addEventListener('click', (e) => {
-  mousePositionElement.style.display = checkboxDropMenu.checked ? 'none' : 'block';
+checkboxDropMenu.addEventListener("click", (e) => {
+  mousePositionElement.style.display = checkboxDropMenu.checked
+    ? "none"
+    : "block";
 });
 // Обработчик движения курсора по карте
-map.on('pointermove', function (evt) {
+map.on("pointermove", function (evt) {
   if (isOpenAside) {
-    mousePositionElement.style.display = 'none';
+    mousePositionElement.style.display = "none";
     return;
   }
   updateMousePosition(evt.coordinate, evt.pixel);
 });
 //Обработчик движения курсора по всей странице
-document.addEventListener('mousemove', function (e) {
+document.addEventListener("mousemove", function (e) {
   if (dropdownMenu.contains(e.target) || zoomItems.contains(e.target)) {
-    mousePositionElement.style.display = 'none';
+    mousePositionElement.style.display = "none";
   }
 });
 // Обработчик покидания окна
-document.addEventListener('mouseout', function (e) {
+document.addEventListener("mouseout", function (e) {
   if (!e.relatedTarget && !e.toElement) {
-    mousePositionElement.style.display = 'none';
+    mousePositionElement.style.display = "none";
   }
 });
 // Обработчик движения курсора по nav
-navElement.addEventListener('mousemove', function (e) {
+navElement.addEventListener("mousemove", function (e) {
   if (!isOpenAside) {
     const mapRect = map.getTargetElement().getBoundingClientRect();
     const pixel = [e.clientX - mapRect.left, e.clientY - mapRect.top];
@@ -739,61 +778,75 @@ function getCacheKey(coordinate) {
 // Функция запроса высоты (уже с debounce)
 const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
   const cacheKey = getCacheKey(coordinate);
-  
+
   // Проверяем кэш
   if (elevationCache.has(cacheKey)) {
     const elevationText = elevationCache.get(cacheKey);
     updateElevationText(coordinate, elevationText);
     return;
   }
-  
-  const url = ldem.getSource().getFeatureInfoUrl(
-    coordinate,
-    viewResolution,
-    'EPSG:100000',
-    {'INFO_FORMAT': 'application/json'}
-  );
-  
+
+  // Генерируем URL с JSONP параметрами
+  const url = ldem.getSource()
+    .getFeatureInfoUrl(coordinate, viewResolution, "EPSG:100000", {
+      INFO_FORMAT: "text/javascript", // Используем JSONP формат
+      FORMAT_OPTIONS: 'callback:handleElevationData' // Указываем имя callback функции
+    });
+
   if (!url) return;
 
-  // Отменяем предыдущий запрос, если он еще выполняется
-  if (lastElevationController) {
-    lastElevationController.abort();
+  // Создаем уникальное имя функции для каждого запроса
+  const callbackName = 'handleElevationData_' + Date.now();
+  
+  // Удаляем предыдущий обработчик, если есть
+  if (window[callbackName]) {
+    delete window[callbackName];
   }
+
+  // Создаем новый script элемент
+  const script = document.createElement('script');
+  script.src = url;
   
-  // Создаем новый контроллер для текущего запроса
-  lastElevationController = new AbortController();
-  
-  fetch(url, { signal: lastElevationController.signal })
-    .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.blob();
-    })
-    .then(data => {
-      let elevationText;
-      if (data.features && data.features.length > 0) {
-        const elevation = data.features[0].properties.GRAY_INDEX;
-        elevationText = `${elevation.toFixed(2)} м`;
-      } else {
-        elevationText = 'нет данных';
-      }
-      
-      // Сохраняем в кэш
-      elevationCache.set(cacheKey, elevationText);
-      updateElevationText(coordinate, elevationText);
-    })
-    .catch(error => {
-      if (error.name !== 'AbortError') {
-        console.error('Ошибка запроса:', error);
-        updateElevationText(coordinate, 'ошибка запроса');
-      }
-    });
+  // Обработчик ошибок
+  script.onerror = () => {
+    console.error("Ошибка загрузки данных высоты");
+    updateElevationText(coordinate, "ошибка запроса");
+    cleanup();
+  };
+
+  // Глобальная функция для обработки ответа
+  window[callbackName] = (data) => {
+    let elevationText;
+    if (data.features && data.features.length > 0) {
+      const elevation = data.features[0].properties.GRAY_INDEX;
+      elevationText = `${elevation.toFixed(2)} м`;
+    } else {
+      elevationText = "нет данных";
+    }
+
+    // Сохраняем в кэш
+    elevationCache.set(cacheKey, elevationText);
+    updateElevationText(coordinate, elevationText);
+    cleanup();
+  };
+
+  // Функция очистки
+  const cleanup = () => {
+    document.body.removeChild(script);
+    delete window[callbackName];
+  };
+
+  // Добавляем script на страницу
+  document.body.appendChild(script);
+
 }, 100);
 
 // Функция для обновления текста высоты
 function updateElevationText(coordinate, elevationText) {
   mousePositionElement.innerHTML = `
-    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(
+    2
+  )} м <br>
     Высота над уровнем моря: ${elevationText}
   `;
 }
@@ -802,19 +855,21 @@ function updateElevationText(coordinate, elevationText) {
 function updateMousePosition(coordinate, pixel, clientX, clientY) {
   // Обновляем позицию элемента
   if (pixel) {
-    mousePositionElement.style.left = (pixel[0] + 10) + 'px';
-    mousePositionElement.style.top = (pixel[1] + 10) + 'px';
+    mousePositionElement.style.left = pixel[0] + 10 + "px";
+    mousePositionElement.style.top = pixel[1] + 10 + "px";
   } else {
-    mousePositionElement.style.left = (clientX + 10) + 'px';
-    mousePositionElement.style.top = (clientY + 10) + 'px';
+    mousePositionElement.style.left = clientX + 10 + "px";
+    mousePositionElement.style.top = clientY + 10 + "px";
   }
 
   // Показываем элемент с координатами
   mousePositionElement.innerHTML = `
-    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
+    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(
+    2
+  )} м <br>
     Высота над уровнем моря: загрузка...
   `;
-  mousePositionElement.style.display = 'block';
+  mousePositionElement.style.display = "block";
 
   // Запрашиваем высоту с debounce и кэшированием
   const viewResolution = map.getView().getResolution();
@@ -824,26 +879,32 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
 // Функция debounce для ограничения частоты вызовов
 function debounce(func, wait) {
   let timeout;
-  return function(...args) {
+  return function (...args) {
     const context = this;
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(context, args), wait);
   };
 }
 
-
-async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, heightMeters) {
+async function checkAreaAllOnes(
+  layerName,
+  centerX,
+  centerY,
+  widthMeters,
+  heightMeters
+) {
   const minX = centerX - widthMeters / 2;
   const minY = centerY - heightMeters / 2;
   const maxX = centerX + widthMeters / 2;
   const maxY = centerY + heightMeters / 2;
 
   // Рассчитываем размеры в пикселях (10mpp)
-  const widthPixels = Math.ceil(widthMeters / 10);  // Округляем вверх
+  const widthPixels = Math.ceil(widthMeters / 10); // Округляем вверх
   const heightPixels = Math.ceil(heightMeters / 10);
   console.log(widthPixels, heightPixels);
   // 1. Запрашиваем изображение (1 пиксель = 10 метров)
-  const imgUrl = `http://localhost:8080/geoserver/wms?` +
+  const imgUrl =
+    `http://localhost:8080/geoserver/wms?` +
     `service=WMS&version=1.1.0&request=GetMap&` +
     `layers=${layerName}&` +
     `bbox=${minX},${minY},${maxX},${maxY}&` +
@@ -862,17 +923,17 @@ async function checkAreaAllOnes(layerName, centerX, centerY, widthMeters, height
 
   // 3. Анализируем пиксели
   const imageData = ctx.getImageData(0, 0, widthPixels, heightPixels).data;
-  
-  for (let i = 3; i < imageData.length; i += 4) { // Проверяем только альфа-канал
+
+  for (let i = 3; i < imageData.length; i += 4) {
+    // Проверяем только альфа-канал
     const alpha = imageData[i]; // Альфа-канал (0 = прозрачный, 255 = непрозрачный)
-    if (alpha === 0) { // Если пиксель прозрачный
+    if (alpha === 0) {
+      // Если пиксель прозрачный
       return false;
     }
   }
   return true;
 }
-
-
 
 // Вспомогательная функция загрузки изображения
 function loadImage(url) {
@@ -884,12 +945,12 @@ function loadImage(url) {
     img.src = url;
   });
 }
-  // Функция для добавления/удаления радиуса
+// Функция для добавления/удаления радиуса
 const exclusionRadiusLayers = [];
 
 async function toggleExclusionRadius(show, modules, moduleToAdd) {
   // Удаляем все существующие слои с радиусами
-  exclusionRadiusLayers.forEach(layer => {
+  exclusionRadiusLayers.forEach((layer) => {
     map.removeLayer(layer);
   });
   exclusionRadiusLayers.length = 0;
@@ -897,23 +958,23 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
   safeSource.clear();
 
   if (!show || !modules || !moduleToAdd) return;
-  
+
   const dangerLayer = new ol.layer.Vector({
     source: dangerSource,
     style: new ol.style.Style({
-      fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.5)' }),
-      stroke: new ol.style.Stroke({ color: 'rgba(255, 0, 0, 0.8)', width: 2 })
+      fill: new ol.style.Fill({ color: "rgba(255, 0, 0, 0.5)" }),
+      stroke: new ol.style.Stroke({ color: "rgba(255, 0, 0, 0.8)", width: 2 }),
     }),
-    zIndex: 6
+    zIndex: 6,
   });
 
   const safeLayer = new ol.layer.Vector({
     source: safeSource,
     style: new ol.style.Style({
-      fill: new ol.style.Fill({ color: 'rgba(0, 56, 43, 0.2)' }),
-      stroke: new ol.style.Stroke({ color: 'rgba(1, 50, 32, 0.8)', width: 2 })
+      fill: new ol.style.Fill({ color: "rgba(0, 56, 43, 0.2)" }),
+      stroke: new ol.style.Stroke({ color: "rgba(1, 50, 32, 0.8)", width: 2 }),
     }),
-    zIndex: 5
+    zIndex: 5,
   });
 
   // Обрабатываем модули асинхронно
@@ -925,17 +986,24 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
       }
 
       // все зоны
-      const allRadius = await getDistances(moduleToAdd.module_type, module.module_name);
+      const allRadius = await getDistances(
+        moduleToAdd.module_type,
+        module.module_name
+      );
       if (allRadius.min_distance > 0) {
-        dangerSource.addFeature(new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, allRadius.min_distance)
-        }));
+        dangerSource.addFeature(
+          new ol.Feature({
+            geometry: new ol.geom.Circle(module.points, allRadius.min_distance),
+          })
+        );
       }
 
       if (allRadius.max_distance > 0) {
-        safeSource.addFeature(new ol.Feature({
-          geometry: new ol.geom.Circle(module.points, allRadius.max_distance)
-        }));
+        safeSource.addFeature(
+          new ol.Feature({
+            geometry: new ol.geom.Circle(module.points, allRadius.max_distance),
+          })
+        );
       }
     }
 
@@ -943,9 +1011,8 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
     map.addLayer(dangerLayer);
     map.addLayer(safeLayer);
     exclusionRadiusLayers.push(dangerLayer, safeLayer);
-
   } catch (error) {
-    console.error('Ошибка при построении зон:', error);
+    console.error("Ошибка при построении зон:", error);
     // Очищаем слои в случае ошибки
     dangerSource.clear();
     safeSource.clear();
@@ -965,15 +1032,18 @@ function isInDangerZone(point) {
 }
 
 function getRequirements(moduleType) {
-  return fetch("http://localhost:5050/maps/redactor/page/take_modules_requirements", {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(moduleType)
-  })
+  return fetch(
+    "http://localhost:5050/maps/redactor/page/take_modules_requirements",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(moduleType),
+    }
+  )
     .then((response) => {
-      return response.json().then(data => {
+      return response.json().then((data) => {
         if (!response.ok) {
           console.error(data.error);
           if (data.error) {
@@ -984,29 +1054,32 @@ function getRequirements(moduleType) {
         return data; // Возвращаем успешно полученные данные
       });
     })
-    .then(data => {
+    .then((data) => {
       return data.requirements_json; // Возвращаем для цепочки промисов
     })
-    .catch(error => {
-      console.error('Ошибка получения требований модуля:', error);
+    .catch((error) => {
+      console.error("Ошибка получения требований модуля:", error);
       throw error; // Пробрасываем ошибку дальше
     });
 }
 function getDistances(moduleType1, moduleType2) {
   const requestData = {
     module_type_1: moduleType1,
-    module_type_2: moduleType2
+    module_type_2: moduleType2,
   };
-  
-  return fetch("http://localhost:5050/maps/redactor/page/take_modules_distance", {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(requestData)
-  })
+
+  return fetch(
+    "http://localhost:5050/maps/redactor/page/take_modules_distance",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    }
+  )
     .then((response) => {
-      return response.json().then(data => {
+      return response.json().then((data) => {
         if (!response.ok) {
           console.error(data.error);
           if (data.error) {
@@ -1017,11 +1090,11 @@ function getDistances(moduleType1, moduleType2) {
         return data; // Возвращаем успешно полученные данные
       });
     })
-    .then(data => {
+    .then((data) => {
       return data.requirements_json; // Возвращаем для цепочки промисов
     })
-    .catch(error => {
-      console.error('Ошибка получения требований модуля:', error);
+    .catch((error) => {
+      console.error("Ошибка получения требований модуля:", error);
       throw error; // Пробрасываем ошибку дальше
     });
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"loonar_mod/backend/geoserver/config_geoserver"
 	"net/http"
+	"path/filepath"
 	"strings"
 )
 
@@ -141,19 +142,18 @@ func (g *GeoServerClient) createWorkspaceWithRetry(name string) error {
 }
 
 func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, layerName, filePath string) error {
+	cleanedPath := cleanFilePath(filePath)
+	filename := cleanedFilename(cleanedPath)
+
 	// 1. Проверяем существование хранилища
-	checkStoreURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores/%s",
-		g.ConfigGeoServer.BaseURL, workspace, storeName)
+	checkStoreURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores/%s", g.ConfigGeoServer.BaseURL, workspace, storeName)
 
 	_, status, err := g.doRequest("GET", checkStoreURL, nil, "")
-	if err != nil && status != http.StatusNotFound {
-		return fmt.Errorf("failed to check store existence: %w", err)
-	}
-	if status == http.StatusOK {
-		return fmt.Errorf("Coverage exists: %w", err)
+	if err != nil && status != http.StatusNotFound && status != http.StatusOK {
+		return fmt.Errorf("failed to check store existence: %w (status %d)", err, status)
 	}
 
-	// Если хранилище не существует, создаем его
+	// 2. Если хранилища нет - создаём
 	if status == http.StatusNotFound {
 		createStoreURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores",
 			g.ConfigGeoServer.BaseURL, workspace)
@@ -164,9 +164,10 @@ func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, lay
             <workspace>%s</workspace>
             <enabled>true</enabled>
             <type>GeoTIFF</type>
-        </coverageStore>`, storeName, workspace)
+            <url>file:///maps/%s</url>
+        </coverageStore>`, storeName, workspace, filename)
 
-		_, status, err = g.doRequest("POST", createStoreURL, strings.NewReader(storeXML), "application/xml")
+		_, status, err = g.doRequest("POST", createStoreURL, strings.NewReader(storeXML), "text/xml")
 		if err != nil {
 			return fmt.Errorf("failed to create store: %w", err)
 		}
@@ -174,24 +175,44 @@ func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, lay
 			return fmt.Errorf("failed to create store (status %d)", status)
 		}
 		log.Printf("Store %s created successfully", storeName)
+	} else {
+		log.Printf("Store %s already exists, skipping creation", storeName)
 	}
 
-	// 2. Загружаем файл как внешний ресурс
-	uploadURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores/%s/external.geotiff?configure=first&coverageName=%s",
+	// 1. Проверяем, существует ли coverage
+	checkCoverageURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores/%s/coverages/%s",
 		g.ConfigGeoServer.BaseURL, workspace, storeName, layerName)
 
-	_, status, err = g.doRequest("PUT", uploadURL, strings.NewReader(filePath), "text/plain")
-	if err != nil {
-		if strings.Contains(err.Error(), "EOF") && status == http.StatusOK {
-			log.Printf("Geotiff %s likely created (got EOF)", layerName)
-		} else {
-			return fmt.Errorf("failed to upload GeoTIFF: %w (status %d)", err, status)
+	_, status, _ = g.doRequest("GET", checkCoverageURL, nil, "")
+	if status == http.StatusNotFound {
+		// 2. Если coverage нет — создаем
+		createCoverageURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores/%s/coverages",
+			g.ConfigGeoServer.BaseURL, workspace, storeName)
+
+		coverageXML := fmt.Sprintf(`
+		<coverage>
+			<name>%s</name>
+			<nativeName>%s</nativeName>
+			<title>%s</title>
+			<nativeCRS>EPSG:100000</nativeCRS>
+			<srs>EPSG:4326</srs>
+			<projectionPolicy>FORCE_DECLARED</projectionPolicy>
+			<enabled>true</enabled>
+		</coverage>`, layerName, cleanPostfix(filename), layerName)
+
+		_, status, err = g.doRequest("POST", createCoverageURL, strings.NewReader(coverageXML), "application/xml")
+		if err != nil {
+			return fmt.Errorf("failed to create coverage: %w", err)
 		}
-	} else if status != http.StatusCreated {
-		return fmt.Errorf("failed to upload GeoTIFF (status %d)", status)
+		if status != http.StatusCreated && status != http.StatusOK {
+			return fmt.Errorf("failed to create coverage (status %d)", status)
+		}
+		log.Printf("Coverage %s created successfully", layerName)
+	} else if status != http.StatusOK {
+		return fmt.Errorf("failed to check coverage existence (status %d)", status)
 	}
 
-	// 3. Обновляем coverage с правильными параметрами CRS и bbox
+	// 6. Обновляем параметры coverage (bounding box и т.д.)
 	updateCoverageURL := fmt.Sprintf("%s/rest/workspaces/%s/coveragestores/%s/coverages/%s",
 		g.ConfigGeoServer.BaseURL, workspace, storeName, layerName)
 
@@ -215,12 +236,8 @@ func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, lay
             <crs>EPSG:4326</crs>
         </latLonBoundingBox>
         <projectionPolicy>FORCE_DECLARED</projectionPolicy>
-		<enabled>true</enabled>
-		<metadata>
-            <entry key="cachingEnabled">false</entry>
-            <entry key="dirName">%s_%s</entry>
-        </metadata>
-    </coverage>`, layerName, workspace, layerName)
+        <enabled>true</enabled>
+    </coverage>`, layerName)
 
 	_, status, err = g.doRequest("PUT", updateCoverageURL, strings.NewReader(coverageXML), "application/xml")
 	if err != nil {
@@ -232,6 +249,18 @@ func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, lay
 
 	log.Printf("Layer %s published successfully in store %s", layerName, storeName)
 	return nil
+}
+func cleanFilePath(path string) string {
+	return strings.TrimPrefix(path, "file://")
+}
+
+func cleanedFilename(path string) string {
+	_, filename := filepath.Split(path)
+	return filename
+}
+
+func cleanPostfix(filename string) string {
+	return strings.TrimSuffix(filename, filepath.Ext(filename))
 }
 
 func (g *GeoServerClient) SetLayerStyle(workspace, layerName, styleName string) error {

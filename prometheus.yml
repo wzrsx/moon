@@ -1,6 +1,19 @@
+global:
+  scrape_interval: 15s
+
 scrape_configs:
-  - job_name: 'geoserver'
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'geoserver-jmx'
     static_configs:
       - targets: ['geoserver:8081']
-    scrape_interval: 15s
-    metrics_path: '/metrics'
+
+  - job_name: 'geoserver-micrometer'
+    metrics_path: '/geoserver/actuator/prometheus'  # пробуем другой путь
+    basic_auth:
+      username: 'admin'
+      password: 'geoserver'
+    static_configs:
+      - targets: ['geoserver:8080']

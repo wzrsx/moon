@@ -641,3 +641,119 @@
     }
     
 } 
+
+
+/* Для building.html*/
+
+@media (min-width: 300px){
+    .dropdown-menu{
+        width: 50%;
+    }
+    .modules-sidebar{
+        width: 100%;
+    }
+    .sidebar-header{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    h2{
+        font-size: 30px;
+    }
+    .modules-sidebar-title{
+        font-size: 30px;
+    }
+    .close-modal-button{
+        width: 35px;
+        height: 35px;
+        margin-top: 2px;
+        margin-right: 7px;
+    }
+    .modules-back-button{
+        margin-bottom: 10px;
+    }
+    .modules-list {
+        grid-template-columns: repeat(1, 1fr); /* 3 колонки одинаковой ширины */
+        grid-template-rows: repeat(1, 1fr);
+        padding-right: 10px;
+    }
+}
+@media (min-width: 500px){
+    h2{
+        font-size: 60px;
+        width: 80%;
+    }
+    .sidebar-header{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .close-modal-button{
+        width: 80px;
+        height: 80px;
+        font-size: 50px;
+        margin-top: 5px;
+    }
+    .modules-sidebar-title{
+        font-size: 50px;
+    }
+    .modules-back-button{
+        font-size: 50px ;
+        margin-bottom: 20px;
+    }
+    .modules-choice-type{
+        height: 80%;
+    }
+    .name-module{
+        font-size: 40px;
+    }
+
+}
+@media (min-width: 800px){
+    h2{
+        font-size: 70px;
+    }
+    .sidebar-header{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .close-modal-button{
+        width: 80px;
+        height: 80px;
+        font-size: 60px;
+        margin-top: 10px;
+    }
+    .modules-sidebar-title{
+        font-size: 60px;
+    }
+    .modules-back-button{
+        font-size: 50px ;
+    }
+    .modules-list {
+        grid-template-columns: repeat(2, 1fr); /* 3 колонки одинаковой ширины */
+        grid-template-rows: repeat(2, 1fr);
+        padding-right: 10px;
+    }
+
+}
+
+@media (min-width: 1000px){
+    .modules-sidebar{
+        width: 90%;
+        
+    }
+}
+
+@media (min-width: 1600px){
+    .modules-sidebar{
+        width: 80%;
+    }
+    .modules-list {
+        grid-template-columns: repeat(3, 1fr); /* 3 колонки одинаковой ширины */
+        grid-template-rows: repeat(3, 1fr);
+        padding-right: 10px;
+    }
+    h2{
+        font-size: 90px;
+    }
+}
