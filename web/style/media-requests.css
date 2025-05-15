@@ -798,8 +798,9 @@
         width: 90%;
         
     }
+    
     .dropdown-menu-btn{
-        font-size: 30px;
+        padding-right: 7px;
     }
     
 }
@@ -813,6 +814,9 @@
     }
     .dropdown-menu{
         width: 30%;
+    }
+    .dropdown-menu-btn{
+        font-size: 30px;
     }
     .modules-sidebar{
         width: 80%;
