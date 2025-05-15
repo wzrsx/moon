@@ -9,7 +9,6 @@ import (
 	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/repository/queries_auth"
-	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
 	"sync"
 	"time"
@@ -129,7 +128,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 
 	subject := "Ваш код подтверждения"
 	var body string
-	if isReg{
+	if isReg {
 		body = fmt.Sprintf(`
 				<html>
 				<body style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -184,7 +183,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 
 		// Устанавливаем код в слайс
 		setCode(confirmationCode, email, username, password)
-	}else {
+	} else {
 		body = fmt.Sprintf(`
 				<html>
 				<body style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -240,9 +239,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 		// Устанавливаем код в слайс
 		setRecoverCode(confirmationCode, email)
 	}
-	
 
-	
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"message": "Registration successful. Please check your email",
 		"next":    "codeDialog",
@@ -281,7 +278,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 	if code_info.Attempts >= 10 {
 		code_info.BlockUntil = time.Now().Add(time.Minute * 1)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "Too many attempts. You have blocked on 1 minute",
+			"message":   "Too many attempts. You have blocked on 1 minute",
 			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
 		})
 		code_info.Attempts = 0
@@ -297,7 +294,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 
 	if code_info.BlockUntil.After(time.Now()) {
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "You have blocked on 1 minute",
+			"message":   "You have blocked on 1 minute",
 			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
 		})
 		return
@@ -322,18 +319,8 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 		return
 	}
 
-	map_id, err := queries_maps.TakeMap(user_id, a.Pool)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Taking map: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error Taking map: %v", err),
-		})
-		delete(emailCodes, creds.Email)
-		return
-	}
-
 	ctx := context.Background()
-	string_tocken, err := jwt_logic.CreateTocken(&ctx, code_info.Username, user_id, map_id, a.Logger)
+	string_tocken, err := jwt_logic.CreateTocken(&ctx, code_info.Username, user_id, "", a.Logger)
 	if err != nil {
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error create JWT-tocken: %v", err),
@@ -381,7 +368,7 @@ func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.R
 	if code_info.Attempts >= 10 {
 		code_info.BlockUntil = time.Now().Add(time.Minute * 1)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "Too many attempts. You have blocked on 1 minute",
+			"message":   "Too many attempts. You have blocked on 1 minute",
 			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
 		})
 		code_info.Attempts = 0
@@ -397,7 +384,7 @@ func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.R
 
 	if code_info.BlockUntil.After(time.Now()) {
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "You have blocked on 1 minute",
+			"message":   "You have blocked on 1 minute",
 			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
 		})
 		return
@@ -429,9 +416,8 @@ func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.R
 }
 
 func (a *AuthHandlers) ChengePassHandler(rw http.ResponseWriter, r *http.Request) {
-	
-}
 
+}
 
 func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsAuth struct {
@@ -469,17 +455,8 @@ func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	map_id, err := queries_maps.TakeMap(data.UserID, a.Pool)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Taking map: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error Taking map: %v", err),
-		})
-		return
-	}
-
 	ctx := context.Background()
-	string_tocken, err := jwt_logic.CreateTocken(&ctx, data.Username, data.UserID, map_id, a.Logger)
+	string_tocken, err := jwt_logic.CreateTocken(&ctx, data.Username, data.UserID, "", a.Logger)
 	if err != nil {
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error create JWT-tocken: %v", err),
@@ -539,7 +516,7 @@ func setCode(confirmation_code string, email string, username string, password s
 		}
 	})
 }
-func setRecoverCode(confirmation_code string, email string, ) {
+func setRecoverCode(confirmation_code string, email string) {
 	mu.Lock()
 	defer mu.Unlock()
 
