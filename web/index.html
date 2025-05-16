@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style/reset.css">
-    <link rel="stylesheet" href="/static/style/style.css">
+    <link rel="stylesheet" href="./static/style/reset.css">
+    <link rel="stylesheet" href="./static/style/style.css">
+    <link rel="stylesheet" href="./static/style/media-requests.css">
     <title>Moon</title>
 </head>
 <body>
@@ -23,6 +24,13 @@
         <h2>
             колонизация Луны начинается здесь!
         </h2>
+        <div class="description-section">
+            
+            <h2>Описание сайта</h2>
+            <p>Здесь вы можете добавить текст, который будет описывать ваш сайт. Например, вы можете рассказать о его функциональности, целях и особенностях.</p>
+            <p>Добавьте больше информации, чтобы пользователи могли лучше понять, что предлагает ваш сайт.</p>
+            <p>Вы можете использовать различные HTML-теги для форматирования текста, добавления изображений и других элементов.</p>
+        </div>
     </main>
     <dialog class="sign-in-dialog" id="signInDialog">
         <div class="content-sign-in-dialog">
@@ -37,7 +45,7 @@
                 <span class="error-message" id="loginSignInError" style="color: #a90000; display: none;">error message</span>
                 <input type="password" id="passwordSignIn" class="input-sign-in-dialog" placeholder="Введите пароль">
                 <span class="error-message" id="passwordSignInError" style="color: #a90000; display: none;">error message</span>
-                <button id="signInBtn" class="submitBtn">Войти</button>
+                <button id="signInBtn" class="submitBtnSignIn">Войти</button>
             </form>
             <div class="btns">
                 <button id="registrateBtnForm">Регистрация</button>
@@ -45,32 +53,32 @@
             </div>
         </div>
     </dialog>
-    <dialog class="sign-in-dialog" id="registrationDialog">
-        <div class="content-sign-in-dialog">
+    <dialog class="registration-dialog" id="registrationDialog">
+        <div class="content-registration-dialog">
             <div class="header-form">
                 <button class="close-modal-button">
                     &#x2715;
                 </button>
-                <p class="dialog-title">Регистрация</p>
+                <p class="registration-dialog-title">Регистрация</p>
             </div>
             <form action="">
-                <input type="text" id="loginRegistration" class="input-sign-in-dialog" placeholder="Введите логин">
+                <input type="text" id="loginRegistration" class="input-registration-dialog" placeholder="Введите логин">
                 <span class="error-message" id="loginRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="email" id="emailRegistration" class="input-sign-in-dialog" placeholder="Введите почту">
+                <input type="email" id="emailRegistration" class="input-registration-dialog" placeholder="Введите почту">
                 <span class="error-message" id="emailRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="passRegistration" class="input-sign-in-dialog" placeholder="Введите пароль">
+                <input type="password" id="passRegistration" class="input-registration-dialog" placeholder="Введите пароль">
                 <span class="error-message" id="passRegistrationError" style="color: #a90000; display: none;">error message</span>
-                <input type="password" id="repeatPassRegistration" class="input-sign-in-dialog" placeholder="Повторите пароль">
+                <input type="password" id="repeatPassRegistration" class="input-registration-dialog" placeholder="Повторите пароль">
                 <span class="error-message" id="repeatPassRegistrationError" style="color: #a90000; display: none;">error message</span> 
-                <button id="registrateBtn" class="submitBtn">Зарегистрироваться</button>
+                <button id="registrateBtn" class="submitBtnRegistration">Зарегистрироваться</button>
             </form>
             <div class="btns">
                 <button id="signInBtnForm">Войти</button>
             </div>
         </div>
     </dialog>
-    <dialog class="sign-in-dialog" id="forgetPassDialog">
-        <div class="content-sign-in-dialog">
+    <dialog class="forget-pass-dialog" id="forgetPassDialog">
+        <div class="content-forget-pass-dialog">
             <div class="header-form">
                 <button class="close-modal-button">
                     &#x2715;
@@ -78,9 +86,11 @@
                 <p class="dialog-title">Забыли пароль</p>
             </div>
             <form action="">
-                <input type="text" id="loginForgetPass" class="input-sign-in-dialog" placeholder="Введите логин или почту">
-                <span class="error-message" id="forgetPassError" style="color: #a90000; display: none;">error message</span> 
-                <button id="recoverPassBtn" class="submitBtn">Восстановить</button>
+                <input type="text" id="emailForgetPass" class="input-forget-pass-dialog" placeholder="Введите почту">
+                <input type="text" id="passwordForgetPass" class="input-forget-pass-dialog" placeholder="Введите новый пароль">
+                <span class="error-message" id="emailForgetPassError" style="color: #a90000; display: none;">error message</span> 
+                <span class="error-message" id="passwordForgetPassError" style="color: #a90000; display: none;">error message</span> 
+                <button id="recoverPassBtn" class="submitBtnForgetPass">Восстановить</button>
             </form>
             <div class="btns">
                 <button id="signInBtnForm2">Войти</button>
@@ -114,6 +124,51 @@
                         <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
+            </div>
+        </div>
+    </dialog>
+    <dialog class="check-code-dialog" id="checkCodeRegistrationDialog">
+        <div class="content-check-code-dialog">
+            <div class="header-form">
+                <button class="close-modal-button">
+                    &#x2715;
+                </button>
+                <p class="dialog-title">Подтверждение регистрации</p>
+            </div>
+            <form action="">
+                <p class="dialog-subtitle">проверьте почту</p>
+                <div class="code-input-block" id="confirmationCodeRegistration">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration2'); checkAllFilled()" id="inputCodeRegistration1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration3'); checkAllFilled()" id="inputCodeRegistration2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration4'); checkAllFilled()" id="inputCodeRegistration3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRegistration4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                </div>
+                <span class="error-message" id="codeRegistrationError" style="color: #a90000; display: none;">error message</span> 
+            </form>
+            <div class="enterCode"> <p class="dialog-subtitle">Введите код из письма</p> </div>
+            
+        </div>
+    </dialog>
+    <dialog class="check-code-dialog" id="checkCodeRecoverDialog">
+        <div class="content-check-code-dialog">
+            <div class="header-form">
+                <button class="close-modal-button">
+                    &#x2715;
+                </button>
+                <p class="dialog-title">Восстановление пароля</p>
+            </div>
+            <form action="">
+                <p class="dialog-subtitle">проверьте почту</p>
+                <div class="code-input-block" id="confirmationCode">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover2'); checkAllFilled()" id="inputCodeRecover1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover3'); checkAllFilled()" id="inputCodeRecover2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover4'); checkAllFilled()" id="inputCodeRecover3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRecover4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                </div>
+                <span class="error-message" id="codeForgetPassError" style="color: #a90000; display: none;">error message</span> 
+            </form>
+            <div class="enterCode"> 
+                <p class="dialog-subtitle">Введите код из письма</p>
             </div>
         </div>
     </dialog>

@@ -24,15 +24,20 @@ func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.Co
 		logger.Fatal("geoserver_init", zap.Error(err))
 	}
 
+	logger.Info("Server config",
+		zap.String("host", cfg_server.Host),
+		zap.String("port", cfg_server.Port))
+
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         cfg_server.Host + ":" + cfg_server.Port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	err = srv.ListenAndServe()
-	if err != nil {
-		return srv
+
+	logger.Info("Starting server", zap.String("address", srv.Addr))
+	if err = srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Fatal("Server failed", zap.Error(err))
 	}
 	return srv
 }

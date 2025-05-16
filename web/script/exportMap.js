@@ -39,9 +39,9 @@ async function exportMapToPNG(needDownload = true) {
   const height = Math.round(width * (extent[3] - extent[1]) / (extent[2] - extent[0]));
     try {
       // Загружаем слои как изображения
-      const ldem_img = await getImageMap('LDEM_83S_10MPP_ADJ', extent);
-      const hill_img = await getImageMap('LDEM_83S_10MPP_ADJ_HILL', extent);
-      const ldsm_img = await getImageMap('LDSM_83S_10MPP_ADJ', extent);
+      const ldem_img = await getImageMap('ldem-83s', extent);
+      const hill_img = await getImageMap('ldem-hill', extent);
+      const ldsm_img = await getImageMap('ldsm-83s', extent);
   
       // Создаём canvas и комбинируем изображения
       const resultCanvas = combineImages(ldem_img, hill_img, ldsm_img, width, height);
@@ -138,7 +138,7 @@ async function getImageMap(layerName, extent, targetSize = 2048) {//targetSize �
         SERVICE: 'WMS',
         VERSION: '1.3.0',
         REQUEST: 'GetMap',
-        LAYERS: `moon_workspace:${layerName}`,
+        LAYERS: `moon-workspace:${layerName}`,
         FORMAT: 'image/png',
         TRANSPARENT: 'true',
         WIDTH: width.toString(),

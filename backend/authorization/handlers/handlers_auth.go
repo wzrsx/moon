@@ -9,7 +9,6 @@ import (
 	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/repository/queries_auth"
-	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
 	"sync"
 	"time"
@@ -34,7 +33,9 @@ type EmailCodeRecord struct {
 }
 
 var mu sync.RWMutex // Для потокобезопасности
-var emailCodes = make(map[string]*EmailCodeRecord)
+var registrationCodes = make(map[string]*EmailCodeRecord)
+
+var recoverCodes = make(map[string]*EmailCodeRecord)
 
 func CreateAuthHandlers(cfg_auth *config_auth.ConfigAuth, logger *zap.Logger, pool *pgxpool.Pool) *AuthHandlers {
 	return &AuthHandlers{
@@ -78,18 +79,112 @@ func (a *AuthHandlers) RegisterHandler(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	a.sendWelcomeEmail(creds.Email, creds.Username, creds.Password, rw)
+	a.sendWelcomeEmail(creds.Email, creds.Username, creds.Password, true, rw)
+}
+func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
+	type CredentialsRegistration struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var creds CredentialsRegistration
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"error": fmt.Sprintf("Error Decoding credentials: %v", err),
+		})
+		return
+	}
+
+	// Проверяем есть ли email в БД
+	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
+		if err.Error() != "email exists" {
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"message": "Error check email exists DB",
+			})
+			a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
+			return
+		}
+	}
+	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
+		if err.Error() != "email exists" {
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"message": "Error check email exists DB",
+			})
+			a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
+			return
+		}
+	}
+	a.sendWelcomeEmail(creds.Email, "", creds.Password, false, rw)
 }
 
-func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw http.ResponseWriter) {
+func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg bool, rw http.ResponseWriter) {
 
 	// auth := smtp.PlainAuth("", a.ConfigAuth.Sender, a.ConfigAuth.SenderPassword, a.ConfigAuth.SMTP_Host)
 
 	confirmationCode := genConfirmCode()
 
 	// Формируем красивое HTML-письмо
+
 	subject := "Ваш код подтверждения"
-	body := fmt.Sprintf(`
+	var body string
+	if isReg {
+		body = fmt.Sprintf(`
+				<html>
+				<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+					<div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+						<h2 style="color: #444;">Регистрация</h2>
+						<p>Для регистрации введите следующий код подтверждения:</p>
+						
+						<div style="background: #f5f5f5; padding: 15px; text-align: center; 
+									margin: 20px 0; font-size: 24px; letter-spacing: 2px;
+									border-radius: 5px; font-weight: bold;">
+							%s
+						</div>
+						
+						<p>Этот код действителен в течение 5 минут.</p>
+						<p style="color: #888; font-size: 12px;">
+							Если вы не запрашивали этот код, пожалуйста, проигнорируйте это письмо.
+						</p>
+					</div>
+				</body>
+				</html>
+				`, confirmationCode)
+		// Формируем заголовки письма
+		headers := make(map[string]string)
+		headers["From"] = a.ConfigAuth.Sender
+		headers["To"] = email
+		headers["Subject"] = subject
+		headers["MIME-Version"] = "1.0"
+		headers["Content-Type"] = "text/html; charset=\"utf-8\""
+
+		// Собираем все части письма
+		message := ""
+		for k, v := range headers {
+			message += fmt.Sprintf("%s: %s\r\n", k, v)
+		}
+		message += "\r\n" + body
+
+		// Отправка письма
+		// err := smtp.SendMail(
+		// 	a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
+		// 	auth,
+		// 	a.ConfigAuth.Sender,
+		// 	[]string{email},
+		// 	[]byte(message),
+		// )
+		// if err != nil {
+		// 	a.Logger.Sugar().Errorf("Error sending email: %v", err)
+		// 	respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+		// 		"error": fmt.Sprintf("Error sending email: %v", err),
+		// 	})
+		// 	return
+		// }
+
+		// Устанавливаем код в слайс
+		setCode(confirmationCode, email, username, password)
+	} else {
+		body = fmt.Sprintf(`
 				<html>
 				<body style="font-family: Arial, sans-serif; line-height: 1.6;">
 					<div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
@@ -110,40 +205,41 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw htt
 				</body>
 				</html>
 				`, confirmationCode)
+		// Формируем заголовки письма
+		headers := make(map[string]string)
+		headers["From"] = a.ConfigAuth.Sender
+		headers["To"] = email
+		headers["Subject"] = subject
+		headers["MIME-Version"] = "1.0"
+		headers["Content-Type"] = "text/html; charset=\"utf-8\""
 
-	// Формируем заголовки письма
-	headers := make(map[string]string)
-	headers["From"] = a.ConfigAuth.Sender
-	headers["To"] = email
-	headers["Subject"] = subject
-	headers["MIME-Version"] = "1.0"
-	headers["Content-Type"] = "text/html; charset=\"utf-8\""
+		// Собираем все части письма
+		message := ""
+		for k, v := range headers {
+			message += fmt.Sprintf("%s: %s\r\n", k, v)
+		}
+		message += "\r\n" + body
 
-	// Собираем все части письма
-	message := ""
-	for k, v := range headers {
-		message += fmt.Sprintf("%s: %s\r\n", k, v)
+		// Отправка письма
+		// err := smtp.SendMail(
+		// 	a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
+		// 	auth,
+		// 	a.ConfigAuth.Sender,
+		// 	[]string{email},
+		// 	[]byte(message),
+		// )
+		// if err != nil {
+		// 	a.Logger.Sugar().Errorf("Error sending email: %v", err)
+		// 	respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+		// 		"error": fmt.Sprintf("Error sending email: %v", err),
+		// 	})
+		// 	return
+		// }
+
+		// Устанавливаем код в слайс
+		setRecoverCode(confirmationCode, email, password)
 	}
-	message += "\r\n" + body
 
-	// Отправка письма
-	// err := smtp.SendMail(
-	// 	a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
-	// 	auth,
-	// 	a.ConfigAuth.Sender,
-	// 	[]string{email},
-	// 	[]byte(message),
-	// )
-	// if err != nil {
-	// 	a.Logger.Sugar().Errorf("Error sending email: %v", err)
-	// 	respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-	// 		"error": fmt.Sprintf("Error sending email: %v", err),
-	// 	})
-	// 	return
-	// }
-
-	// Устанавливаем код в слайс
-	setCode(confirmationCode, email, username, password)
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"message": "Registration successful. Please check your email",
 		"next":    "codeDialog",
@@ -151,7 +247,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, rw htt
 	})
 }
 
-func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request) {
+func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsCode struct {
 		Email string `json:"email"`
 		Code  string `json:"code"`
@@ -171,7 +267,7 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	mu.Lock()
 	defer mu.Unlock()
 
-	code_info := emailCodes[creds.Email]
+	code_info := registrationCodes[creds.Email]
 
 	if code_info == nil {
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
@@ -182,7 +278,8 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	if code_info.Attempts >= 10 {
 		code_info.BlockUntil = time.Now().Add(time.Minute * 1)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "Too many attempts. You have blocked on 1 minute",
+			"message":   "Too many attempts. You have blocked on 1 minute",
+			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
 		})
 		code_info.Attempts = 0
 		return
@@ -197,7 +294,8 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 
 	if code_info.BlockUntil.After(time.Now()) {
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "You have blocked on 1 minute",
+			"message":   "You have blocked on 1 minute",
+			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
 		})
 		return
 	}
@@ -217,22 +315,12 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"message": fmt.Sprint("Error create new user"),
 		})
-		delete(emailCodes, creds.Email)
-		return
-	}
-
-	map_id, err := queries_maps.TakeMap(user_id, a.Pool)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Taking map: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error Taking map: %v", err),
-		})
-		delete(emailCodes, creds.Email)
+		delete(registrationCodes, creds.Email)
 		return
 	}
 
 	ctx := context.Background()
-	string_tocken, err := jwt_logic.CreateTocken(&ctx, code_info.Username, user_id, map_id, a.Logger)
+	string_tocken, err := jwt_logic.CreateTocken(&ctx, code_info.Username, user_id, "", a.Logger)
 	if err != nil {
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error create JWT-tocken: %v", err),
@@ -242,11 +330,96 @@ func (a *AuthHandlers) CheckCodeHandler(rw http.ResponseWriter, r *http.Request)
 	rw.Header().Add("Authorization", string_tocken)
 
 	// Удаляем код из слайса
-	delete(emailCodes, creds.Email)
+	delete(registrationCodes, creds.Email)
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"message": "Success register",
+		"message": "Success recover",
 	})
+}
+
+func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.Request) {
+	type CredentialsCode struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}
+	var creds CredentialsCode
+
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"error": fmt.Sprintf("Error Decoding credentials: %v", err),
+		})
+		return
+	}
+
+	// Блокировка для потокобезопасности
+	mu.Lock()
+	defer mu.Unlock()
+
+	code_info := recoverCodes[creds.Email]
+
+	if code_info == nil {
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"message": "Code to email is not exists.",
+		})
+		return
+	}
+	if code_info.Attempts >= 10 {
+		code_info.BlockUntil = time.Now().Add(time.Minute * 1)
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"message":   "Too many attempts. You have blocked on 1 minute",
+			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
+		})
+		code_info.Attempts = 0
+		return
+	}
+
+	if time.Now().After(code_info.ExpiresAt) {
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"message": "Code time has expired",
+		})
+		return
+	}
+
+	if code_info.BlockUntil.After(time.Now()) {
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"message":   "You have blocked on 1 minute",
+			"unlock_at": code_info.BlockUntil.Format(time.RFC3339),
+		})
+		return
+	}
+
+	if code_info.Code != creds.Code {
+		code_info.Attempts++
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+			"message": "Code is not match",
+		})
+		return
+	}
+
+	err = queries_auth.RecoveryQuery(creds.Email, code_info.Password, a.Pool)
+	if err != nil {
+		if err.Error() == "user with this email does not exist" {
+			respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+				"message": err.Error(),
+			})
+		}
+		a.Logger.Sugar().Errorf("Error update user in DB: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"message": "Error update user",
+		})
+		delete(recoverCodes, creds.Email)
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"message": "Success recover",
+	})
+}
+
+func (a *AuthHandlers) ChengePassHandler(rw http.ResponseWriter, r *http.Request) {
+
 }
 
 func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
@@ -285,17 +458,8 @@ func (a *AuthHandlers) SignInHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	map_id, err := queries_maps.TakeMap(data.UserID, a.Pool)
-	if err != nil {
-		a.Logger.Sugar().Errorf("Error Taking map: %v", err)
-		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error Taking map: %v", err),
-		})
-		return
-	}
-
 	ctx := context.Background()
-	string_tocken, err := jwt_logic.CreateTocken(&ctx, data.Username, data.UserID, map_id, a.Logger)
+	string_tocken, err := jwt_logic.CreateTocken(&ctx, data.Username, data.UserID, "", a.Logger)
 	if err != nil {
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Error create JWT-tocken: %v", err),
@@ -323,6 +487,20 @@ func genConfirmCode() string {
 	return string(b)
 }
 
+func (a *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	// Удаляем JWT куку
+	http.SetCookie(w, &http.Cookie{
+		Name:    "jwt_token",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+		MaxAge:  -1,
+	})
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status": "success"}`))
+}
+
 // Вспомогательная функция для JSON-ответов
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -343,15 +521,39 @@ func setCode(confirmation_code string, email string, username string, password s
 		Password:   password,
 	}
 
-	emailCodes[email] = record
+	registrationCodes[email] = record
 
 	time.AfterFunc(15*time.Minute, func() {
 		mu.Lock()
 		defer mu.Unlock()
 
 		// Удаляем только если это та же самая запись
-		if stored, exists := emailCodes[email]; exists && stored == record {
-			delete(emailCodes, email)
+		if stored, exists := registrationCodes[email]; exists && stored == record {
+			delete(registrationCodes, email)
+		}
+	})
+}
+func setRecoverCode(confirmation_code string, email, password string) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	record := &EmailCodeRecord{
+		Password:   password,
+		Code:       confirmation_code,
+		ExpiresAt:  time.Now().Add(5 * time.Minute),
+		BlockUntil: time.Now(),
+		Attempts:   0,
+	}
+
+	recoverCodes[email] = record
+
+	time.AfterFunc(15*time.Minute, func() {
+		mu.Lock()
+		defer mu.Unlock()
+
+		// Удаляем только если это та же самая запись
+		if stored, exists := recoverCodes[email]; exists && stored == record {
+			delete(recoverCodes, email)
 		}
 	})
 }

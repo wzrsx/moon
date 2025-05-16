@@ -1,0 +1,1017 @@
+/* Стили для диалогового окна!!!!! */
+
+/* Базовые стили для мобильных (по ширине) */
+@media (min-width: 300px) {
+    .input-sign-in-dialog {
+        font-size: 25px;
+    }
+    .content-sign-in-dialog .header-form .dialog-title {
+        font-size: 50px;
+    }
+    .btns {
+        flex-direction: row;
+    }
+    .content-sign-in-dialog .btns button {
+        font-size: 26px;
+    }
+}
+
+
+@media (min-width: 320px) and (max-width: 500px) {
+    .sign-in-dialog {
+        border-radius: 20px;
+        width: 100%;
+    }
+    .btns {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .input-sign-in-dialog {
+        font-size: 22px;
+    }
+    .sign-in-dialog form button {
+        font-size: 40px;
+    }
+
+}
+@media (min-width: 500px) {
+    .sign-in-dialog {
+        border-radius: 20px;
+        width: 70%;
+    }
+    .btns {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .input-sign-in-dialog {
+        font-size: 26px;
+    }
+    .sign-in-dialog form button {
+        font-size: 40px;
+    }
+
+}
+
+@media (min-width: 600px) and (max-height: 799px),
+       (min-width: 600px) and (min-height: 800px) and (max-width: 1000px) and (max-height: 1300px) {
+    .sign-in-dialog {
+        width: 77%;
+    }
+    .content-sign-in-dialog .header-form .dialog-title {
+        margin-bottom: 10px;
+    }
+    .btns {
+        flex-direction: row;
+    }
+    .input-sign-in-dialog {
+        font-size: 33px;
+    }
+    .content-sign-in-dialog .btns button {
+        font-size: 30px;
+    }
+    .close-modal-button{
+        width: 30px !important;
+        height: 30px !important;
+    }
+}
+
+@media (min-width: 800px) and (min-height: 1200px) and (max-height: 1500px) and (max-width: 1050px) {
+    .sign-in-dialog {
+        width: 78% !important;
+    }
+    
+    .input-sign-in-dialog {
+        font-size: 40px !important;
+    }
+    .submitBtn{ /*Заменить*/
+        font-size: 55px !important;
+    }
+    .content-sign-in-dialog .btns button {
+        font-size: 35px;
+    }
+    .content-sign-in-dialog .header-form .dialog-title{ /*Заменить*/
+        font-size: 80px !important;
+    }
+}
+
+
+@media (min-width: 1000px) and (min-height: 1000px) {
+    .content-sign-in-dialog .header-form .dialog-title {
+        font-size: 80px;
+    }
+    .content-sign-in-dialog .btns button {
+        font-size: 40px ;
+    }
+    .sign-in-dialog form button{
+        font-size: 50px;
+    }
+    #signInBtn{
+        width: 50%;
+    }
+}
+
+
+@media (min-width: 1300px) and (max-height: 799px),
+       (min-width: 1300px) and (min-height: 800px) and (max-height: 1400px){
+    .sign-in-dialog {
+        width: 38% !important;
+    }
+    .input-sign-in-dialog {
+        font-size: 40px !important; 
+    }
+    .content-sign-in-dialog .btns button {
+        font-size: 33px !important;
+    }
+    .sign-in-dialog form button{
+        font-size: 44px ;
+    }
+}
+
+@media (min-width: 1600px) and (min-height: 1100px) {
+    .content-sign-in-dialog .header-form .dialog-title{ /*Заменить*/
+        font-size: 100px !important;
+    }
+    .sign-in-dialog {
+        width: 36% !important;
+    }
+    .input-sign-in-dialog {
+        font-size: 50px !important; 
+    }
+    .content-sign-in-dialog .btns button {
+        font-size: 37px !important;
+    }
+    .submitBtn{ /*Заменить*/
+        font-size: 60px !important;
+        height: 100px !important;
+        width: 300px !important;
+    }
+}
+
+@media (min-width: 2700px){
+    .sign-in-dialog {
+        width: 26% !important;
+    }
+}
+
+@media (min-height: 500px) {
+    .sign-in-dialog {
+        height: 75%;
+    }
+}
+@media (min-height: 800px) {
+    .sign-in-dialog {
+        height: 65%;
+    }
+    .content-sign-in-dialog .header-form .dialog-title {
+        font-size: 70px;
+    }
+}
+
+@media (min-height: 1100px) {
+    .sign-in-dialog {
+        height: 55%;
+    }
+    .content-sign-in-dialog .header-form .dialog-title {
+        font-size: 80px;
+    }
+}
+
+
+
+/* Стили для регистрации!!!!! ---------------->*/
+
+@media (min-width: 300px)  {
+    .registration-dialog-title {
+        font-size: 40px;
+    }
+    .input-registration-dialog{
+        font-size: 20px ;
+    }
+    .submitBtnRegistration{
+        font-size: 24px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 22px;
+    }
+
+}
+
+@media (min-width: 500px)  {
+    .registration-dialog{
+        width: 67%;
+    }
+    .registration-dialog-title {
+        font-size: 50px !;
+    }
+    .input-registration-dialog{
+        font-size: 25px ;
+    }
+    .submitBtnRegistration{
+        font-size: 27px !important;
+    }
+
+}
+@media (min-width: 800px)  {
+    .registration-dialog{
+        width: 54%;
+    }
+    
+}
+
+
+@media (min-height: 400px)  {
+    .registration-dialog{
+        height: 85%;
+    }
+    .input-registration-dialog{
+        height: 35px;
+    }
+
+}
+
+@media (min-height: 600px)  {
+    .registration-dialog{
+        height: 75%;
+    }
+    .input-registration-dialog{
+        height: 45px;
+    }
+
+}
+
+@media (min-height: 700px)  {
+    .registration-dialog{
+        height: 78%;
+    }
+    .input-registration-dialog{
+        height: 45px;
+    }
+
+}
+
+@media (min-height: 800px)  {
+    .registration-dialog{
+        height: 62%;
+    }
+
+}
+
+@media (min-height: 900px)  {
+    .registration-dialog{
+        height: 57%;
+    }
+
+}
+
+@media (min-height: 900px) and (min-width: 700px)  {
+    .registration-dialog{
+        height: 65%;
+    }
+    .registration-dialog-title {
+        font-size: 57px;
+    }
+    .input-registration-dialog{
+        font-size: 30px ;
+    }
+    .submitBtnRegistration{
+        font-size: 40px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 26px;
+    }
+
+}
+
+@media (min-height: 1200px) and (min-width: 700px)  {
+    .registration-dialog{
+        height: 55%;
+    }
+    .registration-dialog-title {
+        font-size: 57px;
+    }
+    .input-registration-dialog{
+        font-size: 30px ;
+    }
+    .submitBtnRegistration{
+        font-size: 40px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 26px;
+    }
+
+}
+
+@media (min-height: 1100px) and (min-width: 900px) and (max-height: 1400px) and (max-width:  1100px)  {
+    .registration-dialog{
+        height: 57%;
+        width: 50% ;
+    }
+    .input-registration-dialog{
+        height: 65px;
+        font-size: 30px ;
+    }
+    .registration-dialog-title {
+        font-size: 67px;
+    }
+    .submitBtnRegistration{
+        font-size: 47px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 36px;
+    }
+
+}
+
+@media (min-height: 500px) and (min-width: 900px) and (max-height: 699px) {
+    .registration-dialog{
+        height: 87%;
+    }
+    .input-registration-dialog{
+        height: 45px;
+        font-size: 20px ;
+    }
+    .registration-dialog-title {
+        font-size: 47px;
+    }
+    .submitBtnRegistration{
+        font-size: 37px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 26px;
+    }
+
+}
+
+@media (min-height: 700px) and (min-width: 1000px) and (max-height: 850px) {
+    .registration-dialog{
+        height: 70%;
+        width: 40%;
+    }
+    .input-registration-dialog{
+        height: 45px;
+        font-size: 25px !important;
+    }
+    .registration-dialog-title {
+        font-size: 57px;
+    }
+    .submitBtnRegistration{
+        font-size: 40px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 26px;
+    }
+
+}
+
+@media (min-width: 1300px) and (min-height: 1000px) {
+    .registration-dialog {
+        width: 36% !important;
+        height: 65%;
+    }
+    .registration-dialog-title {
+        font-size: 77px;
+    }
+    .input-registration-dialog{
+        height: 60px;
+        font-size: 35px !important;
+    }
+    .submitBtnRegistration{
+        font-size: 45px !important;
+    }
+    .content-registration-dialog .btns button{
+        font-size: 36px;
+    }
+    .content-registration-dialog form .input-registration-dialog{
+        margin-top: 1vh;
+    }
+}
+@media (min-width: 1700px) and (min-height: 1100px) {
+    .registration-dialog {
+        height: 55%;
+    }
+}
+
+
+
+/*Стили для "Забыли пароль"*/
+
+@media (min-width: 300px) {
+    .input-forget-pass-dialog {
+        font-size: 20px;
+    }
+    .forget-pass-dialog .header-form .dialog-title {
+        font-size: 50px;
+    }
+    .btns {
+        flex-direction: row;
+    }
+    .content-forget-pass-dialog .btns button {
+        font-size: 26px;
+    }
+}
+
+
+@media (min-width: 320px) and (max-width: 500px) {
+    .forget-pass-dialog .header-form .dialog-title {
+        font-size: 50px;
+        line-height: 0.9;
+    }
+    .forget-pass-dialog {
+        border-radius: 20px;
+        width: 100%;
+    }
+    .forget-pass-dialog form button{
+        font-size: 35px;
+    }
+    #recoverPassBtn{
+        width: 85%;
+    }
+}
+
+@media (min-width: 500px) and (max-width: 700px) {
+    .forget-pass-dialog {
+        border-radius: 20px;
+        width: 80%;
+    }
+}
+
+@media (min-width: 520px) and (max-height: 799px),
+       (min-width: 600px) and (min-height: 800px) and (max-width: 1050px) and (max-height: 1300px) {
+    .forget-pass-dialog .header-form .dialog-title {
+        font-size: 45px !important;
+        line-height: 0.9;
+    }
+    .forget-pass-dialog {
+        width: 75%;
+    }
+    .btns {
+        flex-direction: row;
+    }
+    .input-forget-pass-dialog {
+        font-size: 25px;
+        height: 65px !important;
+    }
+    #recoverPassBtn{
+        width: 85%;
+    }
+    .content-forget-pass-dialog .btns button {
+        font-size: 30px;
+    }
+}
+
+@media (min-width: 800px) and (min-height: 1200px) and (max-height: 1500px) and (max-width: 1050px) {
+    .forget-pass-dialog {
+        width: 68% !important;
+    }
+    
+    .input-forget-pass-dialog {
+        font-size: 40px !important;
+        height: 70px !important;
+    }
+    .submitBtn{ 
+        font-size: 55px !important;
+    }
+    .content-forget-pass-dialog .btns button {
+        font-size: 35px;
+    }
+    .forget-pass-dialog .header-form .dialog-title{  
+        font-size: 80px ;
+    }
+}
+
+@media (min-width: 1000px) and (min-height: 600px) {
+    .forget-pass-dialog {
+        width: 53%;
+        height: 45%;
+    }
+    .content-forget-pass-dialog .btns button {
+        font-size: 30px ;
+    }
+    .input-forget-pass-dialog {
+        font-size: 35px;
+    }
+}
+
+
+@media (min-width: 1300px) and (max-height: 799px),
+       (min-width: 1300px) and (min-height: 800px) and (max-height: 1400px){
+    .forget-pass-dialog {
+        width: 40% !important;
+    }
+    .input-forget-pass-dialog {
+        font-size: 34px !important; 
+    }
+    .content-forget-pass-dialog .btns button {
+        font-size: 33px !important;
+    }
+     .forget-pass-dialog form button{
+        font-size: 44px !important;
+    } 
+}
+
+@media (min-width: 1600px) and (min-height: 1100px) {
+    .forget-pass-dialog .header-form .dialog-title{ 
+        font-size: 100px !important;
+    }
+    .forget-pass-dialog {
+        width: 36% !important;
+    }
+    .input-forget-pass-dialog {
+        font-size: 50px !important; 
+    }
+    .content-forget-pass-dialog .btns button {
+        font-size: 37px !important;
+    }
+    .submitBtn{ 
+        font-size: 60px !important;
+        height: 100px !important;
+        width: 300px !important;
+    }
+}
+
+@media (min-width: 2700px){
+    .forget-pass-dialog {
+        width: 26% !important;
+    }
+    
+}
+
+@media (min-height: 500px) {
+    .forget-pass-dialog {
+        height: 65%;
+    }
+    .input-forget-pass-dialog{
+        height: 50px;
+    }
+
+}
+@media (min-height: 800px) {
+    .forget-pass-dialog {
+        height: 55%;
+    }
+    .forget-pass-dialog .header-form .dialog-title {
+        font-size: 50px;
+        margin-bottom: 5px;
+    }
+}
+
+@media (min-height: 1100px) {
+    .forget-pass-dialog {
+        height: 40%;
+    }
+    .forget-pass-dialog .header-form .dialog-title {
+        font-size: 75px;
+    }
+}
+
+/* Стили для кодовых окон*/
+
+@media (min-width: 300px){
+    .check-code-dialog{
+        width: 70%;
+    }
+    .content-check-code-dialog .close-modal-button{
+        margin-right: 0;
+        font-size: 25px;
+    }
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 25px;
+    }
+    .dialog-subtitle{
+        font-size: 15px;
+    }
+    .code-input-block .code-input{
+        width: 30%;
+    }
+    .enterCode .dialog-subtitle {
+        margin-top: 20px;
+    }
+    
+}
+
+
+
+@media (min-height: 600px){
+    .check-code-dialog{
+        height: 45%;
+    }
+    .content-check-code-dialog form {
+        height: 22%;
+    }
+}
+
+@media (min-height: 800px){
+    .content-check-code-dialog .close-modal-button{
+        margin-right: 0;
+        font-size: 30px;
+    }
+    .check-code-dialog{
+        height: 35%;
+    }
+    .content-check-code-dialog form {
+        height: 25%;
+    }
+}
+
+
+@media (min-width: 600px) and (min-height: 800px) {
+    .content-check-code-dialog .close-modal-button{
+        font-size: 35px;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+    }
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 40px;
+    }
+    .content-check-code-dialog form .dialog-subtitle{
+        font-size: 25px;
+    }
+    .check-code-dialog{
+        height: 40%;
+        width: 50%;
+    }
+    .enterCode .dialog-subtitle {
+        margin-top: 40px;
+        font-size: 25px;
+    }
+}
+
+@media (min-width: 900px) and (min-height: 1200px) {
+    .content-check-code-dialog .close-modal-button{
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+    }
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 50px;
+    }
+    .content-check-code-dialog form .dialog-subtitle{
+        font-size: 35px;
+    }
+    .check-code-dialog{
+        height: 40%;
+        width: 50%;
+    }
+    .code-input-block{
+        gap: 5px;
+    }
+    .enterCode .dialog-subtitle {
+        margin-top: 50px;
+        font-size: 35px;
+    }
+}
+
+@media (max-width:1300px) and (max-height: 850px) and
+        (min-width: 1000px) and (min-height: 600px) {
+    .content-check-code-dialog .close-modal-button{
+        font-size: 40px;
+        width: 40px;
+        height: 30px;
+        margin-bottom: 10px;
+    }
+    .check-code-dialog{
+        height: 60%;
+        width: 40%;
+    }
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 45px;
+    }
+    .content-check-code-dialog form  {
+        height: 25%;
+    }
+    .content-check-code-dialog form .dialog-subtitle{
+        font-size: 30px;
+    } 
+    
+}
+
+@media (min-width:1800px) and (min-height: 900px) {
+    .content-check-code-dialog .close-modal-button{
+        font-size: 50px;
+        width: 50px;
+        height: 50px;
+        margin-bottom: 10px;
+    }
+    .check-code-dialog{
+        height: 50%;
+        width: 30%;
+    }
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 50px;
+    }
+    .content-check-code-dialog form  {
+        height: 25%;
+    }
+    .content-check-code-dialog form .code-input-block {
+        margin-top: 5px;
+    }
+    .content-check-code-dialog form .dialog-subtitle{
+        font-size: 35px;
+    } 
+    .enterCode .dialog-subtitle{
+        font-size: 30px;
+    }
+}
+
+
+/* Стили для Главного окна!!!!!!!----------->*/
+
+@media (min-width: 300px){
+    h1{
+        font-size: 50px;
+    }
+    h2{
+        font-size: 45px;
+    }
+    .nav-item{
+        width: 30%;
+        font-size: 15px;
+        align-items: center;
+        text-align: center;
+        color: rgba(48, 28, 50, 0.734);
+        background-color: rgba(194, 191, 194, 0.514);
+    }
+    
+}
+
+@media (min-width: 400px){
+    h1{
+        font-size: 60px;
+    }
+    h2{
+        font-size: 55px;
+    }
+    .nav-item{
+        width: 40%;
+        height: 70px;
+        font-size: 20px;
+        align-items: center;
+        text-align: center;
+    }
+    
+}
+@media (min-width: 600px) and (min-height: 900px),
+       (min-width: 600px) and (max-height: 1100px){
+    h1{
+        font-size: 90px ;
+    }
+    h2{
+        font-size: 85px ;
+    }
+    .nav-item{
+        width: 30%;
+        font-size: 25px ;
+    }
+    
+}
+
+@media (min-width: 600px) and (max-height: 899px) {
+    h1{
+        font-size: 60px;
+    }
+    h2{
+        font-size: 55px;
+    }
+    .nav-item{
+        width: 30%;
+        font-size: 20px;
+        align-items: center;
+        text-align: center;
+    }
+    
+}
+
+@media (min-width: 1000px) and (min-height: 1000px) {
+    h1{
+        font-size: 140px ;
+    }
+    h2{
+        font-size: 105px;
+    }
+    .nav-item{
+        width: 30%;
+        font-size: 30px ;
+    }
+    
+}
+
+@media (min-width: 1600px) and (min-height: 1000px) {
+    h1{
+        font-size: 140px ;
+    }
+    h2{
+        font-size: 105px;
+    }
+    .nav-item{
+        width: 23%;
+        height: 90px;
+        font-size: 40px ;
+    }
+    
+}
+
+@media (min-width: 2000px) {
+    h1{
+        font-size: 150px ;
+    }
+    h2{
+        font-size: 115px;
+    }
+    .nav-item{
+        width: 23%;
+        font-size: 45px !important;
+    }
+    
+} 
+
+
+/* Для building.html*/
+
+@media (min-width: 300px){
+    .notification-title {
+        font-size: 18px;
+    }
+    .notification-text {
+        font-size: 15px;
+    }
+    .dropdown-menu{
+        width: 70%;
+    }
+    .dropdown-menu-btn{
+        width: 80%;
+        font-size: 15px;
+    }
+    .modules-sidebar{
+        width: 100%;
+    }
+    .sidebar-header{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    h2{
+        font-size: 30px;
+    }
+    .modules-sidebar-title{
+        font-size: 30px;
+    }
+    .close-modal-button{
+        width: 35px;
+        height: 35px;
+        margin-top: 2px;
+        margin-right: 7px;
+    }
+    .modules-back-button{
+        margin-bottom: 10px;
+    }
+    .modules-list {
+        grid-template-columns: repeat(1, 1fr); /* 3 колонки одинаковой ширины */
+        grid-template-rows: repeat(1, 1fr);
+        padding-right: 10px;
+    }
+    .item-module {
+        width: calc(100% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    }
+}
+@media (min-width: 500px){
+    .notification-title {
+        font-size: 22px;
+    }
+    .notification-text {
+        font-size: 18px;
+    }
+    .dropdown-menu{
+        width: 60%;
+    }
+    .dropdown-menu-btn{
+        width: 70%;
+        font-size: 20px;
+    }
+    h2{
+        font-size: 60px;
+        width: 80%;
+    }
+    .sidebar-header{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .close-modal-button{
+        width: 80px;
+        height: 80px;
+        font-size: 50px;
+        margin-top: 5px;
+    }
+    .modules-sidebar-title{
+        font-size: 50px;
+    }
+    .modules-back-button{
+        font-size: 30px ;
+        margin-bottom: 20px;
+    }
+    .modules-choice-type{
+        height: 80%;
+    }
+    .name-module{
+        font-size: 40px;
+    }
+
+}
+@media (min-width: 500px) and (min-height: 500px) and (max-width: 600px){
+    h2{
+        font-size: 50px;
+    }
+}
+@media (min-width: 800px){
+    .notification-title {
+        font-size: 26px;
+    }
+    .notification-text {
+        font-size: 20px;
+    }
+    .dropdown-menu{
+        width: 40%;
+    }
+    .dropdown-menu-btn{
+        font-size: 25px;
+        height: 60px;
+    }
+    .dropdown-menu-btn svg {
+        width: 30px;
+        height: 30px;
+        margin-right: 5px;
+    }
+    h2{
+        font-size: 70px;
+    }
+    .sidebar-header{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .close-modal-button{
+        width: 60px;
+        height: 60px;
+        font-size: 60px;
+        margin-top: 30px;
+    }
+    .modules-sidebar-title{
+        font-size: 60px;
+    }
+    .modules-back-button{
+        font-size: 50px ;
+    }
+    .name-module{
+        font-size: 35px;
+    }
+    .item-module {
+        width: calc(50% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    }
+
+}
+
+@media (min-width: 1000px){
+    .notification-title {
+        font-size: 32px;
+    }
+    .notification-text {
+        font-size: 22px;
+    }
+    .modules-sidebar{
+        width: 90%;
+        
+    }
+    
+    .dropdown-menu-btn{
+        padding-right: 7px;
+    }
+    
+}
+
+@media (min-width: 1600px){
+    .notification-title {
+        font-size: 40px;
+    }
+    .notification-text {
+        font-size: 26px;
+    }
+    .dropdown-menu{
+        width: 30%;
+    }
+    .dropdown-menu-btn{
+        font-size: 30px;
+    }
+    .modules-sidebar{
+        width: 80%;
+    }
+    .item-module {
+        width: calc(33.33% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    }
+    h2{
+        font-size: 90px;
+    }
+    .name-module{
+        font-size: 40px;
+    }
+}

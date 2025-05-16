@@ -1,9 +1,14 @@
 const signInDialog = document.getElementById("signInDialog");
 const registrationDialog = document.getElementById("registrationDialog");
 const forgetPassDialog = document.getElementById("forgetPassDialog");
-const projectSelectionDialog = document.getElementById("projectSelectionDialog");
+const projectSelectionDialog = document.getElementById(
+  "projectSelectionDialog"
+);
+const checkCodeRegistrationDialog = document.getElementById("checkCodeRegistrationDialog");
+const checkCodeRecoverDialog = document.getElementById("checkCodeRecoverDialog");
 const blurDiv = document.getElementById("blurDiv");
-const EMAIL_REGEXP = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
+const EMAIL_REGEXP =
+  /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 
 const buildingPageBtn = document.getElementById("buildingPageBtn");
 const authBtn = document.getElementById("authBtn");
@@ -12,13 +17,14 @@ const authBtn = document.getElementById("authBtn");
 const registrateBtnForm = document.getElementById("registrateBtnForm");
 const forgetPassBtn = document.getElementById("forgetPassBtn");
 const signInBtnForm = document.getElementById("signInBtnForm");
+const signInBtnForm2 = document.getElementById("signInBtnForm2");
 
 //кнопки отправки формы
 const signInBtn = document.getElementById("signInBtn");
 const registrateBtn = document.getElementById("registrateBtn");
 const recoverPassBtn = document.getElementById("recoverPassBtn");
 
-const closeButtons = document.querySelectorAll('.close-modal-button');
+const closeButtons = document.querySelectorAll(".close-modal-button");
 
 //инпуты
 const loginSignIn = document.getElementById("loginSignIn");
@@ -27,392 +33,731 @@ const passwordSignIn = document.getElementById("passwordSignIn");
 const loginRegistration = document.getElementById("loginRegistration");
 const emailRegistration = document.getElementById("emailRegistration");
 const passRegistration = document.getElementById("passRegistration");
-const repeatPassRegistration = document.getElementById("repeatPassRegistration");
+const repeatPassRegistration = document.getElementById(
+  "repeatPassRegistration"
+);
+
+const emailForgetPass = document.getElementById("emailForgetPass");
+const passwordForgetPass = document.getElementById("passwordForgetPass");
+
 //errors
 const loginSignInError = document.getElementById("loginSignInError");
 const passwordSignInError = document.getElementById("passwordSignInError");
 
-const loginRegistrationError = document.getElementById("loginRegistrationError");
-const emailRegistrationError = document.getElementById("emailRegistrationError");
+const loginRegistrationError = document.getElementById(
+  "loginRegistrationError"
+);
+const emailRegistrationError = document.getElementById(
+  "emailRegistrationError"
+);
 const passRegistrationError = document.getElementById("passRegistrationError");
-const repeatPassRegistrationError = document.getElementById("repeatPassRegistrationError");
-const nameProjectError = document.getElementById("nameProjectError");
-let authHeader;
+const repeatPassRegistrationError = document.getElementById(
+  "repeatPassRegistrationError"
+);
+const emailForgetPassError = document.getElementById("emailForgetPassError");
+const passwordForgetPassError = document.getElementById("passwordForgetPassError");
 
-closeButtons.forEach(button => {
-  button.addEventListener('click', (e) => {
+const codeForgetPassError = document.getElementById("codeForgetPassError");
+const codeRegistrationPassError = document.getElementById(
+  "codeRegistrationPassError"
+);
+const nameProjectError = document.getElementById("nameProjectError");
+
+let authHeader;
+let isReg = false;
+
+
+//DOM ELEMENTS
+// Обработчик кнопки выхода
+document.addEventListener("DOMContentLoaded", function () {
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      fetch("/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      })
+        .then((response) => {
+          if (response.ok) {
+            location.reload();
+          }
+        })
+        .catch((error) => console.error("Ошибка выхода:", error));
+    });
+  }
+
+  // Обработчик кнопки входа (если пользователь не авторизован)
+  const authBtn = document.getElementById("authBtn");
+  if (authBtn && !authBtn.classList.contains("auth-user")) {
+    authBtn.addEventListener("click", function () {
+      signInDialog.showModal();
+    });
+  }
+});
+
+// обработчики кнопок
+closeButtons.forEach((button) => {
+  button.addEventListener("click", (e) => {
     e.preventDefault();
-    const dialog = button.closest('dialog');
+    const dialog = button.closest("dialog");
     dialog.close();
     blurDiv.classList.remove("blur");
     isSwitching = false;
   });
 });
 
-let isSwitching = false; //переключение 
+let isSwitching = false; //переключение
 
-authBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    blurDiv.classList.add("blur"); 
-    signInDialog.showModal(); 
+authBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  blurDiv.classList.add("blur");
+  signInDialog.showModal();
 });
-buildingPageBtn.addEventListener('click', (e) => {
-    e.preventDefault();
+buildingPageBtn.addEventListener("click", (e) => {
+  e.preventDefault();
 });
 
 signInDialog.addEventListener("close", () => {
-    if(!isSwitching){
-        blurDiv.classList.remove("blur"); 
-    }
-    isSwitching = false;
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
 });
 registrationDialog.addEventListener("close", () => {
-    if(!isSwitching){
-        blurDiv.classList.remove("blur"); 
-    }
-    isSwitching = false;
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
 });
 forgetPassDialog.addEventListener("close", () => {
-    if(!isSwitching){
-        blurDiv.classList.remove("blur"); 
-    }
-    isSwitching = false;
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
+});
+checkCodeRecoverDialog.addEventListener("close", () => {
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
+});
+checkCodeRegistrationDialog.addEventListener("close", () => {
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
 });
 projectSelectionDialog.addEventListener("close", () => {
-    blurDiv.classList.remove("blur"); 
-    document.querySelector('.content-project-selection-dialog').style.display = '';
-    projectSelectionDialog.style.height = '';
-    document.querySelector('.create-project-section').style.display = 'none';
-    document.querySelector('.show-projects-section').style.display = 'none';
-    document.querySelector('.project-selection-title').innerText = 'Начните свой проект';
+  blurDiv.classList.remove("blur");
+  document.querySelector(".content-project-selection-dialog").style.display =
+    "";
+  projectSelectionDialog.style.height = "";
+  document.querySelector(".create-project-section").style.display = "none";
+  document.querySelector(".show-projects-section").style.display = "none";
+  document.querySelector(".project-selection-title").innerText =
+    "Начните свой проект";
 });
 //переключение между диалогами
-registrateBtnForm.addEventListener('click', (e) => {
-    e.preventDefault();
-    isSwitching = true;
-    signInDialog.close();
-    registrationDialog.showModal();
+registrateBtnForm.addEventListener("click", (e) => {
+  e.preventDefault();
+  isSwitching = true;
+  signInDialog.close();
+  registrationDialog.showModal();
 });
-forgetPassBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    isSwitching = true;
-    console.log(isSwitching);
-    signInDialog.close();
-    forgetPassDialog.showModal();
+forgetPassBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  isSwitching = true;
+  console.log(isSwitching);
+  signInDialog.close();
+  forgetPassDialog.showModal();
 });
-signInBtnForm.addEventListener('click', (e) => {
-    e.preventDefault();
-    isSwitching = true;
-    registrationDialog.close();
-    signInDialog.showModal();
+signInBtnForm.addEventListener("click", (e) => {
+  e.preventDefault();
+  isSwitching = true;
+  registrationDialog.close();
+  signInDialog.showModal();
 });
-signInBtnForm2.addEventListener('click', (e) => {
-    e.preventDefault();
-    isSwitching = true;
-    forgetPassDialog.close();
-    signInDialog.showModal();
+signInBtnForm2.addEventListener("click", (e) => {
+  e.preventDefault();
+  isSwitching = true;
+  forgetPassDialog.close();
+  signInDialog.showModal();
 });
 
 //отправка формы
-signInBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    resetSignInErrors(); 
-    const loginValue = loginSignIn.value.trim(); 
-    const passwordValue = passwordSignIn.value.trim(); 
+signInBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  resetSignInErrors();
+  const loginValue = loginSignIn.value.trim();
+  const passwordValue = passwordSignIn.value.trim();
 
-    if (!loginValue) {
-        showError(loginSignIn, loginSignInError, "Пожалуйста, введите логин.");
-        return;
+  if (!loginValue) {
+    showError(loginSignIn, loginSignInError, "Пожалуйста, введите логин.");
+    return;
+  }
+
+  if (!passwordValue) {
+    showError(
+      passwordSignIn,
+      passwordSignInError,
+      "Пожалуйста, введите пароль."
+    );
+    return;
+  }
+  const formData = {
+    email: loginSignIn.value,
+    password: passwordSignIn.value,
+  };
+  fetch("http://localhost:5050/auth/signin", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", // Убедитесь, что заголовок установлен
+    },
+    body: JSON.stringify(formData),
+  })
+    .then((response) => {
+      return response.json().then((data) => {
+        if (!response.ok) {
+          // Если ответ не успешен, проверяем наличие сообщения
+          if (data.message) {
+            showError(null, passwordSignInError, data.message);
+          }
+          return Promise.reject(data);
+        }
+        return data; // Возвращаем успешно полученные данные
+      });
+    })
+    .then((data) => {
+      location.reload();
+    })
+    .catch((error) => {
+      console.error("Ошибка авторизации:", error);
+      // Здесь можно также обработать другие ошибки, если нужно
+    });
+  //отправка на сервер
+});
+registrateBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  resetRegErrors();
+  const login = loginRegistration.value.trim();
+  const email = emailRegistration.value.trim();
+  const password = passRegistration.value;
+  const repeat_password = repeatPassRegistration.value;
+
+  if (!login) {
+    showError(
+      loginRegistration,
+      loginRegistrationError,
+      "Пожалуйста, введите логин."
+    );
+    return;
+  }
+  if (!email) {
+    showError(
+      emailRegistration,
+      emailRegistrationError,
+      "Пожалуйста, введите почту."
+    );
+    return;
+  }
+
+  if (!isEmailValid(email)) {
+    showError(
+      emailRegistration,
+      emailRegistrationError,
+      "Неккоректный формат почты."
+    );
+    return;
+  }
+  if (!isPassValid(password, passRegistrationError, passRegistration)) {
+    return;
+  }
+  if (!repeat_password) {
+    showError(
+      repeatPassRegistration,
+      repeatPassRegistrationError,
+      "Пожалуйста, повторите пароль."
+    );
+    return;
+  }
+  if (password !== repeat_password) {
+    showError(
+      repeatPassRegistration,
+      repeatPassRegistrationError,
+      "Пароли не совпадают."
+    );
+    return;
+  }
+  const bodyrequest = {
+    username: login,
+    email: email,
+    password: password,
+  };
+  fetch("http://localhost:5050/auth/registration", {
+    method: "POST",
+    contentType: "application/json",
+    body: JSON.stringify(bodyrequest),
+  }).then((response) => {
+    return response.json().then((data) => {
+      if (!response.ok) {
+        // Если ответ не успешен, проверяем наличие сообщения
+        if (data.message) {
+          showError(null, passRegistrationError, data.message);
+        }
+        return Promise.reject(data);
       }
-    
-    if (!passwordValue) {
-        showError(passwordSignIn, passwordSignInError, "Пожалуйста, введите пароль.");
-        return;
+      console.log(data.code); // TEST
+      authHeader = response.headers.get("Authorization");
+      return data; // Возвращаем успешно полученные данные
+    });
+  });
+  //отправка на сервер
+  isReg = true;
+  e.preventDefault();
+  isSwitching = true;
+  registrationDialog.close();
+  checkCodeRegistrationDialog.showModal();
+});
+
+recoverPassBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  resetRegErrors();
+  const email = emailForgetPass.value.trim();
+  const newpass = passwordForgetPass.value.trim();
+
+  if (!email) {
+    showError(
+      emailForgetPass,
+      emailForgetPassError,
+      "Пожалуйста, введите почту."
+    );
+    return;
+  }
+  if (!newpass) {
+    showError(
+      passwordForgetPass,
+      passwordForgetPassError,
+      "Пожалуйста, введите новый пароль."
+    );
+    return;
+  }
+  if (!isPassValid(newpass, passwordForgetPassError, passwordForgetPass)) {
+    return;
+  }
+
+  if (!isEmailValid(email)) {
+    showError(
+      emailForgetPass,
+      emailForgetPassError,
+      "Неккоректный формат почты."
+    );
+    return;
+  }
+  if (!isPassValid(newpass, passwordForgetPassError, passwordForgetPass)) {
+    return;
+  }
+  const bodyrequest = {
+    email: email,
+    password: newpass,
+  };
+  fetch("http://localhost:5050/auth/recover", {
+    method: "POST",
+    contentType: "application/json",
+    body: JSON.stringify(bodyrequest),
+  }).then((response) => {
+    return response.json().then((data) => {
+      if (!response.ok) {
+        // Если ответ не успешен, проверяем наличие сообщения
+        if (data.message) {
+          showError(null, passwordForgetPassError, data.message);
+        }
+        return Promise.reject(data);
+      }
+      console.log(data.code); // TEST
+      authHeader = response.headers.get("Authorization");
+      return data; // Возвращаем успешно полученные данные
+    });
+  });
+  //отправка на сервер
+  isReg = false;
+  e.preventDefault();
+  isSwitching = true;
+  forgetPassDialog.close();
+  checkCodeRecoverDialog.showModal();
+});
+
+recoverPassBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  resetRecoverErrors();
+});
+
+//переход к некст инпуту кода
+function moveToNext(currentInput, nextInputId) {
+  // Если текущее поле не пустое, перемещаем фокус на следующее поле
+  if (currentInput.value.length >= 1 && nextInputId) {
+    document.getElementById(nextInputId).focus();
+  }
+}
+
+//проверка на число
+function isNumberKey(evt) {
+  const charCode = evt.which ? evt.which : evt.keyCode;
+  // Разрешаем только цифры (0-9)
+  if (charCode < 48 || charCode > 57) {
+    evt.preventDefault(); // Запрещаем ввод
+    return false;
+  }
+  return true;
+}
+
+//проверяем 6 инпутов
+function checkAllFilled() {
+  let id;
+  if (isReg){
+    id = "#confirmationCodeRegistration";
+  }else {id = "#confirmationCodeRecovery";}
+  const inputsRegistration = document.querySelectorAll(id + " .code-input"); //получаем все инпуты внутри блока
+  const allFilled = Array.from(inputsRegistration).every(
+    (input) => input.value.length === 1
+  );
+  resetInputStyles(inputsRegistration);
+  if (allFilled) {
+    const code = Array.from(inputsRegistration)
+      .map((input) => input.value)
+      .join("");
+    let email;
+    let url;
+    let errField;
+    if (isReg) {
+      email = emailRegistration.value.trim();
+      url = "http://localhost:5050/auth/check_code_registration";
+      errField = codeRegistrationPassError;
+    } else {
+      email = emailForgetPass.value.trim();
+      url = "http://localhost:5050/auth/check_code_recover";
+      errField = codeForgetPassError;
     }
-    const formData = {
-        email: loginSignIn.value,
-        password: passwordSignIn.value,
+    console.log("email:", email);
+    body = {
+      email: email,
+      code: code,
     };
-    fetch("http://localhost:5050/auth/signin", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json' // Убедитесь, что заголовок установлен
-        },
-        body: JSON.stringify(formData),
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     })
-        .then(response => {
-            return response.json().then(data => {
-                if (!response.ok) {
-                    // Если ответ не успешен, проверяем наличие сообщения
-                    if (data.message) {                    
-                        showError(null, passwordSignInError, data.message);
-                    }
-                    return Promise.reject(data);
-                }
-                return data; // Возвращаем успешно полученные данные
-            });
-        })
-        .then(data => {
-            location.reload();
-        })
-        .catch(error => {
-            console.error('Ошибка авторизации:', error);
-            // Здесь можно также обработать другие ошибки, если нужно
-        });
-    //отправка на сервер
-});
-registrateBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    resetRegErrors();
-    const login = loginRegistration.value.trim();
-    const email = emailRegistration.value.trim();
-    const password = passRegistration.value;
-    const repeat_password = repeatPassRegistration.value;
+      .then((response) => {
+        if (response.status === 423) {
+          showBlockInput(inputsRegistration);
+          return response.json(); // Преобразуем ответ в JSON
+        }
+        if (response.status === 409) {
+          applyErrorStyles(inputsRegistration);
+          throw new Error("Invalid code");
+        }
+        if (response.ok) {
+          resetInputStyles(inputsRegistration);
+          if (isReg) {
+            location.href = "/";
+            isReg = false;
+            return;
+          }
+          location.href = "/";
+          isSwitching = true;
+          checkCodeRecoverDialog.close();
+          signInDialog.showModal();
+          return;
+        }
+        return Promise.reject();
+      })
+      .then((data) => {
+        if (!data?.unlock_at) {
+          throw new Error("Не получено время разблокировки");
+        }
 
-    if (!login) {
-        showError(loginRegistration, loginRegistrationError, "Пожалуйста, введите логин.");
-        return;
-    }
-    if (!email) {
-        showError(emailRegistration, emailRegistrationError , "Пожалуйста, введите почту.");
-        return;
-    }
+        const unlockTime = new Date(data.unlock_at);
+        if (isNaN(unlockTime.getTime())) {
+          throw new Error(`Некорректный формат времени: ${data.unlock_at}`);
+        }
 
-    if (!isEmailValid(email)) {
-        showError(emailRegistration, emailRegistrationError, "Неккоректный формат почты.");
-        return;
+        const updateTimer = () => {
+          const now = new Date();
+          const diff = unlockTime - now;
+          console.log(now);
+          if (diff <= 0) {
+            clearInterval(interval);
+            showCanField(errField, "Можете пробовать снова.", inputsRegistration);
+            return;
+          }
+
+          const totalSeconds = Math.floor(diff / 1000);
+          const minutes = Math.floor(totalSeconds / 60);
+          const seconds = totalSeconds % 60;
+
+          const timeString = `${minutes.toString().padStart(2, "0")}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+          showError(
+            errField,
+            `Слишком большое количество попыток, попробуйте снова через: ${timeString}`
+          );
+        };
+
+        // Первое обновление сразу
+        updateTimer();
+
+        // Затем каждую секунду
+        const interval = setInterval(updateTimer, 1000);
+
+        return { interval, unlockTime };
+      });
+  }
+
+  return allFilled;
+}
+
+function handleKeyDown(event, inputElement) {
+  if (event.key === "Backspace") {
+    const currentIndex = parseInt(inputElement.id.replace("inputCode", ""));
+    if (inputElement.value === "") {
+      // только если input уже пустой
+      inputElement.value = "";
+      const previousInput = document.getElementById(
+        "inputCode" + (currentIndex - 1)
+      );
+      if (previousInput) {
+        previousInput.focus();
+      }
+      checkAllFilled();
+    } else {
+      if (currentIndex == 4) {
+        const inputsRegistration = document.querySelectorAll(
+          "#confirmationCodeRegistration .code-input"
+        );
+        resetErrorStyles(inputsRegistration);
+        const inputsRecovery = document.querySelectorAll(
+          "#confirmationCodeRecovery .code-input"
+        );
+        resetErrorStyles(inputsRecovery);
+      }
+      inputElement.value = ""; // если есть значение - просто очищаем, не переходим
     }
-    if (!isPassValid(password, passRegistrationError, passRegistration)) {
-        return;
-    }
-    if (!repeat_password) {
-        showError(repeatPassRegistration, repeatPassRegistrationError, "Пожалуйста, повторите пароль.");
-        return;
-    }
-    if (password !== repeat_password) {
-        showError(repeatPassRegistration, repeatPassRegistrationError, "Пароли не совпадают.");
-        return;
-    }
-    const bodyrequest = {
-        username: login,
-        email: email,
-        password: password,
-    }
-    fetch("http://localhost:5050/auth/registration", {
-        method: 'POST',
-        contentType: 'application/json',
-        body: JSON.stringify(bodyrequest)
-    })
-    .then (response => {
-        return response.json().then(data => {
-            if (!response.ok) {
-                // Если ответ не успешен, проверяем наличие сообщения
-                if (data.message) {
-                    showError(null, passRegistrationError, data.message);
-                }
-                return Promise.reject(data);
-            }
-            console.log(data.code);// TEST
-            authHeader = response.headers.get('Authorization')
-            return data; // Возвращаем успешно полученные данные
-        });
-    })
-    //отправка на сервер
-});
-recoverPassBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    resetRecoverErrors();
-    
-});
-function selectProject(){
-    blurDiv.classList.add("blur"); 
-    projectSelectionDialog.showModal();
+  }
+}
+
+function resetInputStyles(inputs) {
+  inputs.forEach((input) => {
+    input.style.borderColor = "";
+    input.style.background = "";
+  });
+  codeForgetPassError.style.display = "none";
+}
+
+function selectProject() {
+  blurDiv.classList.add("blur");
+  projectSelectionDialog.showModal();
 }
 function goBuilding() {
-    fetch("http://localhost:5050/maps/redactor", {
-        method: 'GET',
-        credentials: 'include',
+  fetch("http://localhost:5050/maps/redactor", {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      Accept: "application/json", // Явно указываем, что ожидаем JSON
+    },
+  })
+    .then((response) => {
+      return response.json().then((data) => {
+        if (data.redirect_url) {
+          window.location.href = data.redirect_url;
+        } else {
+          window.location.href = `/maps/redactor/page`;
+        }
+      });
     })
-        .then(response => {
-            const contentType = response.headers.get('content-type');
-
-            if (!contentType || !contentType.includes('application/json')) {
-                return response.text().then(text => {
-                    throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
-                });
-            }
-
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error || `Ошибка сервера: ${response.status}`);
-                });
-            }
-
-            return response.json();
-        })
-        .then(data => {
-            window.location.href = `/maps/redactor/page`;
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-        });
+    .catch((error) => {
+      console.error("Ошибка:", error);
+      // Можно показать пользователю сообщение об ошибке
+    });
 }
 
 function showError(input, field, text) {
-    field.innerText = text;
-    field.style.display = "block";
-    input.style.borderColor = 'red';
+  field.innerText = text;
+  field.style.display = "block";
+  input.style.borderColor = "red";
 }
+
 function resetSignInErrors() {
-    loginSignInError.style.display = "none";
-    passwordSignInError.style.display = "none";
-    loginSignIn.style.borderColor = 'transparent';
-    passwordSignIn.style.borderColor = 'transparent';
+  loginSignInError.style.display = "none";
+  passwordSignInError.style.display = "none";
+  loginSignIn.style.borderColor = "transparent";
+  passwordSignIn.style.borderColor = "transparent";
 }
-function resetRegErrors(){
-    loginRegistrationError.style.display = "none";
-    emailRegistrationError.style.display = "none";
-    passRegistrationError.style.display = "none";
-    repeatPassRegistrationError.style.display = "none";
-    loginRegistration.style.borderColor = 'transparent';
-    emailRegistration.style.borderColor = 'transparent';
-    passRegistration.style.borderColor = 'transparent';
-    repeatPassRegistration.style.borderColor = 'transparent';
+
+function resetRegErrors() {
+  loginRegistrationError.style.display = "none";
+  emailRegistrationError.style.display = "none";
+  passRegistrationError.style.display = "none";
+  repeatPassRegistrationError.style.display = "none";
+  loginRegistration.style.borderColor = "transparent";
+  emailRegistration.style.borderColor = "transparent";
+  passRegistration.style.borderColor = "transparent";
+  repeatPassRegistration.style.borderColor = "transparent";
 }
+
+function resetRecoverErrors() {
+  emailForgetPassError.style.display = "none";
+  passwordForgetPassError.style.display = "none";
+  emailForgetPass.style.borderColor = "transparent";
+  passwordForgetPass.style.borderColor = "transparent";
+}
+
 function isEmailValid(value) {
-    return EMAIL_REGEXP.test(value);
+  return EMAIL_REGEXP.test(value);
 }
 
 //проверка пароля
 function isPassValid(value, field, input) {
-    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
-    if (!value) {
-      showError(input, field, "Пожалуйста, введите пароль.");
-      input.style.borderColor = "red";
-      return false;
-    }
-    // Проверка длины пароля
-    if (value.length < 5) {
-      showError(input, field, "Пароль должен содержать не менее 5 символов.");
-      input.style.borderColor = "red";
-      return false;
-    }
-  
-    // Проверка наличия специального символа в пароле
-    if (!specialCharRegex.test(value)) {
-      showError(
-        input,
-        field,
-        "Пароль должен содержать хотя бы один специальный символ."
-      );
-      input.style.borderColor = "red";
-      return false;
-    }
-    return true;
+  const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+  if (!value) {
+    showError(input, field, "Пожалуйста, введите пароль.");
+    input.style.borderColor = "red";
+    return false;
   }
-  function showCreateProjectForm(){
-    projectSelectionDialog.style.height = '35%';
-    document.querySelector('.content-project-selection-dialog').style.display = 'none';
-    document.querySelector('.create-project-section').style.display = 'flex';
+  // Проверка длины пароля
+  if (value.length < 5) {
+    showError(input, field, "Пароль должен содержать не менее 5 символов.");
+    input.style.borderColor = "red";
+    return false;
   }
-  function createNewProject(){
-    let nameProj = document.getElementById('nameProject').value; //+валидация to do
-    const requestData = {
-        name_map: nameProj 
-    };
-    fetch("http://localhost:5050/maps/create", {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-    })
-        .then(response => {
-            const contentType = response.headers.get('content-type');
 
-            if (!contentType || !contentType.includes('application/json')) {
-                return response.text().then(text => {
-                    throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
-                });
-            }
+  // Проверка наличия специального символа в пароле
+  if (!specialCharRegex.test(value)) {
+    showError(
+      input,
+      field,
+      "Пароль должен содержать хотя бы один специальный символ."
+    );
+    input.style.borderColor = "red";
+    return false;
+  }
+  return true;
+}
+function showCreateProjectForm() {
+  projectSelectionDialog.style.height = "35%";
+  document.querySelector(".content-project-selection-dialog").style.display =
+    "none";
+  document.querySelector(".create-project-section").style.display = "flex";
+}
+function createNewProject() {
+  let nameProj = document.getElementById("nameProject").value; //+валидация to do
+  const requestData = {
+    name_map: nameProj,
+  };
+  fetch("http://localhost:5050/maps/create", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(requestData),
+  })
+    .then((response) => {
+      const contentType = response.headers.get("content-type");
 
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error || `Ошибка сервера: ${response.status}`);
-                });
-            }
-
-            return response.json();
-        })
-        .then(data => {
-            selectMap(data.map_id, true);
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
+      if (!contentType || !contentType.includes("application/json")) {
+        return response.text().then((text) => {
+          throw new Error(
+            `Ожидался JSON, но получен: ${text.slice(0, 100)}...`
+          );
         });
-  }
-  function showProjects(){
-    document.querySelector('.content-project-selection-dialog').style.display = 'none';
-    document.querySelector('.show-projects-section').style.display = 'block';
-    document.querySelector('.project-selection-title').innerText = 'Мои проекты';
-    loadMaps();
-  }
-  function loadMaps() {
-    fetch("http://localhost:5050/maps/get_maps", {
-        method: 'GET',
-        credentials: 'include',
+      }
+
+      if (!response.ok) {
+        return response.json().then((err) => {
+          throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+        });
+      }
+
+      return response.json();
     })
-    .then(response => {
-        const contentType = response.headers.get('content-type');
-
-        if (!contentType || !contentType.includes('application/json')) {
-            return response.text().then(text => {
-                throw new Error(`Ожидался JSON, но получен: ${text.slice(0, 100)}...`);
-            });
-        }
-
-        if (!response.ok) {
-            return response.json().then(err => {
-                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
-            });
-        }
-
-        return response.json();
+    .then((data) => {
+      selectMap(data.map_id, true);
     })
-    .then(data => {
-        const projectsSection = document.querySelector('.show-projects-section');
-        projectsSection.innerHTML = ''; // Очищаем секцию перед заполнением
+    .catch((error) => {
+      console.error("Ошибка:", error);
+    });
+}
+function showProjects() {
+  document.querySelector(".content-project-selection-dialog").style.display =
+    "none";
+  document.querySelector(".show-projects-section").style.display = "block";
+  document.querySelector(".project-selection-title").innerText = "Мои проекты";
+  loadMaps();
+}
+function loadMaps() {
+  fetch("http://localhost:5050/maps/get_maps", {
+    method: "GET",
+    credentials: "include",
+  })
+    .then((response) => {
+      const contentType = response.headers.get("content-type");
 
-        // Проверяем, что данные есть и это массив
-        if (Array.isArray(data) && data.length > 0) {
-            renderMaps(data);
-            // Показываем секцию
-            projectsSection.style.display = 'block';
-        } else {
-            projectsSection.innerHTML = '<p>Нет доступных проектов</p>';
-            projectsSection.style.display = 'block';
-        }
+      if (!contentType || !contentType.includes("application/json")) {
+        return response.text().then((text) => {
+          throw new Error(
+            `Ожидался JSON, но получен: ${text.slice(0, 100)}...`
+          );
+        });
+      }
+
+      if (!response.ok) {
+        return response.json().then((err) => {
+          throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+        });
+      }
+
+      return response.json();
     })
-    .catch(error => {
-        console.error('Ошибка:', error);
-        const projectsSection = document.querySelector('.show-projects-section');
-        projectsSection.innerHTML = `<p>Ошибка загрузки: ${error.message}</p>`;
-        projectsSection.style.display = 'block';
+    .then((data) => {
+      const projectsSection = document.querySelector(".show-projects-section");
+      projectsSection.innerHTML = ""; // Очищаем секцию перед заполнением
+
+      // Проверяем, что данные есть и это массив
+      if (Array.isArray(data) && data.length > 0) {
+        renderMaps(data);
+        // Показываем секцию
+        projectsSection.style.display = "block";
+      } else {
+        projectsSection.innerHTML = "<p>Нет доступных проектов</p>";
+        projectsSection.style.display = "block";
+      }
+    })
+    .catch((error) => {
+      console.error("Ошибка:", error);
+      const projectsSection = document.querySelector(".show-projects-section");
+      projectsSection.innerHTML = `<p>Ошибка загрузки: ${error.message}</p>`;
+      projectsSection.style.display = "block";
     });
 }
 function renderMaps(maps) {
-    const projectsSection = document.querySelector('.show-projects-section');
-    projectsSection.innerHTML = '';
+  const projectsSection = document.querySelector(".show-projects-section");
+  projectsSection.innerHTML = "";
 
-    maps.forEach(map => {
-        const projectItem = document.createElement('div');
-        projectItem.className = 'project-item';
-        projectItem.dataset.mapId = map.map_id; // Сохраняем ID в data-атрибуте
-        
-        projectItem.innerHTML = `
+  maps.forEach((map) => {
+    const projectItem = document.createElement("div");
+    projectItem.className = "project-item";
+    projectItem.dataset.mapId = map.map_id; // Сохраняем ID в data-атрибуте
+
+    projectItem.innerHTML = `
             <div class="project-info">
-                <p class="project-name">${map.map_name || 'Без названия'}</p>
-                <p class="project-date">${formatDate(new Date(map.map_created))}</p>
+                <p class="project-name">${map.map_name || "Без названия"}</p>
+                <p class="project-date">${formatDate(
+                  new Date(map.map_created)
+                )}</p>
             </div>
             <button class="project-delete">
                 <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -420,70 +765,68 @@ function renderMaps(maps) {
                 </svg>
             </button>
         `;
-        
-        projectsSection.appendChild(projectItem);
-    });
 
-    // Добавляем обработчики событий
-    addMapEventListeners();
+    projectsSection.appendChild(projectItem);
+  });
+
+  // Добавляем обработчики событий
+  addMapEventListeners();
 }
 function addMapEventListeners() {
-    document.querySelectorAll('.project-item').forEach(item => {
-        // Обработчик для всей карточки (если нужно)
-        item.addEventListener('click', (e) => {
-            // Проверяем, что клик не по кнопке удаления
-            if (!e.target.closest('.project-delete')) {
-                const mapId = item.dataset.mapId;
-                selectMap(mapId, false); // Ваша функция для открытия карты
-            }
-        });
-
-        // Обработчик для кнопки удаления
-        const deleteBtn = item.querySelector('.project-delete');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Предотвращаем всплытие
-                const mapId = item.dataset.mapId;
-                deleteMap(mapId); // Ваша функция для удаления
-            });
-        }
+  document.querySelectorAll(".project-item").forEach((item) => {
+    // Обработчик для всей карточки (если нужно)
+    item.addEventListener("click", (e) => {
+      // Проверяем, что клик не по кнопке удаления
+      if (!e.target.closest(".project-delete")) {
+        const mapId = item.dataset.mapId;
+        selectMap(mapId, false); // Ваша функция для открытия карты
+      }
     });
+
+    // Обработчик для кнопки удаления
+    const deleteBtn = item.querySelector(".project-delete");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // Предотвращаем всплытие
+        const mapId = item.dataset.mapId;
+        deleteMap(mapId); // Ваша функция для удаления
+      });
+    }
+  });
 }
 
 function selectMap(mapId, is_first_launch) {
-    fetch(`/maps/redactor?map_id=${mapId}&is_first_launch=${is_first_launch}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include'
+  fetch(`/maps/redactor?map_id=${mapId}&is_first_launch=${is_first_launch}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        return response.json().then((err) => {
+          throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+        });
+      }
+      return response.json();
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => {
-                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
-            });
-        }
-        return response.json();
+    .then((data) => {
+      // Перенаправляем на страницу выбора места
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
     })
-    .then(data => {
-        // Перенаправляем на страницу выбора места
-        if (data.redirect_url) {
-            window.location.href = data.redirect_url;
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
+    .catch((error) => {
+      console.error("Ошибка:", error);
     });
 }
 //to do
-function deleteMap(mapId) {
-
-}
+function deleteMap(mapId) {}
 // Функция для форматирования даты в формат DD-MM-YYYY
 function formatDate(date) {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 }
