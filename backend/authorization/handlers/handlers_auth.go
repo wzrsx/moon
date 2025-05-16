@@ -33,7 +33,7 @@ type EmailCodeRecord struct {
 }
 
 var mu sync.RWMutex // Для потокобезопасности
-var emailCodes = make(map[string]*EmailCodeRecord)
+var registrationCodes = make(map[string]*EmailCodeRecord)
 
 var recoverCodes = make(map[string]*EmailCodeRecord)
 
@@ -84,6 +84,7 @@ func (a *AuthHandlers) RegisterHandler(rw http.ResponseWriter, r *http.Request) 
 func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsRegistration struct {
 		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	var creds CredentialsRegistration
 	err := json.NewDecoder(r.Body).Decode(&creds)
@@ -114,7 +115,7 @@ func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	a.sendWelcomeEmail(creds.Email, "", "", false, rw)
+	a.sendWelcomeEmail(creds.Email, "", creds.Password, false, rw)
 }
 
 func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg bool, rw http.ResponseWriter) {
@@ -236,7 +237,7 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 		// }
 
 		// Устанавливаем код в слайс
-		setRecoverCode(confirmationCode, email)
+		setRecoverCode(confirmationCode, email, password)
 	}
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
@@ -266,7 +267,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 	mu.Lock()
 	defer mu.Unlock()
 
-	code_info := emailCodes[creds.Email]
+	code_info := registrationCodes[creds.Email]
 
 	if code_info == nil {
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
@@ -314,7 +315,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
 			"message": fmt.Sprint("Error create new user"),
 		})
-		delete(emailCodes, creds.Email)
+		delete(registrationCodes, creds.Email)
 		return
 	}
 
@@ -329,17 +330,16 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 	rw.Header().Add("Authorization", string_tocken)
 
 	// Удаляем код из слайса
-	delete(emailCodes, creds.Email)
+	delete(registrationCodes, creds.Email)
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"message": "Success register",
+		"message": "Success recover",
 	})
 }
 
 func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsCode struct {
 		Email string `json:"email"`
-		Password string `json:"password"`
 		Code  string `json:"code"`
 	}
 	var creds CredentialsCode
@@ -398,17 +398,20 @@ func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = queries_auth.RecoveryQuery(creds.Email, creds.Password, a.Pool)
+	err = queries_auth.RecoveryQuery(creds.Email, code_info.Password, a.Pool)
 	if err != nil {
-		a.Logger.Sugar().Errorf("Error create new user in DB: %v", err)
+		if err.Error() == "user with this email does not exist" {
+			respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+				"message": err.Error(),
+			})
+		}
+		a.Logger.Sugar().Errorf("Error update user in DB: %v", err)
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"message": fmt.Sprint("Error create new user"),
+			"message": "Error update user",
 		})
-		delete(emailCodes, creds.Email)
+		delete(recoverCodes, creds.Email)
 		return
-	} 
-
-	// потом додумать проверку кода в поле ввода пароля,
+	}
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
 		"message": "Success recover",
@@ -485,17 +488,17 @@ func genConfirmCode() string {
 }
 
 func (a *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-    // Удаляем JWT куку
-    http.SetCookie(w, &http.Cookie{
-        Name:    "jwt_token",
-        Value:   "",
-        Path:    "/",
-        Expires: time.Unix(0, 0),
-        MaxAge:  -1,
-    })
-    
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(`{"status": "success"}`))
+	// Удаляем JWT куку
+	http.SetCookie(w, &http.Cookie{
+		Name:    "jwt_token",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+		MaxAge:  -1,
+	})
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status": "success"}`))
 }
 
 // Вспомогательная функция для JSON-ответов
@@ -518,23 +521,24 @@ func setCode(confirmation_code string, email string, username string, password s
 		Password:   password,
 	}
 
-	emailCodes[email] = record
+	registrationCodes[email] = record
 
 	time.AfterFunc(15*time.Minute, func() {
 		mu.Lock()
 		defer mu.Unlock()
 
 		// Удаляем только если это та же самая запись
-		if stored, exists := emailCodes[email]; exists && stored == record {
-			delete(emailCodes, email)
+		if stored, exists := registrationCodes[email]; exists && stored == record {
+			delete(registrationCodes, email)
 		}
 	})
 }
-func setRecoverCode(confirmation_code string, email string) {
+func setRecoverCode(confirmation_code string, email, password string) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	record := &EmailCodeRecord{
+		Password:   password,
 		Code:       confirmation_code,
 		ExpiresAt:  time.Now().Add(5 * time.Minute),
 		BlockUntil: time.Now(),
@@ -548,7 +552,7 @@ func setRecoverCode(confirmation_code string, email string) {
 		defer mu.Unlock()
 
 		// Удаляем только если это та же самая запись
-		if stored, exists := emailCodes[email]; exists && stored == record {
+		if stored, exists := recoverCodes[email]; exists && stored == record {
 			delete(recoverCodes, email)
 		}
 	})

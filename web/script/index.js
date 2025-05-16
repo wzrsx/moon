@@ -4,9 +4,8 @@ const forgetPassDialog = document.getElementById("forgetPassDialog");
 const projectSelectionDialog = document.getElementById(
   "projectSelectionDialog"
 );
-const checkCodeRegistrationDialog = document.getElementById(
-  "checkCodeRegistrationDialog"
-);
+const checkCodeRegistrationDialog = document.getElementById("checkCodeRegistrationDialog");
+const checkCodeRecoverDialog = document.getElementById("checkCodeRecoverDialog");
 const blurDiv = document.getElementById("blurDiv");
 const EMAIL_REGEXP =
   /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
@@ -39,6 +38,7 @@ const repeatPassRegistration = document.getElementById(
 );
 
 const emailForgetPass = document.getElementById("emailForgetPass");
+const passwordForgetPass = document.getElementById("passwordForgetPass");
 
 //errors
 const loginSignInError = document.getElementById("loginSignInError");
@@ -55,14 +55,17 @@ const repeatPassRegistrationError = document.getElementById(
   "repeatPassRegistrationError"
 );
 const emailForgetPassError = document.getElementById("emailForgetPassError");
+const passwordForgetPassError = document.getElementById("passwordForgetPassError");
 
 const codeForgetPassError = document.getElementById("codeForgetPassError");
 const codeRegistrationPassError = document.getElementById(
   "codeRegistrationPassError"
 );
 const nameProjectError = document.getElementById("nameProjectError");
+
 let authHeader;
 let isReg = false;
+
 
 //DOM ELEMENTS
 // Обработчик кнопки выхода
@@ -129,6 +132,18 @@ registrationDialog.addEventListener("close", () => {
   isSwitching = false;
 });
 forgetPassDialog.addEventListener("close", () => {
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
+});
+checkCodeRecoverDialog.addEventListener("close", () => {
+  if (!isSwitching) {
+    blurDiv.classList.remove("blur");
+  }
+  isSwitching = false;
+});
+checkCodeRegistrationDialog.addEventListener("close", () => {
   if (!isSwitching) {
     blurDiv.classList.remove("blur");
   }
@@ -310,6 +325,7 @@ recoverPassBtn.addEventListener("click", (e) => {
   e.preventDefault();
   resetRegErrors();
   const email = emailForgetPass.value.trim();
+  const newpass = passwordForgetPass.value.trim();
 
   if (!email) {
     showError(
@@ -317,6 +333,17 @@ recoverPassBtn.addEventListener("click", (e) => {
       emailForgetPassError,
       "Пожалуйста, введите почту."
     );
+    return;
+  }
+  if (!newpass) {
+    showError(
+      passwordForgetPass,
+      passwordForgetPassError,
+      "Пожалуйста, введите новый пароль."
+    );
+    return;
+  }
+  if (!isPassValid(newpass, passwordForgetPassError, passwordForgetPass)) {
     return;
   }
 
@@ -328,8 +355,12 @@ recoverPassBtn.addEventListener("click", (e) => {
     );
     return;
   }
+  if (!isPassValid(newpass, passwordForgetPassError, passwordForgetPass)) {
+    return;
+  }
   const bodyrequest = {
     email: email,
+    password: newpass,
   };
   fetch("http://localhost:5050/auth/recover", {
     method: "POST",
@@ -340,7 +371,7 @@ recoverPassBtn.addEventListener("click", (e) => {
       if (!response.ok) {
         // Если ответ не успешен, проверяем наличие сообщения
         if (data.message) {
-          showError(null, passRegistrationError, data.message);
+          showError(null, passwordForgetPassError, data.message);
         }
         return Promise.reject(data);
       }
@@ -353,9 +384,15 @@ recoverPassBtn.addEventListener("click", (e) => {
   isReg = false;
   e.preventDefault();
   isSwitching = true;
-  registrationDialog.close();
-  checkCodeRegistrationDialog.showModal();
+  forgetPassDialog.close();
+  checkCodeRecoverDialog.showModal();
 });
+
+recoverPassBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  resetRecoverErrors();
+});
+
 //переход к некст инпуту кода
 function moveToNext(currentInput, nextInputId) {
   // Если текущее поле не пустое, перемещаем фокус на следующее поле
@@ -374,10 +411,14 @@ function isNumberKey(evt) {
   }
   return true;
 }
+
 //проверяем 6 инпутов
 function checkAllFilled() {
-
-  const inputsRegistration = document.querySelectorAll("#confirmationCodeRegistration .code-input"); //получаем все инпуты внутри блока
+  let id;
+  if (isReg){
+    id = "#confirmationCodeRegistration";
+  }else {id = "#confirmationCodeRecovery";}
+  const inputsRegistration = document.querySelectorAll(id + " .code-input"); //получаем все инпуты внутри блока
   const allFilled = Array.from(inputsRegistration).every(
     (input) => input.value.length === 1
   );
@@ -426,7 +467,10 @@ function checkAllFilled() {
             isReg = false;
             return;
           }
-          showPassInput(email);
+          location.href = "/";
+          isSwitching = true;
+          checkCodeRecoverDialog.close();
+          signInDialog.showModal();
           return;
         }
         return Promise.reject();
@@ -514,10 +558,6 @@ function resetInputStyles(inputs) {
   codeForgetPassError.style.display = "none";
 }
 
-recoverPassBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  resetRecoverErrors();
-});
 function selectProject() {
   blurDiv.classList.add("blur");
   projectSelectionDialog.showModal();
@@ -567,6 +607,13 @@ function resetRegErrors() {
   emailRegistration.style.borderColor = "transparent";
   passRegistration.style.borderColor = "transparent";
   repeatPassRegistration.style.borderColor = "transparent";
+}
+
+function resetRecoverErrors() {
+  emailForgetPassError.style.display = "none";
+  passwordForgetPassError.style.display = "none";
+  emailForgetPass.style.borderColor = "transparent";
+  passwordForgetPass.style.borderColor = "transparent";
 }
 
 function isEmailValid(value) {

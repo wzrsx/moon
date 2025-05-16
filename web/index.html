@@ -86,8 +86,10 @@
                 <p class="dialog-title">Забыли пароль</p>
             </div>
             <form action="">
-                <input type="text" id="emailForgetPass" class="input-forget-pass-dialog" placeholder="Введите логин или почту">
-                <span class="error-message" id="forgetPassError" style="color: #a90000; display: none;">error message</span> 
+                <input type="text" id="emailForgetPass" class="input-forget-pass-dialog" placeholder="Введите почту">
+                <input type="text" id="passwordForgetPass" class="input-forget-pass-dialog" placeholder="Введите новый пароль">
+                <span class="error-message" id="emailForgetPassError" style="color: #a90000; display: none;">error message</span> 
+                <span class="error-message" id="passwordForgetPassError" style="color: #a90000; display: none;">error message</span> 
                 <button id="recoverPassBtn" class="submitBtnForgetPass">Восстановить</button>
             </form>
             <div class="btns">
@@ -156,8 +158,8 @@
                 <p class="dialog-title">Восстановление пароля</p>
             </div>
             <form action="">
-                <div class="code-input-block" id="confirmationCodeRecovery">
-                    <p class="dialog-subtitle">проверьте почту</p>
+                <p class="dialog-subtitle">проверьте почту</p>
+                <div class="code-input-block" id="confirmationCode">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover2'); checkAllFilled()" id="inputCodeRecover1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover3'); checkAllFilled()" id="inputCodeRecover2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover4'); checkAllFilled()" id="inputCodeRecover3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
