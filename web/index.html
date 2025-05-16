@@ -132,21 +132,19 @@
                     &#x2715;
                 </button>
                 <p class="dialog-title">Подтверждение регистрации</p>
-                <p class="dialog-subtitle">проверьте почту</p>
             </div>
             <form action="">
-                <div class="code-input-block" id="confirmationCode">
+                <p class="dialog-subtitle">проверьте почту</p>
+                <div class="code-input-block" id="confirmationCodeRegistration">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration2'); checkAllFilled()" id="inputCodeRegistration1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration3'); checkAllFilled()" id="inputCodeRegistration2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration4'); checkAllFilled()" id="inputCodeRegistration3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration5'); checkAllFilled()" id="inputCodeRegistration4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration6'); checkAllFilled()" id="inputCodeRegistration5" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRegistration6" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRegistration4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                 </div>
-                <input type="text" id="loginRegistrationPass" class="input-check-code-dialog" placeholder="Введите код из письма">
-                <span class="error-message" id="codeRegistrationPassError" style="color: #a90000; display: none;">error message</span> 
-                <button id="checkCodeRegistrationPassBtn" class="submitBtn">Подтвердить</button>
+                <span class="error-message" id="codeRegistrationError" style="color: #a90000; display: none;">error message</span> 
             </form>
+            <div class="enterCode"> <p class="dialog-subtitle">Введите код из письма</p> </div>
+            
         </div>
     </dialog>
     <dialog class="check-code-dialog" id="checkCodeRecoverDialog">
@@ -156,21 +154,20 @@
                     &#x2715;
                 </button>
                 <p class="dialog-title">Восстановление пароля</p>
-                <p class="dialog-subtitle">проверьте почту</p>
             </div>
             <form action="">
-                <div class="code-input-block" id="confirmationCode">
+                <div class="code-input-block" id="confirmationCodeRecovery">
+                    <p class="dialog-subtitle">проверьте почту</p>
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover2'); checkAllFilled()" id="inputCodeRecover1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover3'); checkAllFilled()" id="inputCodeRecover2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover4'); checkAllFilled()" id="inputCodeRecover3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover5'); checkAllFilled()" id="inputCodeRecover4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover6'); checkAllFilled()" id="inputCodeRecover5" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRecover6" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRecover4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
                 </div>
-                <input type="text" id="loginForgetPass" class="input-check-code-dialog" placeholder="Введите код из письма">
                 <span class="error-message" id="codeForgetPassError" style="color: #a90000; display: none;">error message</span> 
-                <button id="checkCodeRecoverPassBtn" class="submitBtn">Подтвердить</button>
             </form>
+            <div class="enterCode"> 
+                <p class="dialog-subtitle">Введите код из письма</p>
+            </div>
         </div>
     </dialog>
     <script src="/static/script/index.js"></script>

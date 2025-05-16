@@ -83,9 +83,7 @@ func (a *AuthHandlers) RegisterHandler(rw http.ResponseWriter, r *http.Request) 
 }
 func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsRegistration struct {
-		Username string `json:"username"`
 		Email    string `json:"email"`
-		Password string `json:"password"`
 	}
 	var creds CredentialsRegistration
 	err := json.NewDecoder(r.Body).Decode(&creds)
@@ -96,26 +94,27 @@ func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	if len(creds.Password) < 5 {
-		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"message": "Password is too small.",
-		})
-		return
-	}
 
 	// Проверяем есть ли email в БД
 	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
-		if err.Error() == "email exists" {
+		if err.Error() != "email exists" {
 			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-				"message": "email exists",
+				"message": "Error check email exists DB",
 			})
+			a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
 			return
 		}
-		a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
-		return
 	}
-
-	a.sendWelcomeEmail(creds.Email, creds.Username, creds.Password, true, rw)
+	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
+		if err.Error() != "email exists" {
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"message": "Error check email exists DB",
+			})
+			a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
+			return
+		}
+	}
+	a.sendWelcomeEmail(creds.Email, "", "", false, rw)
 }
 
 func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg bool, rw http.ResponseWriter) {
@@ -340,6 +339,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.Request) {
 	type CredentialsCode struct {
 		Email string `json:"email"`
+		Password string `json:"password"`
 		Code  string `json:"code"`
 	}
 	var creds CredentialsCode
@@ -398,15 +398,15 @@ func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.R
 		return
 	}
 
-	// err, user_id := queries_auth.RegistrationQuery(code_info.Username, creds.Email, code_info.Password, a.Pool)
-	// if err != nil {
-	// 	a.Logger.Sugar().Errorf("Error create new user in DB: %v", err)
-	// 	respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-	// 		"message": fmt.Sprint("Error create new user"),
-	// 	})
-	// 	delete(emailCodes, creds.Email)
-	// 	return
-	// } ЗАМЕНИТЬ _______________________________________________________________________________________________
+	err = queries_auth.RecoveryQuery(creds.Email, creds.Password, a.Pool)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error create new user in DB: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"message": fmt.Sprint("Error create new user"),
+		})
+		delete(emailCodes, creds.Email)
+		return
+	} 
 
 	// потом додумать проверку кода в поле ввода пароля,
 
@@ -482,6 +482,20 @@ func genConfirmCode() string {
 		b[i] = table[int(b[i])%len(table)]
 	}
 	return string(b)
+}
+
+func (a *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    // Удаляем JWT куку
+    http.SetCookie(w, &http.Cookie{
+        Name:    "jwt_token",
+        Value:   "",
+        Path:    "/",
+        Expires: time.Unix(0, 0),
+        MaxAge:  -1,
+    })
+    
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"status": "success"}`))
 }
 
 // Вспомогательная функция для JSON-ответов

@@ -5,19 +5,45 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/golang-jwt/jwt"
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("web/index.html"))
-	if tmpl == nil {
-		log.Println("Template not found!")
-		respondWithJSON(w, http.StatusInternalServerError, "Could not load template")
-		return
+
+	// Получаем JWT токен из куки
+	cookie, err := r.Cookie("jwt_token")
+	var username string
+
+	if err != nil {
+		// Парсим токен и извлекаем имя пользователя
+		log.Printf("cookie haven't username")
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error templating html"})
+			return
+		}
+	}
+	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+		return []byte("your-secret-key"), nil
+	})
+
+	if err == nil && token.Valid {
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			username = claims["username"].(string)
+		}
+	}
+	// Создаем данные для шаблона
+	data := struct {
+		Username string
+	}{
+		Username: username,
 	}
 
-	err := tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, data)
 	if err != nil {
-		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error templating html"})
 		return
 	}
 }
