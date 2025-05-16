@@ -45,16 +45,13 @@ async function exportMapToPNG() {
   
       // Создаём canvas и комбинируем изображения
       const resultCanvas = combineImages(ldem_img, hill_img, ldsm_img, width, height);
-      const modulesLayer = map.getLayers().getArray().find(layer =>
-        layer.get('name') === 'modules_layer'
-      );
-  
-      if (!modulesLayer) {
+      
+      if (!moduleLayers) {
         console.warn('Слой модулей не найден');
         return;
       }
   
-      const source = modulesLayer.getSource();
+      const source = moduleLayers[0].getSource();
       const features = source.getFeatures();
       // Проверяем, есть ли объекты, пересекающиеся с текущим extent
       const hasIntersectingFeature = features.some(feature => {
@@ -190,38 +187,44 @@ function drawVectorLayerOnCanvas(canvas, map, extent) {
   features.forEach(feature => {
     const styles = createModuleStyleFunction(zoom)(feature, resolution);
     const styleArray = Array.isArray(styles) ? styles : [styles];
-
+  
     styleArray.forEach(style => {
       let geometry = feature.getGeometry();
+      
+      // Проверка наличия геометрии
+      if (!geometry) {
+        console.warn('Feature has no geometry', feature);
+        return;
+      }
+  
+      // Применение геометрии из стиля, если есть
       if (style.getGeometryFunction()) {
-        geometry = style.getGeometryFunction()(feature);
-      }
-
-      if (!geometry) return;
-
-      const geomType = geometry.getType();
-
-      if (geomType === 'Point') {
-        const coords = geometry.getCoordinates();
-        const pixel = coordinateToPixel(coords);
-        drawPoint(ctx, style, pixel, zoom);
-      } else if (geomType === 'Polygon') {
-        const coords = geometry.getCoordinates()[0]; // внешний контур
-        const pixels = coords.map(coordinateToPixel);
-        drawPolygon(ctx, style, pixels);
-      }
-
-      const textStyle = style.getText();
-      if (textStyle) {
-        let textCoords;
-        if (geomType === 'Point') {
-          textCoords = geometry.getCoordinates();
-        } else {
-          const interiorPoint = geometry.getInteriorPoint();
-          textCoords = interiorPoint.getCoordinates();
+        const customGeometry = style.getGeometryFunction()(feature);
+        if (customGeometry) {
+          geometry = customGeometry;
         }
-        const textPixel = coordinateToPixel(textCoords);
-        drawText(ctx, textStyle, textPixel[0], textPixel[1]);
+      }
+  
+      // Проверка типа геометрии
+      if (!(geometry instanceof ol.geom.Geometry)) {
+        console.warn('Invalid geometry type', geometry);
+        return;
+      }
+  
+      const geomType = geometry.getType();
+  
+      try {
+        const coords = geometry.getCoordinates();
+        if (geomType !== 'Polygon') {
+            const pixel = coordinateToPixel(coords);
+            drawPoint(ctx, style, pixel, zoom);
+        } else if (geomType === 'Polygon') {
+            const exteriorRing = coords[0]; 
+            const pixelCoords = exteriorRing.map(coord => coordinateToPixel(coord));
+            drawPolygon(ctx, style, pixelCoords);
+        }
+      } catch (e) {
+        console.error('Error drawing geometry', e, feature);
       }
     });
   });
@@ -230,10 +233,16 @@ function drawVectorLayerOnCanvas(canvas, map, extent) {
 // Вспомогательные функции для отрисовки
 function drawPoint(ctx, style, pixel, zoom) {
   const imageStyle = style.getImage();
-
+  const textStyle = style.getText(); 
+  let polygon;
   if (!imageStyle) {
-    console.warn('Нет изображения в стиле');
-    return;
+    //для зума >17 берем квадрат полигон
+    polygon = style.getGeometry();
+    if(!polygon){
+      console.warn('Нет изображения/полигона в стиле');
+      return;
+    }
+    
   }
 
   // Если это Icon
@@ -276,51 +285,79 @@ function drawPoint(ctx, style, pixel, zoom) {
       ctx.stroke();
     }
 
-  } else {
-    console.warn('Неизвестный тип изображения', imageStyle);
-  }
-}
-function drawPolygon(ctx, style, geometry, transform) {
-  console.log("drawPolygon");
-  const coordinates = geometry.getCoordinates()[0]; // Берем только внешнее кольцо
-  const fill = style.getFill();
-  const stroke = style.getStroke();
-  
-  if (!fill && !stroke) return;
-  
-  ctx.beginPath();
-  
-  coordinates.forEach((coord, i) => {
-    const pixel = transform(coord);
-    if (i === 0) {
-      ctx.moveTo(pixel[0], pixel[1]);
-    } else {
-      ctx.lineTo(pixel[0], pixel[1]);
-    }
-  });
-  
-  ctx.closePath();
-  
-  if (fill) {
-    ctx.fillStyle = fill.getColor();
-    ctx.fill();
-  }
-  
-  if (stroke) {
-    ctx.strokeStyle = stroke.getColor();
-    ctx.lineWidth = stroke.getWidth();
-    ctx.stroke();
+  } 
+  // Отрисовка текста
+  if (textStyle) {
+    drawText(ctx, textStyle, pixel);
   }
 }
 
-function drawText(ctx, textStyle, x, y) {
-  ctx.save();
-  ctx.font = 'normal 14px Jura'; //настроить размер to do
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+function drawPolygon(ctx, style, pixels) {
+  if (!pixels || pixels.length === 0) return;
+  const textStyle = style.getText();
+  const fill = style.getFill();
+  
+  if (!fill) return;
+  
+  ctx.beginPath();
+  
+  // Рисуем полигон
+  ctx.moveTo(pixels[0][0], pixels[0][1]);
+  for (let i = 1; i < pixels.length; i++) {
+      ctx.lineTo(pixels[i][0], pixels[i][1]);
+  }
+  ctx.closePath();
+  
+  if (fill) {
+      ctx.fillStyle = fill.getColor();
+      ctx.fill();
+  }
+  // Отрисовка текста
+  if (textStyle) {
+    ctx.font = textStyle.getFont();
+    const text = textStyle.getText();
+    const textWidth = ctx.measureText(text).width;
     
-  ctx.fillText(textStyle.getText(), x, y + (textStyle.getOffsetY() || 0));
-  ctx.restore();
+    const centerX = (pixels[0][0] + pixels[2][0]) / 2; 
+    const topY = Math.min(...pixels.map(p => p[1])); 
+    
+    const textX = centerX - textWidth/2;
+    const textY = topY - 5; // 5px отступа сверху
+    
+    ctx.fillText(text, textX, textY);
+  }
+}
+function drawText(ctx, textStyle, pixel) {
+  if (!textStyle || !pixel) return;
+
+  const text = textStyle.getText();
+  if (!text) return;
+
+  try {
+    ctx.font = textStyle.getFont();
+    const fill = textStyle.getFill();
+    if (fill) {
+      ctx.fillStyle = fill.getColor() || '#000000';
+    }
+    const offsetX = textStyle.getOffsetX() || 0;
+    const offsetY = textStyle.getOffsetY() || 0;
+    const textX = pixel[0] + offsetX;
+    const textY = pixel[1] + offsetY;
+
+    // Рисуем обводку (если есть)
+    const stroke = textStyle.getStroke();
+    if (stroke) {
+      ctx.strokeStyle = stroke.getColor();
+      ctx.lineWidth = stroke.getWidth();
+      ctx.strokeText(text, textX, textY);
+    }
+
+    // Рисуем основной текст
+    ctx.fillText(text, textX, textY);
+
+  } catch (error) {
+    console.error('Ошибка отрисовки текста:', error);
+  }
 }
 function preloadIcons(features, createStyleFunction, zoom, resolution) {
   const promises = [];

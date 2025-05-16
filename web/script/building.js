@@ -86,7 +86,6 @@ function createModuleStyleFunction(zoom) {
       const x = coordinates[0];
       const y = coordinates[1];
 
-      // Остальной код
       const size = 6; // Размер квадрата в пикселях
       const halfSize = size / 2;
 
@@ -99,15 +98,9 @@ function createModuleStyleFunction(zoom) {
         [x - halfSize, y - halfSize], // замыкание квадрата
       ];
 
-      return [
-        new ol.style.Style({
-          fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
-        }),
-        new ol.style.Style({
+      return new ol.style.Style({
           geometry: new ol.geom.Polygon([squareCoords]),
           fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
-        }),
-        new ol.style.Style({
           text: new ol.style.Text({
             text: moduleType,
             offsetY: -20,
@@ -115,8 +108,7 @@ function createModuleStyleFunction(zoom) {
             fill: new ol.style.Fill({ color: '#fff' }),
             stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
           }),
-        }),
-      ];
+      });
     } else if (zoom >= 12) {
       return new ol.style.Style({
         image: new ol.style.Icon({
