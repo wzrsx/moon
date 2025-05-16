@@ -815,7 +815,20 @@ h3{
     left: -50px;
     min-width: 220px;
 }
-
+.delete-module{
+    display: block;
+    margin: 0 auto;
+    border: 1px solid red;
+    padding: 5px;
+    border-radius: 10px;
+    transition: all 0.5s ease-in;
+}
+.delete-module:hover{
+    background-color: #ff000052;
+}
+.delete-module span{
+    color: rgb(139, 0, 0);
+}
 /* Стили для раскрывающегося блока */
 .expandable-section {
     margin-bottom: 5px;

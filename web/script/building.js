@@ -179,7 +179,7 @@ function addModuleToMap(moduleData) {
       },
       zIndex: 5
     });
-    
+    vectorLayer.set('type', 'moduleLayer');
     map.addLayer(vectorLayer);
     moduleLayers.push(vectorLayer);
   }
