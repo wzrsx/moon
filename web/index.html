@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="./static/style/reset.css">
     <link rel="stylesheet" href="./static/style/style.css">
     <link rel="stylesheet" href="./static/style/media-requests.css">
+    <link rel="stylesheet" href="./static/style/building-media-requests.css">
     <title>Moon</title>
 </head>
 <body>
@@ -180,6 +181,21 @@
             </form>
             <div class="enterCode"> 
                 <p class="dialog-subtitle">Введите код из письма</p>
+            </div>
+        </div>
+    </dialog>
+    <dialog class="confirm-dialog" id="deleteMapDialog">
+        <div class="content-confirm-dialog">
+            <div class="header-form">
+                <button class="close-modal-button" onclick="closeDeleteMapDialog()" style="display: block;">
+                    &#x2715;
+                </button>
+                <p id="titleDialog">Вы уверены что хотите удалить карту?</p>
+            </div>
+            <span>Это действие нельзя отменить</span>
+            <div class="confirm-dialog-btns btns">
+                <button id="cancelDelMapBtn" onclick="closeDeleteMapDialog()">Отмена</button>
+                <button id="confirmDelMapBtn">Удалить</button>
             </div>
         </div>
     </dialog>
