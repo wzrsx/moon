@@ -302,6 +302,21 @@
             </div>
         </div>
     </dialog>
+    <dialog class="confirm-dialog" id="deleteModuleDialog">
+        <div class="content-confirm-dialog">
+            <div class="header-form">
+                <button class="close-modal-button" onclick="closeDeleteModuleDialog()" style="display: block;">
+                    &#x2715;
+                </button>
+                <p id="titleDeleteDialog">Вы уверены, что хотите удалить модуль?</p>
+            </div>
+            <span id="moduleDeleteMessage">Это действие нельзя отменить</span>
+            <div class="confirm-dialog-btns btns">
+                <button id="cancelDeleteBtn" onclick="closeDeleteModuleDialog()">Отмена</button>
+                <button id="confirmDeleteBtn">Удалить</button>
+            </div>
+        </div>
+    </dialog>
     <dialog class="confirm-dialog" id="saveDialog">
         <div class="content-confirm-dialog">
             <div class="header-form">

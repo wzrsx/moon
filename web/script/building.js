@@ -219,6 +219,7 @@ const confirmBtn = document.getElementById("confirmBtn");
 //диалоги
 const confirmDialog = document.getElementById("confirmDialog");
 const saveDialog = document.getElementById("saveDialog");
+const deleteDialog = document.getElementById("deleteModuleDialog");
 //боковая панель
 const sidebar = document.getElementById("modulesSidebar");
 
@@ -335,6 +336,19 @@ confirmBtn.addEventListener('click', (e) => {
 confirmDialog.addEventListener("close", () => {
   blurDiv.classList.remove("blur");
 });
+deleteDialog.addEventListener("close", () => {
+  blurDiv.classList.remove("blur");
+});
+function closeDeleteModuleDialog() {
+  blurDiv.classList.remove("blur");
+  deleteDialog.close();
+}
+function showDeleteModuleDialog(moduleName) {
+  blurDiv.classList.add("blur");
+  document.getElementById("titleDeleteDialog").innerText = 
+  `Вы уверены, что хотите удалить ${moduleName.toLowerCase()}?`;
+  deleteDialog.showModal();
+}
 /*to do ПРИМЕНИТЬ НА ВСЕ БОКОВЫЕ ПО КЛАССУ*/
 document.addEventListener('keydown', event => {
   if (event.key === "Escape" || event.keyCode === 27) {

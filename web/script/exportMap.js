@@ -606,6 +606,7 @@ function selectJSON() {
 }
 //to do
 function showParametrsPDF() {
+  document.getElementById('parametrsToExportPNG').style.display = 'none';
   selectedFormat = 'pdf';
 }
 function showParametrsPNG(){

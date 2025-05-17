@@ -1,64 +1,118 @@
 const popupElement = document.createElement('div');
 let currentPopupFeature = null;
+let currentModuleInfo = null;
 const popup = new ol.Overlay({
     element: document.createElement('div'),
     positioning: 'bottom-center',
     offset: [0, -20],
     stopEvent: false
   });
-  map.addOverlay(popup);
-  // Функция для создания содержимого popup
-  function createPopupContent(moduleInfo, moduleType) {
+map.addOverlay(popup);
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', confirmModuleDeletion);
+    }
+});
+function showPopupForFeature(feature) {
+    const popupElement = popup.getElement();
+    const moduleType = feature.get('type');
+    const moduleInfo = cachedInfoModules.find(module => module.module_type === moduleType);
+    const coordinates = feature.getGeometry().getCoordinates();
+    currentModuleInfo = moduleInfo;
+    currentPopupFeature = feature;
+
+    popupElement.innerHTML = createPopupContent(
+        moduleInfo, 
+        feature.get('habitation')
+    );
+    
+    popup.setPosition(coordinates);
+    popupElement.style.display = 'block';
+    
+    initPopupEventListeners(popupElement, moduleInfo);
+}
+
+function initPopupEventListeners(popupElement, moduleInfo) {
+    // Раскрывающиеся секции
+    popupElement.querySelectorAll('.expand-hint').forEach(hint => {
+        hint.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const section = this.closest('.expandable-section');
+            const isExpanded = section.classList.toggle('expanded');
+            const icon = this.querySelector('.expand-icon');
+            icon.textContent = isExpanded ? '▲' : '▼';
+            this.textContent = isExpanded ? 'Свернуть ' : 'Развернуть ';
+            this.appendChild(icon);
+        });
+    });
+
+    // Кнопка удаления
+    const deleteBtn = popupElement.querySelector('.delete-module');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showDeleteModuleDialog(moduleInfo.module_name);
+        });
+    }
+}
+
+function createPopupContent(moduleInfo, habitationType) {
     return `
-      <div class="module-popup">
-        <div class="module-popup-header" style="background-color: ${getColorByModuleType(moduleType)}">
-            ${moduleInfo.module_name}
+        <div class="module-popup">
+            <div class="module-popup-header" style="background-color: ${getColorByModuleType(habitationType)}">
+                ${moduleInfo.module_name}
+            </div>
+            <div class="module-popup-image">
+                <img src="/static/style/photos/modules_compressed/${moduleInfo.module_type}.png" 
+                    alt="${moduleInfo.module_name}" 
+                    style="max-width: 200px; max-height: 150px;">
+            </div>
+            <div class="module-popup-content">
+                <div class="popup-section">
+                    <strong>Краткое описание:</strong><br> 
+                    ${moduleInfo.description}
+                </div>
+                <div class="popup-section">
+                    <strong>Габариты: (Д×В×Ш)</strong><br>
+                    ${moduleInfo.length_meters} м × ${moduleInfo.height_meters} м × ${moduleInfo.width_meters} м
+                </div>
+                <div class="popup-section">
+                    <div class="expandable-section">
+                        <div class="expandable-header">
+                            <strong>Безопасные расстояния от других модулей:</strong>
+                        </div>
+                        <div class="expand-hint">
+                            Развернуть <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="expandable-content">
+                            ${getModuleDistanceTemplate(moduleInfo)}
+                        </div>
+                    </div>
+                </div>
+                <div class="popup-section">
+                    <div class="expandable-section">
+                        <div class="expandable-header">
+                            <strong>Рекомендации по расположению:</strong>
+                        </div>
+                        <div class="expand-hint">
+                            Развернуть <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="expandable-content">
+                            ${getModuleDistanceTemplate(moduleInfo)}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button class="delete-module">
+                        <span>Удалить модуль</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="module-popup-image">
-            <img src="/static/style/photos/modules_compressed/${moduleInfo.module_type}.png" 
-                alt="${moduleInfo.module_name}" 
-                style="max-width: 200px; max-height: 150px;">
-        </div>
-        <div class="module-popup-content">
-            <div class="popup-section">
-            <strong>Краткое описание:</strong><br> 
-            ${moduleInfo.description}
-            </div>
-            <div class="popup-section">
-            <strong>Габариты: (Д×В×Ш)</strong><br>
-            ${moduleInfo.length_meters} м × ${moduleInfo.height_meters} м × ${moduleInfo.width_meters} м
-            </div>
-            <div class="popup-section">
-            <div class="expandable-section">
-                <div class="expandable-header">
-                <strong>Безопасные расстояния от других модулей:</strong>
-                </div>
-                <div class="expand-hint">
-                    Развернуть 
-                <span class="expand-icon">▼</span>
-                </div>
-                <div class="expandable-content">
-                ${getModuleDistanceTemplate(moduleInfo)}
-                </div>
-            </div>
-            </div>
-            <div class="popup-section">
-            <div class="expandable-section">
-                <div class="expandable-header">
-                <strong>Рекомендации по расположению:</strong>
-                </div>
-                <div class="expand-hint">
-                    Развернуть 
-                <span class="expand-icon">▼</span>
-                </div>
-                <div class="expandable-content">
-                ${getModuleDistanceTemplate(moduleInfo, true)}
-                </div>
-            </div>
-        </div> 
-    </div>
     `;
-  }
+}
   // Добавляем обработчик клика по карте
     map.on('click', function(evt) {
         const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
@@ -117,30 +171,8 @@ const popup = new ol.Overlay({
     }
 });
 
-// Функция для отображения popup для конкретного feature
-function showPopupForFeature(feature) {
-    const popupElement = popup.getElement();
-    const moduleInfo = cachedInfoModules.find(module => module.module_type === feature.get('type'));
-    const moduleDistances = cachedRadiusModules.find(module => module.module_type === feature.get('type'));
-    const coordinates = feature.getGeometry().getCoordinates();
-    
-    popupElement.innerHTML = createPopupContent(moduleInfo, feature.get('habitation'), moduleDistances);
-    popup.setPosition(coordinates);
-    popupElement.style.display = 'block';
-    
-    setTimeout(() => {
-        popupElement.querySelectorAll('.expand-hint').forEach(hint => {
-            hint.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const section = this.closest('.expandable-section');
-                section.classList.toggle('expanded');
-                this.textContent = section.classList.contains('expanded') ? 'Свернуть ▲' : 'Развернуть ▼';
-            });
-        });
-    }, 0);
-}
-  function getModuleDistanceTemplate(module, useMaxDistance = false) {
+
+function getModuleDistanceTemplate(module, useMaxDistance = false) {
     const modulePairs = [
       { text: 'административного модуля', key: 'administrative_module' },
       { text: 'астрономической площадки', key: 'astro_site_module' },
@@ -177,3 +209,23 @@ function showPopupForFeature(feature) {
   
     return [result];
   }
+
+function confirmModuleDeletion() {
+    if (!currentModuleInfo || !currentPopupFeature) return;
+    moduleLayers[0].getSource().removeFeature(currentPopupFeature);
+    
+    cachedInfoModules = cachedInfoModules.filter(m => m.module_type !== currentModuleInfo.module_type);
+    cachedRadiusModules = cachedRadiusModules.filter(m => m.module_type !== currentModuleInfo.module_type);
+    
+    const popupElement = popup.getElement();
+    popupElement.style.display = 'none';
+    
+    console.log("update!");
+    
+    // Сбрасываем текущие данные
+    currentModuleInfo = null;
+    currentPopupFeature = null;
+    
+    // Закрываем диалог
+    closeDeleteModuleDialog();
+}
