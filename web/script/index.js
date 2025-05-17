@@ -9,6 +9,7 @@ const checkCodeRecoverDialog = document.getElementById("checkCodeRecoverDialog")
 const blurDiv = document.getElementById("blurDiv");
 const EMAIL_REGEXP =
   /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
+const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
 
 const buildingPageBtn = document.getElementById("buildingPageBtn");
 const authBtn = document.getElementById("authBtn");
@@ -36,6 +37,7 @@ const passRegistration = document.getElementById("passRegistration");
 const repeatPassRegistration = document.getElementById(
   "repeatPassRegistration"
 );
+const nameProj = document.getElementById("nameProject");
 
 const emailForgetPass = document.getElementById("emailForgetPass");
 const passwordForgetPass = document.getElementById("passwordForgetPass");
@@ -61,7 +63,6 @@ const codeForgetPassError = document.getElementById("codeForgetPassError");
 const codeRegistrationPassError = document.getElementById(
   "codeRegistrationPassError"
 );
-const nameProjectError = document.getElementById("nameProjectError");
 
 let authHeader;
 let isReg = false;
@@ -622,7 +623,6 @@ function isEmailValid(value) {
 
 //проверка пароля
 function isPassValid(value, field, input) {
-  const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
   if (!value) {
     showError(input, field, "Пожалуйста, введите пароль.");
     input.style.borderColor = "red";
@@ -653,10 +653,41 @@ function showCreateProjectForm() {
     "none";
   document.querySelector(".create-project-section").style.display = "flex";
 }
+function toggleErrorNameProject(message = '', show = false) {
+  const errorElement = document.getElementById('nameProjectError');
+  if (show && message) {
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    nameProj.style.borderColor = '#a90000'
+    document.getElementById('nameProject').classList.add('input-error');
+  } else {
+    errorElement.style.display = 'none';
+    nameProj.style.borderColor = ''
+    
+    document.getElementById('nameProject').classList.remove('input-error');
+  }
+}
 function createNewProject() {
-  let nameProj = document.getElementById("nameProject").value; //+валидация to do
+  let nameProjVal = nameProj.value;
+  toggleErrorNameProject('', false);
+  if(!nameProjVal){
+    toggleErrorNameProject("Название проекта не может быть пустым", true);
+    return;
+  }
+  if(nameProjVal.length < 5){
+    toggleErrorNameProject("Название должно содержать минимум 5 символов", true);
+    return;
+  }
+  if(nameProjVal.length > 100){
+    toggleErrorNameProject("Название не должно превышать 100 символов", true);
+    return;
+  }
+  if (specialCharRegex.test(nameProjVal)) {
+    toggleErrorNameProject("Название содержит запрещенный символ", true);
+    return;
+  }
   const requestData = {
-    name_map: nameProj,
+    name_map: nameProjVal,
   };
   fetch("http://localhost:5050/maps/create", {
     method: "POST",
@@ -665,19 +696,11 @@ function createNewProject() {
     },
     body: JSON.stringify(requestData),
   })
-    .then((response) => {
-      const contentType = response.headers.get("content-type");
-
-      if (!contentType || !contentType.includes("application/json")) {
-        return response.text().then((text) => {
-          throw new Error(
-            `Ожидался JSON, но получен: ${text.slice(0, 100)}...`
-          );
-        });
-      }
-
+  .then((response) => {
       if (!response.ok) {
-        return response.json().then((err) => {
+        return response.json().then(err => {
+          // Показываем пользователю сообщение об ошибке
+          toggleErrorNameProject(err.error || "Ошибка при создании карты", true);
           throw new Error(err.error || `Ошибка сервера: ${response.status}`);
         });
       }
@@ -689,6 +712,9 @@ function createNewProject() {
     })
     .catch((error) => {
       console.error("Ошибка:", error);
+      if (!error.message.includes("Ожидался JSON")) {
+        toggleErrorNameProject(error.message, true);
+      }
     });
 }
 function showProjects() {

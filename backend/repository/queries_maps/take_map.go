@@ -8,12 +8,14 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-type Map struct{
-	UserID 				string `json:"user_id"`
-	MapID 				string `json:"map_id"`
-	MapName 			string `json:"map_name"`
-	MapCreated 			string `json:"map_created"`
+
+type Map struct {
+	UserID     string `json:"user_id"`
+	MapID      string `json:"map_id"`
+	MapName    string `json:"map_name"`
+	MapCreated string `json:"map_created"`
 }
+
 func TakeMap(user_id string, pool *pgxpool.Pool) (string, error) {
 	// Получаем соединение из пула
 	conn, err := pool.Acquire(context.Background())
@@ -48,45 +50,48 @@ func TakeMap(user_id string, pool *pgxpool.Pool) (string, error) {
 	return id_map, nil
 }
 func CreateMap(user_id string, name_map string, pool *pgxpool.Pool) (Map, error) {
-    conn, err := pool.Acquire(context.Background())
-    if err != nil {
-        return Map{}, err
-    }
-    defer conn.Release()
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		return Map{}, err
+	}
+	defer conn.Release()
 
-    var (
-        id_map    string
-        created_at time.Time
-    )
+	// Проверяем существование карты у этого пользователя
+	var existingMapID string
+	err = conn.QueryRow(context.Background(),
+		"SELECT id FROM maps WHERE user_id = $1 AND name_map = $2",
+		user_id, name_map).Scan(&existingMapID)
 
-    // Проверяем существование карты
-    err = conn.QueryRow(context.Background(),
-        "SELECT id, created_at FROM maps WHERE name_map = $1", name_map).Scan(&id_map, &created_at)
-    
-    if err != nil {
-        if err != pgx.ErrNoRows {
-            return Map{}, fmt.Errorf("database query error: %v", err)
-        }
-        
-        // Создаем новую карту если не найдена
-        err = conn.QueryRow(context.Background(),
-            `INSERT INTO maps (user_id, name_map) 
-             VALUES ($1, $2) 
-             RETURNING id, created_at`,
-            user_id, name_map).Scan(&id_map, &created_at)
-        
-        if err != nil {
-            return Map{}, fmt.Errorf("failed to create new map: %v", err)
-        }
-    }
+	if err == nil {
+		// Карта уже существует
+		return Map{}, fmt.Errorf("Карта с именем '%s' уже существует", name_map)
+	} else if err != pgx.ErrNoRows {
+		// Произошла другая ошибка при запросе
+		return Map{}, fmt.Errorf("Ошибка базы данных: %v", err)
+	}
 
-    // Возвращаем структуру Map
-    return Map{
-        UserID:     user_id,
-        MapID:      id_map,
-        MapName:    name_map,
-        MapCreated: created_at.Format(time.RFC3339),
-    }, nil
+	// Создаем новую карту
+	var (
+		id_map     string
+		created_at time.Time
+	)
+
+	err = conn.QueryRow(context.Background(),
+		`INSERT INTO maps (user_id, name_map) 
+         VALUES ($1, $2) 
+         RETURNING id, created_at`,
+		user_id, name_map).Scan(&id_map, &created_at)
+
+	if err != nil {
+		return Map{}, fmt.Errorf("не удалось создать карту: %v", err)
+	}
+
+	return Map{
+		UserID:     user_id,
+		MapID:      id_map,
+		MapName:    name_map,
+		MapCreated: created_at.Format(time.RFC3339),
+	}, nil
 }
 
 func TakeMaps(user_id string, pool *pgxpool.Pool) ([]Map, error) {
