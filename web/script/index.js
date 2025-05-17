@@ -1,6 +1,7 @@
 const signInDialog = document.getElementById("signInDialog");
 const registrationDialog = document.getElementById("registrationDialog");
 const forgetPassDialog = document.getElementById("forgetPassDialog");
+const deleteMapDialog = document.getElementById("deleteMapDialog");
 const projectSelectionDialog = document.getElementById(
   "projectSelectionDialog"
 );
@@ -104,7 +105,6 @@ closeButtons.forEach((button) => {
     e.preventDefault();
     const dialog = button.closest("dialog");
     dialog.close();
-    blurDiv.classList.remove("blur");
     isSwitching = false;
   });
 });
@@ -187,6 +187,27 @@ signInBtnForm2.addEventListener("click", (e) => {
   signInDialog.showModal();
 });
 
+deleteMapDialog.addEventListener("close", () => {
+  updateBlurState();
+});
+
+function closeDeleteMapDialog() {
+  deleteMapDialog.close();
+}
+
+function updateBlurState() {
+  const isProjectDialogOpen = projectSelectionDialog && 
+                            (projectSelectionDialog.hasAttribute('open') || 
+                             projectSelectionDialog.open);
+  
+  if (!isProjectDialogOpen && blurDiv) {
+      blurDiv.classList.remove("blur");
+      return true;
+  }
+  else{
+    return false;
+  }
+}
 //отправка формы
 signInBtn.addEventListener("click", (e) => {
   e.preventDefault();
@@ -791,12 +812,62 @@ function renderMaps(maps) {
                 </svg>
             </button>
         `;
-
-    projectsSection.appendChild(projectItem);
+      const deleteBtn = projectItem.querySelector('.project-delete');
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showDeleteMapDialog(map.map_name, map.map_id, projectItem);
+      });
+    
+      projectsSection.appendChild(projectItem);
   });
 
   // Добавляем обработчики событий
   addMapEventListeners();
+}
+// Функция показа диалога удаления
+function showDeleteMapDialog(mapName, mapId, element) {
+  const dialog = document.getElementById('deleteMapDialog');
+  const title = document.getElementById('titleDialog');
+  
+  // Устанавливаем название карты в диалог
+  title.textContent = `Вы уверены что хотите удалить проект ${mapName}?`;
+  
+  // Показываем диалог
+  dialog.showModal();
+  
+  // Обработчик подтверждения удаления
+  const confirmBtn = document.getElementById('confirmDelMapBtn');
+  const oldHandler = confirmBtn.onclick;
+  confirmBtn.onclick = function() {
+    if (oldHandler) oldHandler();
+    handleDeleteMap(mapId, element);
+    dialog.close();
+  };
+}
+async function handleDeleteMap(mapId, element) {
+  try {
+    const response = await fetch('http://localhost:5050/maps/delete', {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            map_id: mapId
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete module');
+    }
+    
+    element.remove();
+
+    return await response.json();
+  } catch (error) {
+      console.error('Delete module error:', error);
+      throw error;
+  }
 }
 function addMapEventListeners() {
   document.querySelectorAll(".project-item").forEach((item) => {
@@ -808,16 +879,6 @@ function addMapEventListeners() {
         selectMap(mapId, false); // Ваша функция для открытия карты
       }
     });
-
-    // Обработчик для кнопки удаления
-    const deleteBtn = item.querySelector(".project-delete");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // Предотвращаем всплытие
-        const mapId = item.dataset.mapId;
-        deleteMap(mapId); // Ваша функция для удаления
-      });
-    }
   });
 }
 
@@ -847,9 +908,6 @@ function selectMap(mapId, is_first_launch) {
       console.error("Ошибка:", error);
     });
 }
-//to do
-function deleteMap(mapId) {}
-// Функция для форматирования даты в формат DD-MM-YYYY
 function formatDate(date) {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");

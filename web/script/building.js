@@ -184,9 +184,15 @@ function addModuleToMap(moduleData) {
     geometry: new ol.geom.Point(moduleData.points),
     type: moduleData.module_type,
     habitation: moduleData.habitation_type,
-    id: moduleData.id_module
+    id: moduleData.module_id
   });
-
+  //сохраняем в кэш
+  cachedModules.push({
+    id: moduleData.module_id,
+    points: moduleData.points,
+    module_type: moduleData.module_type,
+    habitation_type: moduleData.habitation_type,
+  });
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
 
@@ -435,8 +441,8 @@ function backToTypes() {
   });
 
   setTimeout(() => {
-    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'none' : 'block';
-    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'none' : 'block';
+    modulesContainerInhabited.style.display = (currentModuleType === 'inhabited' || currentModuleType === null) ? 'none' : 'block';
+    modulesContainerTechnological.style.display = (currentModuleType === 'technological' || currentModuleType === null)  ? 'none' : 'block';
     notificationsContainer.style.display = 'none'; // Скрываем уведомления
     modulesChoiceType.style.display = 'grid';
 
@@ -476,11 +482,10 @@ modules.forEach(module => {
 
       if (moduleRequirements.module_type === 'medical_module' || moduleRequirements.module_type === 'repair_module') {
         onlyGreenInZone = true;
-        await updateClippedLayer();
       }else{
         onlyGreenInZone = false;
-        await updateClippedLayer();
       }
+      await updateClippedLayer();
       // 4. Создаем drag-элемент
       const originalImg = this.querySelector('.photo-item-module');
       clone = originalImg.cloneNode(true);
@@ -531,9 +536,9 @@ modules.forEach(module => {
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
         isDragging = false;
-        if (currentClippedLayer && currentClippedLayer !== greenLayer) {
+        if (currentClippedLayer && currentClippedLayer !== greenLayerInhabit && currentClippedLayer !== greenLayerTech) {
           map.removeLayer(currentClippedLayer);
-      }
+        }
         toggleExclusionRadius(false);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
@@ -546,7 +551,7 @@ modules.forEach(module => {
         };
         //ЕСЛИ Жилой -> 15deg 
         if (currentModuleType === 'inhabited') {
-          checkAreaAllOnes("cmps_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
+          checkAreaAllOnes("cmps_15deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
             .then(async result => {
               if (!result) {
                 sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
@@ -637,12 +642,12 @@ function saveModule(moduleData){
       });
     })
     .then(data => {
-      cachedModules.push({
-        points: moduleData.points,
-        module_type: moduleData.module_type,
-        habitation_type: moduleData.habitation_type,
-      });
-      addModuleToMap(moduleData);
+      // Создаем новый объект с добавленным module_id
+      const fullModuleData = {
+          ...moduleData, 
+          id_module: data.module_id
+      };
+      addModuleToMap(fullModuleData);
     })
     .catch(error => {
       console.error('Ошибка сохранения модуля:', error);
@@ -707,8 +712,10 @@ const createFullscreenLayer = (layerName, opacity, zIndex) => {
 const ldem = createFullscreenLayer('ldem-83s', 1.0, 1);
 const ldsm = createFullscreenLayer('ldsm-83s', 0.3, 2);
 const hillshade = createFullscreenLayer('ldem-hill', 0.6, 3);
-const greenLayer = createFullscreenLayer('cmps_5deg', 0, 4);
-greenLayer.set('name', 'greenLayer');
+const greenLayerTech = createFullscreenLayer('cmps_5deg', 0, 4);
+const greenLayerInhabit = createFullscreenLayer('cmps_15deg', 0, 4);
+greenLayerTech.set('name', 'greenLayerTech');
+greenLayerInhabit.set('name', 'greenLayerInhabit');
 // Создаем WMS-слой с возможностью обновления фильтра
 
 map.on('moveend', async function() {
@@ -765,7 +772,8 @@ haworthLayer.set('name', 'haworthLayer');
 map.addLayer(ldem);
 map.addLayer(ldsm);
 map.addLayer(hillshade);
-map.addLayer(greenLayer);
+map.addLayer(greenLayerTech);
+map.addLayer(greenLayerInhabit);
 map.addLayer(malapertLayer);
 map.addLayer(shackletonLayer);
 map.addLayer(haworthLayer);
@@ -1469,13 +1477,18 @@ function processCoordinates(zone, ctx, projectFn) {
   }
 }
 async function updateClippedLayer() {
+  let nameLayer;
   // Удаляем старый clippedLayer (если он не greenLayer)
-  if (currentClippedLayer && currentClippedLayer !== greenLayer) {
+  if (currentClippedLayer && currentClippedLayer !== greenLayerTech && currentClippedLayer !== greenLayerInhabit) {
     map.removeLayer(currentClippedLayer);
     currentClippedLayer = null;
   }
-
-  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'cmps_5deg');
+  if(currentModuleType === 'inhabited'){
+    nameLayer = 'cmps_15deg';
+  }else if(currentModuleType === 'technological'){
+    nameLayer = 'cmps_5deg';
+  }
+  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, nameLayer);
   currentClippedLayer = clippedLayer;
   map.addLayer(clippedLayer);
 }

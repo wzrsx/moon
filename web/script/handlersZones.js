@@ -75,7 +75,7 @@ function toggleLayer(layerName, isVisible) {
         console.error("Layer not found:", layerName);
         return;
     }
-    if(layer.get("name") !== 'greenLayer' && isVisible){
+    if((layer.get("name") !== 'greenLayerTech' && layer.get("name") !== 'greenLayerInhabit') && isVisible){
       showPlacesZone(layer.get("name").replace("Layer", ""));
     }else{
       layer.setOpacity(isVisible ? 0.7 : 0)
