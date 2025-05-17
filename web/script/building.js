@@ -441,8 +441,8 @@ function backToTypes() {
   });
 
   setTimeout(() => {
-    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'none' : 'block';
-    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'none' : 'block';
+    modulesContainerInhabited.style.display = (currentModuleType === 'inhabited' || currentModuleType === null) ? 'none' : 'block';
+    modulesContainerTechnological.style.display = (currentModuleType === 'technological' || currentModuleType === null)  ? 'none' : 'block';
     notificationsContainer.style.display = 'none'; // Скрываем уведомления
     modulesChoiceType.style.display = 'grid';
 
