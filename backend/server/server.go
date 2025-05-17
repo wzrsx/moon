@@ -4,7 +4,6 @@ import (
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/geoserver/config_geoserver"
-	"loonar_mod/backend/geoserver/geoserver_init"
 	config_server "loonar_mod/backend/server/config_server"
 	"net/http"
 	"time"
@@ -18,11 +17,11 @@ func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.Co
 	service := CreateMoonServiceServer(pool, logger, cfg_auth, cfg_db)
 	router := service.AddHandlers()
 
-	geo_client := geoserver_init.NewGeoClient(cfg_geoserver)
-	err := geo_client.GeoserverInit()
-	if err != nil {
-		logger.Fatal("geoserver_init", zap.Error(err))
-	}
+	// geo_client := geoserver_init.NewGeoClient(cfg_geoserver)
+	// err := geo_client.GeoserverInit()
+	// if err != nil {
+	// 	logger.Fatal("geoserver_init", zap.Error(err))
+	// }
 
 	logger.Info("Server config",
 		zap.String("host", cfg_server.Host),
@@ -36,7 +35,7 @@ func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.Co
 	}
 
 	logger.Info("Starting server", zap.String("address", srv.Addr))
-	if err = srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Fatal("Server failed", zap.Error(err))
 	}
 	return srv

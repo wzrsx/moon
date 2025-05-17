@@ -422,6 +422,22 @@ body{
     border-color: white;
     animation: drawBorder 0.8s ease-in-out forwards;
 }
+/* Специфичный стиль для кнопки выхода */
+.nav-item.exit {
+    background-color: rgba(252, 0, 0, 0.3);
+}
+
+/* Специфичный hover для кнопки выхода */
+.nav-item.exit:hover {
+    background-color: rgba(247, 129, 129, 0.5);
+}
+
+.user-auth-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;              
+}
 @keyframes drawBorder {
     0% {
       clip-path: polygon(
@@ -1211,18 +1227,26 @@ h3{
     flex-direction: column;
     min-height: 100vh;
     color: #e7beff;
+    overflow-y: off;
   }
   .choose-place-body header{
     margin-top: 25px;
     color: white;
   }
   .cards-places{
-    display: flex;
-    width: 95%;
-    justify-content: space-between;
-    align-items: flex-start;
+     display: flex;
+    flex-wrap: wrap; /* Разрешаем перенос на новую строку */
+    width: 100%;
+    gap: 20px; /* Отступ между карточками */
+    justify-content: center; /* Или center для центрирования */
+    height: 75vh;
+    overflow-y: auto;
+    align-items: center;
+    padding-bottom: 10px;
+    padding-top: 10px;
   }
   .card-place {
+    
     border: 1px solid #5a189a;
     width: 30%;
     height: 52vh;
@@ -1232,6 +1256,9 @@ h3{
     display: flex;
     flex-direction: column;
     position: relative;
+    flex: 1 1 calc(50% - 20px); /* 33.33% минус gap */
+    min-width: 350px; /* Минимальная ширина карточки */
+    max-width: calc(50% - 20px); /* Одинаковая ширина для всех */
 }
 .card-place:nth-child(1) {
     box-shadow: 0px 0px 15px 10px #420b75;
@@ -1243,7 +1270,7 @@ h3{
     box-shadow: 0px 0px 15px 10px #380766;
 }
 .card-place:hover {
-    height: 80vh;
+    height: 100vh;
     box-shadow: 0px 0px 15px 10px #5a189a;
 }
 
@@ -1284,6 +1311,7 @@ h3{
     margin-left: auto;
     margin-right: 10px;
     margin-bottom: 10px;
+    margin-top: 10px;
     border-radius: 5px;
     color: #c77dff;
     align-self: flex-end;
@@ -1295,9 +1323,11 @@ h3{
     background: #3c096c;
 }
   .choose-place-main{
+    margin-top: 40px;
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: stretch; /* Растягиваем по высоте */
+    overflow-y: off;
   }
   .choose-place-footer{
     text-align: center;

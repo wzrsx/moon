@@ -13,18 +13,21 @@
     <header>
     <ul class="header-menu">
         <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
-        <li class="nav-item">
             {{if .Username}}
                 <!-- Показываем если пользователь авторизован -->
                 <div class="user-auth-container">
                     <span class="username">{{.Username}}</span>
-                    <button id="logoutBtn">Выйти</button>
+                    <li class="nav-item exit">
+                        <button id="logoutBtn">Выйти</button>
+                    </li>
                 </div>
             {{else}}
                 <!-- Показываем если пользователь не авторизован -->
-                <button id="authBtn">Вход/Регистрация</button>
+                <li class="nav-item">
+                    <button id="authBtn">Вход/Регистрация</button>
+                </li>
             {{end}}
-        </li>
+        
     </ul>
     </header>
     <main class="main-page">
@@ -98,7 +101,7 @@
             </div>
             <form action="">
                 <input type="text" id="emailForgetPass" class="input-forget-pass-dialog" placeholder="Введите почту">
-                <input type="text" id="passwordForgetPass" class="input-forget-pass-dialog" placeholder="Введите новый пароль">
+                <input type="password" id="passwordForgetPass" class="input-forget-pass-dialog" placeholder="Введите новый пароль">
                 <span class="error-message" id="emailForgetPassError" style="color: #a90000; display: none;">error message</span> 
                 <span class="error-message" id="passwordForgetPassError" style="color: #a90000; display: none;">error message</span> 
                 <button id="recoverPassBtn" class="submitBtnForgetPass">Восстановить</button>
