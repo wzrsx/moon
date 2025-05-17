@@ -93,6 +93,24 @@ func CreateMap(user_id string, name_map string, pool *pgxpool.Pool) (Map, error)
 		MapCreated: created_at.Format(time.RFC3339),
 	}, nil
 }
+func DeleteMap(map_id string, pool *pgxpool.Pool) error{
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(),
+		"DELETE FROM maps WHERE id = $1",
+		map_id)
+	if err != nil {
+		return  err
+	}
+
+	
+
+	return nil
+}
 
 func TakeMaps(user_id string, pool *pgxpool.Pool) ([]Map, error) {
 	conn, err := pool.Acquire(context.Background())

@@ -82,6 +82,23 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 
 	return modules, nil
 }
+func  DeleteModule(module_id string, pool *pgxpool.Pool) error {
+
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(),
+		"DELETE FROM modules WHERE id = $1",
+		module_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 func TakeModulesRequirements(pool *pgxpool.Pool) ([]ModulesRequirements, error) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {

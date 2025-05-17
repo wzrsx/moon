@@ -345,6 +345,15 @@ body{
     margin-top: 5px;
     padding-bottom: 25px;
 }
+.input-project-selection-dialog{/*do adaptiv*/
+    background-color: #D9D9D9;
+    border-radius: 15px;
+    height: 65px;
+    width: 100%;
+    padding-left: 20px;
+    font-size: 30px;
+    border: 1px solid transparent;
+}
 .project-item{
     width: 95%;
     border-radius: 15px;
@@ -599,7 +608,7 @@ h3{
     display: flex;
     flex-direction: column;
     width: 20%;
-    background-color: white;
+    background-color: rgb(248, 223, 254);
     align-items: center;
     border-bottom-left-radius: 15px; 
     border-bottom-right-radius: 15px; 
@@ -611,7 +620,7 @@ h3{
     pointer-events: all;
 }
 .dropdown-menu:hover {
-    background-color: #ff8a8a; /* Цвет фона при наведении */
+    background-color: white; /* Цвет фона при наведении */
 }
 /*появление меню*/
 .burger-checkbox:checked ~ .dropdown-menu {
@@ -717,11 +726,13 @@ h3{
     box-sizing: border-box;
     animation: dialogFadeIn 0.3s ease-out forwards;
     transition: height 0.5s ease;
+    overflow-y: auto; /* Включаем вертикальную прокрутку при необходимости */
 }
 .content-confirm-dialog{
     height: 100%;
     display: flex;
     flex-direction: column;
+    
 }
 .confirm-dialog::backdrop {
     background: none;
@@ -741,6 +752,7 @@ h3{
     justify-content: space-around;
     margin-top: auto;
     margin-bottom: auto;
+    padding-bottom: 10px;
 }
 .confirm-dialog-btns button{
     width: 40%;
@@ -749,6 +761,7 @@ h3{
     border-radius: 10px;
     transition: all 0.5s ease;
 }
+.percent{}
 #cancelBtn, #cancelDeleteBtn{
     background-color: #c0c0c0e0;
 }
@@ -1378,9 +1391,10 @@ h3{
 .save-inputs-group {
     border: 2px solid #ccc;
     padding: 10px;
-    margin-bottom: 10px;
+    margin: 0 -10px 10px -10px;
     border-radius: 6px;
     background-color: transparent;
+
 }   
 .save-inputs-group label {
     font-weight: bold;
@@ -1443,6 +1457,7 @@ h3{
 }
 .checkbox-user-bbox label{
     color: black;
+    font-size: inherit;
 }
 .checkbox-user-bbox input[type="checkbox"] {
     margin-right: 5px;

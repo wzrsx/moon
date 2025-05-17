@@ -1,0 +1,567 @@
+/* Для building.html*/
+
+@media (min-width: 300px){
+    .notification-title {
+        font-size: 18px;
+    }
+    .notification-text {
+        font-size: 15px;
+    }
+    .dropdown-menu{
+        width: 70%;
+    }
+    .dropdown-menu-btn{
+        width: 80%;
+        font-size: 15px;
+    }
+    .modules-sidebar{
+        width: 100%;
+    }
+    .sidebar-header{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    h2{
+        font-size: 30px;
+    }
+    .modules-sidebar-title{
+        font-size: 30px;
+    }
+    .close-modal-button{
+        width: 35px;
+        height: 35px;
+        margin-top: 2px;
+        margin-right: 7px;
+    }
+    .modules-back-button{
+        margin-bottom: 10px;
+    }
+    .modules-list {
+        grid-template-columns: repeat(1, 1fr); /* 3 колонки одинаковой ширины */
+        grid-template-rows: repeat(1, 1fr);
+        padding-right: 10px;
+    }
+    .item-module {
+        width: calc(100% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    }
+}
+@media (min-width: 500px){
+    .notification-title {
+        font-size: 22px;
+    }
+    .notification-text {
+        font-size: 18px;
+    }
+    .dropdown-menu{
+        width: 60%;
+    }
+    .dropdown-menu-btn{
+        width: 70%;
+        font-size: 20px;
+    }
+    h2{
+        font-size: 60px;
+        width: 80%;
+    }
+    .sidebar-header{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .modules-sidebar .close-modal-button{
+        width: 80px;
+        height: 80px;
+        font-size: 50px;
+        margin-top: 5px;
+    }
+    .modules-sidebar-title{
+        font-size: 50px;
+    }
+    .modules-back-button{
+        font-size: 30px ;
+        margin-bottom: 20px;
+    }
+    .modules-choice-type{
+        height: 80%;
+    }
+    .name-module{
+        font-size: 40px;
+    }
+
+}
+@media (min-width: 500px) and (min-height: 500px) and (max-width: 600px){
+    h2{
+        font-size: 50px;
+    }
+}
+@media (min-width: 800px){
+    .notification-title {
+        font-size: 26px;
+    }
+    .notification-text {
+        font-size: 20px;
+    }
+    .dropdown-menu{
+        width: 40%;
+    }
+    .dropdown-menu-btn{
+        font-size: 25px;
+        height: 60px;
+    }
+    .dropdown-menu-btn svg {
+        width: 30px;
+        height: 30px;
+        margin-right: 5px;
+    }
+    h2{
+        font-size: 70px;
+    }
+    .sidebar-header{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .close-modal-button{
+        width: 60px;
+        height: 60px;
+        font-size: 60px;
+        margin-top: 30px;
+    }
+    .modules-sidebar-title{
+        font-size: 60px;
+    }
+    .modules-back-button{
+        font-size: 50px ;
+    }
+    .name-module{
+        font-size: 35px;
+    }
+    .item-module {
+        width: calc(50% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    }
+
+}
+
+@media (min-width: 1000px){
+    .notification-title {
+        font-size: 32px;
+    }
+    .notification-text {
+        font-size: 22px;
+    }
+    .modules-sidebar{
+        width: 90%;
+        
+    }
+    
+    .dropdown-menu-btn{
+        padding-right: 7px;
+    }
+    
+}
+
+@media (min-width: 1600px){
+    .notification-title {
+        font-size: 40px;
+    }
+    .notification-text {
+        font-size: 26px;
+    }
+    .dropdown-menu{
+        width: 30%;
+    }
+    .dropdown-menu-btn{
+        font-size: 30px;
+    }
+    .modules-sidebar{
+        width: 80%;
+    }
+    .item-module {
+        width: calc(33.33% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
+    }
+    h2{
+        font-size: 90px;
+    }
+    .name-module{
+        font-size: 40px;
+    }
+}
+
+
+/*Диалоговое Экспорт*/
+
+@media (min-width: 300px){
+    .confirm-dialog .close-modal-button{
+        margin-right: 0;
+    }
+    .confirm-dialog{
+        width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .confirm-dialog-btns button {
+        width: 45%;
+    }
+    
+    
+}
+
+@media (min-width: 700px){
+    .confirm-dialog{
+        width: 60%;
+    }
+    .confirm-dialog-btns button {
+        width: 45%;
+    }
+    
+    
+}
+
+@media (min-width: 800px){
+    .confirm-dialog{
+        width: 55%;
+    }
+    .confirm-dialog-btns button {
+        width: 40%;
+    }
+    
+    
+}
+
+@media (min-width: 1400px){
+    .confirm-dialog{
+        width: 50%;
+    }
+    .confirm-dialog-btns button {
+        width: 30%;
+    }
+    
+    
+}
+@media (min-width: 1800px){
+    .confirm-dialog{
+        width: 60%;
+    }
+    .confirm-dialog-btns button {
+        width: 45%;
+    }
+    
+    
+}
+
+
+@media (min-height: 500px){
+    .confirm-dialog{
+        height: 60%;
+        padding-bottom: 35px;
+    }
+    
+    
+}
+
+@media (min-height: 700px){
+    .confirm-dialog{
+        height: 60%;
+        padding-bottom: 15px;
+    }
+    
+    
+}
+@media (min-height: 900px){
+    .confirm-dialog{
+        height: 50%;
+        padding-bottom: 0;
+    }
+    .parametrs-to-export{
+        margin-top: 15px;
+    }
+    
+}
+
+@media (min-height: 1100px){
+    
+    .confirm-dialog{
+        height: 50%;
+        padding-bottom: 35px;
+    }
+    
+}
+
+@media (min-height: 1300px){
+    .confirm-dialog{
+        height: 50% !important;
+        padding-bottom: 35px;
+    }
+    
+}
+
+@media (min-width: 300px) and (min-height: 500px){
+    .confirm-dialog .close-modal-button{
+        margin-top: 0;
+        font-size: 30px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 20px;
+    }
+    .confirm-dialog-btns {
+        flex-direction: row;
+        align-items: center;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 30px;
+    }
+    .parametrs-to-export p {
+        font-size: 15px;
+    }
+    .confirm-dialog span {
+        font-size: 15px;
+    }
+    .percent-value{
+        margin-top: 2px
+    }
+    
+
+}
+@media (min-width: 400px) and (min-height: 500px){
+    .confirm-dialog .close-modal-button{
+        margin-top: 5px;
+        font-size: 40px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 20px;
+    }
+    .confirm-dialog-btns {
+        flex-direction: row;
+        align-items: center;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 35px;
+    }
+    .parametrs-to-export p {
+        font-size: 15px;
+    }
+    .confirm-dialog span {
+        font-size: 18px;
+    }
+    .percent-value{
+        margin-top: 13px
+    }
+    .percent{
+        margin-top: 10px;
+    }
+
+}
+@media (min-width: 600px) and (min-height: 900px){
+    .confirm-dialog .close-modal-button{
+        margin-top: 5px;
+        font-size: 40px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 30px;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 40px;
+        margin-bottom: 20px;
+    }
+    .save-inputs-group{
+        margin: 0 0 10px 0;
+    }
+    .parametrs-to-export p {
+        font-size: 23px;
+    }
+    .confirm-dialog span {
+        font-size: 30px;
+    }
+    .percent-value{
+        margin-top: 15px
+    }
+    .percent{
+        margin-top: 12px;
+    }
+    .format-file-btn{
+        width: 90px;
+        height: 90px;
+    }
+    .formats-files{
+        width: 80%;
+    }
+    .extent-inputs-row input{
+        height: 50%;
+    }
+
+}
+@media (min-width: 800px) and (min-height: 1100px){
+    .confirm-dialog .close-modal-button{
+        margin-top: 5px;
+        font-size: 40px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 25px;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 45px;
+    }
+    .parametrs-to-export p {
+        font-size: 23px;
+    }
+    .confirm-dialog span {
+        font-size: 18px;
+    }
+    .percent-value{
+        margin-top: 0;
+    }
+    .percent{
+        margin-top: 0;
+    }
+}
+
+@media (min-width: 1000px) and (min-height: 1300px){
+    .confirm-dialog .close-modal-button{
+        margin-top: 5px;
+        font-size: 50px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 35px;
+    }
+    
+    .confirm-dialog-btns {
+       
+        flex-direction: row;
+        align-items: center;
+    }
+    .confirm-dialog-btns button{
+        height: 70px;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 55px;
+    }
+    .parametrs-to-export p {
+        font-size: 25px;
+    }
+    .confirm-dialog span {
+        font-size: 23px;
+    }
+    .percent-value{
+        margin-top: 3px;
+    }
+    .percent{
+        margin-top: 0;
+    }
+
+    .checkbox-user-bbox{
+        font-size: 30px;
+    }
+    .checkbox-user-bbox input{
+        width: 20px;
+        height: 20px;
+    }
+    .save-inputs-group label{
+        font-size: 25px;
+    }
+    .input-wrapper input {
+        font-size: 20px;
+    }
+}
+
+@media (min-width: 1300px) and (min-height: 700px){
+    .format-file-btn {
+        width: 90px;
+        height: 90px;
+    }
+    .confirm-dialog .close-modal-button{
+        margin-top: 5px;
+        font-size: 50px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 35px;
+    }
+    .formats-files{
+        margin-top: 10px;
+    }
+    .confirm-dialog-btns {
+       
+        flex-direction: row;
+        align-items: center;
+    }
+    .confirm-dialog-btns button{
+        height: 70px;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 55px;
+    }
+    .parametrs-to-export p {
+        font-size: 25px;
+    }
+    .confirm-dialog span {
+        font-size: 23px;
+    }
+    .percent-value{
+        margin-top: 3px;
+    }
+    .percent{
+        margin-top: 0;
+    }
+
+    .checkbox-user-bbox{
+        font-size: 30px;
+    }
+    .checkbox-user-bbox input{
+        width: 20px;
+        height: 20px;
+    }
+    .save-inputs-group label{
+        font-size: 25px;
+    }
+    .input-wrapper input {
+        font-size: 20px;
+    }
+
+}
+
+@media (min-width: 1800px) and (min-height: 850px){
+    .confirm-dialog .close-modal-button{
+        margin-top: 5px;
+        font-size: 50px;
+    }
+    .confirm-dialog-btns button {
+        font-size: 35px;
+    }
+    
+    .confirm-dialog-btns {
+       
+        flex-direction: row;
+        align-items: center;
+    }
+    .confirm-dialog-btns button{
+        height: 70px;
+    }
+    .confirm-dialog .header-form p {
+        font-size: 55px;
+    }
+    .parametrs-to-export p {
+        font-size: 25px;
+    }
+    .confirm-dialog span {
+        font-size: 18px;
+    }
+    .percent-value{
+        margin-top: 3px;
+    }
+    .percent{
+        margin-top: 0;
+    }
+
+    .checkbox-user-bbox{
+        font-size: 30px;
+    }
+    .checkbox-user-bbox input{
+        width: 20px;
+        height: 20px;
+    }
+    .save-inputs-group label{
+        font-size: 25px;
+    }
+    .input-wrapper input {
+        font-size: 20px;
+    }
+}
