@@ -222,7 +222,7 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
 		a.Logger.Error("No claims in context")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in token"})
 		return
 	}
 
@@ -232,29 +232,31 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
 		return
 	}
+
 	module := queries_maps.NewModule()
 	err := json.NewDecoder(r.Body).Decode(&module)
-
 	if err != nil {
-		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
+		a.Logger.Sugar().Errorf("Error decoding module data: %v", err)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"error": fmt.Sprintf("Error save module: %v", err),
+			"error": fmt.Sprintf("Error saving module: %v", err),
 		})
 		return
 	}
+
 	module.MapId = id_map
 
-	err = module.SaveModule(a.Pool)
+	moduleID, err := module.SaveModule(a.Pool)
 	if err != nil {
-		a.Logger.Error("Error querying module", zap.Error(err))
+		a.Logger.Error("Error saving module to DB", zap.Error(err))
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error save module: %v", err),
+			"error": fmt.Sprintf("Error saving module: %v", err),
 		})
 		return
 	}
 
-	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"message": "Successfuly saved module",
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+		"message":   "Successfully saved module",
+		"module_id": moduleID,
 	})
 }
 func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
@@ -314,6 +316,30 @@ func (a *MapsHandlers) ClearMapToken(rw http.ResponseWriter, r *http.Request) {
 	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
 		"message": "Success exit",
 	})
+}
+func (a *MapsHandlers) DeleteModuleFromMap(rw http.ResponseWriter, r *http.Request) {
+	/*claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		return
+	}
+
+	id_map, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+		return
+	}
+	var request struct {
+		id_module string `json:"id_module"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		a.Logger.Error("Invalid request body:", zap.Error(err))
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+		return
+	}
+	err = queries_maps.DeleteModule(id_map, request.id_module)*/
 }
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")

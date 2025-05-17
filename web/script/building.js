@@ -184,9 +184,15 @@ function addModuleToMap(moduleData) {
     geometry: new ol.geom.Point(moduleData.points),
     type: moduleData.module_type,
     habitation: moduleData.habitation_type,
-    id: moduleData.id_module
+    id: moduleData.module_id
   });
-
+  //сохраняем в кэш
+  cachedModules.push({
+    id: moduleData.module_id,
+    points: moduleData.points,
+    module_type: moduleData.module_type,
+    habitation_type: moduleData.habitation_type,
+  });
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
 
@@ -637,12 +643,7 @@ function saveModule(moduleData){
       });
     })
     .then(data => {
-      cachedModules.push({
-        points: moduleData.points,
-        module_type: moduleData.module_type,
-        habitation_type: moduleData.habitation_type,
-      });
-      addModuleToMap(moduleData);
+      addModuleToMap(data);
     })
     .catch(error => {
       console.error('Ошибка сохранения модуля:', error);
