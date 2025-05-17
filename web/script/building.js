@@ -539,7 +539,7 @@ modules.forEach(module => {
         isDragging = false;
         if (currentClippedLayer && currentClippedLayer !== greenLayer) {
           map.removeLayer(currentClippedLayer);
-      }
+        }
         toggleExclusionRadius(false);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
@@ -643,7 +643,12 @@ function saveModule(moduleData){
       });
     })
     .then(data => {
-      addModuleToMap(data);
+      // Создаем новый объект с добавленным module_id
+      const fullModuleData = {
+          ...moduleData, 
+          id_module: data.module_id
+      };
+      addModuleToMap(fullModuleData);
     })
     .catch(error => {
       console.error('Ошибка сохранения модуля:', error);

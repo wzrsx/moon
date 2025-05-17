@@ -220,7 +220,7 @@ function confirmModuleDeletion() {
     const popupElement = popup.getElement();
     popupElement.style.display = 'none';
     
-    console.log("update!");
+    deleteModuleFromDB(currentPopupFeature.get('id'));
     
     // Сбрасываем текущие данные
     currentModuleInfo = null;
@@ -228,4 +228,28 @@ function confirmModuleDeletion() {
     
     // Закрываем диалог
     closeDeleteModuleDialog();
+}
+async function deleteModuleFromDB(id) {
+    try {
+        const response = await fetch('http://localhost:5050/maps/redactor/page/delete_module', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                id_module: id
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete module');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Delete module error:', error);
+        sendNotification(`Ошибка удаления: ${error.message}`, false);
+        throw error;
+    }
 }

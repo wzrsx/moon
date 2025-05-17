@@ -82,7 +82,7 @@ func TakeModules(idMap string, pool *pgxpool.Pool) ([]Module, error) {
 
 	return modules, nil
 }
-func  DeleteModule(module_id string, pool *pgxpool.Pool) error {
+func DeleteModule(module_id string, pool *pgxpool.Pool) error {
 
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
@@ -191,5 +191,3 @@ func TakeModulesDistance(pool *pgxpool.Pool) ([]ModulesDistance, error) {
 
 	return resp, nil
 }
-
-//func DeleteModule(string id_map, string id_module, pool *pgxpool.Pool) error {}

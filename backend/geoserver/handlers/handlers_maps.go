@@ -318,28 +318,76 @@ func (a *MapsHandlers) ClearMapToken(rw http.ResponseWriter, r *http.Request) {
 	})
 }
 func (a *MapsHandlers) DeleteModuleFromMap(rw http.ResponseWriter, r *http.Request) {
-	/*claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
 		a.Logger.Error("No claims in context")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
 	id_map, ok := claims["map_id"].(string)
-	if !ok {
+	if !ok || id_map == "" {
 		a.Logger.Error("Map ID not found in claims")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found in token"})
 		return
 	}
+
 	var request struct {
-		id_module string `json:"id_module"`
+		IDModule string `json:"id_module"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		a.Logger.Error("Invalid request body:", zap.Error(err))
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
 		return
 	}
-	err = queries_maps.DeleteModule(id_map, request.id_module)*/
+
+	err := queries_maps.DeleteModule(request.IDModule, a.Pool)
+	if err != nil {
+		a.Logger.Error("Failed to delete module:", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to delete module"})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"status":  "success",
+		"message": "Module deleted successfully",
+	})
+}
+func (a *MapsHandlers) DeleteMapHandler(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+	id_user, ok := claims["user_id"].(string)
+	if !ok {
+		a.Logger.Error("User ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
+	var request struct {
+		IDMap string `json:"map_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		a.Logger.Error("Invalid request body:", zap.Error(err))
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+		return
+	}
+
+	err := queries_maps.DeleteMap(request.IDMap, id_user, a.Pool)
+	if err != nil {
+		a.Logger.Error("Failed to delete module:", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to delete module"})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"status":  "success",
+		"message": "Map deleted successfully",
+	})
 }
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
