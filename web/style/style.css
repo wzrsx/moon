@@ -1244,6 +1244,7 @@ h3{
     width: 95%;
     margin: 0 auto;
     color: #f0d6ff;
+    font-size: 20px;
 }
 
 .card-place:hover .hidden-text {
