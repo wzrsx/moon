@@ -24,14 +24,13 @@ async function exportMapToPNG() {
   if (checkboxBbox && checkboxBbox.checked) {
       extent = getUserBboxValues();
   } 
-  // 2. Отступы в процентах (если блок видим)
+  // 2. Отступы в процентах
   else if (inputsExtent && inputsExtent.style.display === 'block') {
       extent = calculateExtentWithMargins(minX, minY, maxX, maxY);
   } 
-  // 3. Стандартный буфер
+  // 3. Стандарт (5%)
   else {
-      const buffer = 1000; // 1 км
-      extent = [minX - buffer, minY - buffer, maxX + buffer, maxY + buffer];
+      extent = calculateExtentWithMargins(minX, minY, maxX, maxY);
   }
 
   // Вычисляем размеры изображения
@@ -46,8 +45,9 @@ async function exportMapToPNG() {
       // Создаём canvas и комбинируем изображения
       const resultCanvas = combineImages(ldem_img, hill_img, ldsm_img, width, height);
       
-      if (!moduleLayers) {
-        console.warn('Слой модулей не найден');
+      if (moduleLayers.length === 0) {
+        console.warn('Слой модулей не найден или пуст');
+        sendNotification("Нет модулей для экспорта", false);
         return;
       }
   
@@ -159,16 +159,8 @@ async function getImageMap(layerName, extent, targetSize = 2048) {//targetSize �
 function drawVectorLayerOnCanvas(canvas, map, extent) {
   const ctx = canvas.getContext('2d');
   const view = map.getView();
-  const modulesLayer = map.getLayers().getArray().find(layer =>
-    layer.get('name') === 'modules_layer'
-  );
-
-  if (!modulesLayer) {
-    console.warn('Слой модулей не найден');
-    return;
-  }
-
-  const source = modulesLayer.getSource();
+ 
+  const source = moduleLayers[0].getSource();
   const features = source.getFeatures();
 
   const canvasWidth = canvas.width;
@@ -265,6 +257,10 @@ function drawPoint(ctx, style, pixel, zoom) {
       scaledWidth,
       scaledHeight
     );
+    // Отрисовка текста
+    if (textStyle) {
+      drawText(ctx, textStyle, pixel, scaledWidth, scaledHeight);
+    }
   } else if (imageStyle instanceof ol.style.Circle) {
     console.log("circle");
     const radius = imageStyle.getRadius();
@@ -284,12 +280,12 @@ function drawPoint(ctx, style, pixel, zoom) {
       ctx.lineWidth = stroke.getWidth();
       ctx.stroke();
     }
-
+    // Отрисовка текста
+    if (textStyle) {
+      drawText(ctx, textStyle, pixel, radius * 2, radius * 2);
+    }
   } 
-  // Отрисовка текста
-  if (textStyle) {
-    drawText(ctx, textStyle, pixel);
-  }
+  
 }
 
 function drawPolygon(ctx, style, pixels) {
@@ -315,6 +311,8 @@ function drawPolygon(ctx, style, pixels) {
   // Отрисовка текста
   if (textStyle) {
     ctx.font = textStyle.getFont();
+    const fill = textStyle.getFill();
+    ctx.fillStyle = fill.getColor() 
     const text = textStyle.getText();
     const textWidth = ctx.measureText(text).width;
     
@@ -323,11 +321,16 @@ function drawPolygon(ctx, style, pixels) {
     
     const textX = centerX - textWidth/2;
     const textY = topY - 5; // 5px отступа сверху
-    
+    const stroke = textStyle.getStroke();
+    if (stroke) {
+      ctx.strokeStyle = stroke.getColor();
+      ctx.lineWidth = stroke.getWidth();
+      ctx.strokeText(text, textX, textY);
+    }
     ctx.fillText(text, textX, textY);
   }
 }
-function drawText(ctx, textStyle, pixel) {
+function drawText(ctx, textStyle, pixel, iconWidth = 0, iconHeight = 0) {
   if (!textStyle || !pixel) return;
 
   const text = textStyle.getText();
@@ -339,11 +342,14 @@ function drawText(ctx, textStyle, pixel) {
     if (fill) {
       ctx.fillStyle = fill.getColor() || '#000000';
     }
+    // Рассчитываем размеры текста
+    const textMetrics = ctx.measureText(text);
+    const textWidth = textMetrics.width;
     const offsetX = textStyle.getOffsetX() || 0;
     const offsetY = textStyle.getOffsetY() || 0;
-    const textX = pixel[0] + offsetX;
-    const textY = pixel[1] + offsetY;
-
+    // Вычисляем позицию текста по центру под иконкой
+    const textX = pixel[0] - textWidth / 2 + offsetX;
+    const textY = pixel[1] + iconHeight / 2 + offsetY; 
     // Рисуем обводку (если есть)
     const stroke = textStyle.getStroke();
     if (stroke) {
