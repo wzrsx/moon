@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="./static/style/reset.css">
     <link rel="stylesheet" href="./static/style/style.css">
     <link rel="stylesheet" href="./static/style/media-requests.css">
-    <link rel="stylesheet" href="./static/style/building-media-requests.css">
     <title>Moon</title>
 </head>
 <body>
@@ -14,7 +13,18 @@
     <header>
     <ul class="header-menu">
         <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
-        <li class="nav-item" id="authBtn">Вход/Регистрация</li>
+        <li class="nav-item">
+            {{if .Username}}
+                <!-- Показываем если пользователь авторизован -->
+                <div class="user-auth-container">
+                    <span class="username">{{.Username}}</span>
+                    <button id="logoutBtn">Выйти</button>
+                </div>
+            {{else}}
+                <!-- Показываем если пользователь не авторизован -->
+                <button id="authBtn">Вход/Регистрация</button>
+            {{end}}
+        </li>
     </ul>
     </header>
     <main class="main-page">
@@ -110,8 +120,8 @@
             <button class="project-selection-btn btn-open" onclick="showProjects()">Открыть существующий проект</button>
         </div>
         <div class="create-project-section" style="display: none;">
-            <input type="text" placeholder="Введите название проекта" id="nameProject" class="input-sign-in-dialog">
-            <span class="error-message" id="nameProjectError" style="color: #a90000; display: none; margin-top: -3%;">error message</span> 
+            <input type="text" placeholder="Введите название проекта" id="nameProject" class="input-project-selection-dialog">
+            <span class="error-message" id="nameProjectError" style="color: #a90000; display: none;">error message</span> 
             <button class="create-project-btn btn-new" onclick="createNewProject()">Приступить</button>
         </div>
         <div class="show-projects-section" style="display: none;">
@@ -170,21 +180,6 @@
             </form>
             <div class="enterCode"> 
                 <p class="dialog-subtitle">Введите код из письма</p>
-            </div>
-        </div>
-    </dialog>
-    <dialog class="confirm-dialog" id="deleteMapDialog">
-        <div class="content-confirm-dialog">
-            <div class="header-form">
-                <button class="close-modal-button" onclick="closeDeleteMapDialog()" style="display: block;">
-                    &#x2715;
-                </button>
-                <p id="titleDialog">Вы уверены что хотите удалить карту?</p>
-            </div>
-            <span>Это действие нельзя отменить</span>
-            <div class="confirm-dialog-btns btns">
-                <button id="cancelDelMapBtn" onclick="closeDeleteMapDialog()">Отмена</button>
-                <button id="confirmDelMapBtn">Удалить</button>
             </div>
         </div>
     </dialog>
