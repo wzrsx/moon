@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./static/style/reset.css">
-    <link rel="stylesheet" href="./static/style/style.css">
-    <link rel="stylesheet" href="./static/style/media-requests.css">
-    <link rel="stylesheet" href="./static/style/building-media-requests.css">
+    <link rel="stylesheet" href="/static/style/reset.css">
+    <link rel="stylesheet" href="/static/style/style.css">
+    <link rel="stylesheet" href="/static/style/media-requests.css">
     <title>Moon</title>
 </head>
 <body>
@@ -153,10 +152,10 @@
             <form action="">
                 <p class="dialog-subtitle">проверьте почту</p>
                 <div class="code-input-block" id="confirmationCodeRegistration">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration2'); checkAllFilled()" id="inputCodeRegistration1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration3'); checkAllFilled()" id="inputCodeRegistration2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration4'); checkAllFilled()" id="inputCodeRegistration3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRegistration4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration2')" id="inputCodeRegistration1">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration3')" id="inputCodeRegistration2">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRegistration4')" id="inputCodeRegistration3">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null)" id="inputCodeRegistration4">
                 </div>
                 <span class="error-message" id="codeRegistrationError" style="color: #a90000; display: none;">error message</span> 
             </form>
@@ -175,10 +174,10 @@
             <form action="">
                 <p class="dialog-subtitle">проверьте почту</p>
                 <div class="code-input-block" id="confirmationCode">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover2'); checkAllFilled()" id="inputCodeRecover1" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover3'); checkAllFilled()" id="inputCodeRecover2" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover4'); checkAllFilled()" id="inputCodeRecover3" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null); checkAllFilled()" id="inputCodeRecover4" onkeypress="return isNumberKey(event)" onkeydown="handleKeyDown(event, this)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover2');" id="inputCodeRecover1">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover3');" id="inputCodeRecover2">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 'inputCodeRecover4');" id="inputCodeRecover3">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, null);" id="inputCodeRecover4">
                 </div>
                 <span class="error-message" id="codeForgetPassError" style="color: #a90000; display: none;">error message</span> 
             </form>
