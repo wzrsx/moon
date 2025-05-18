@@ -1023,6 +1023,9 @@
         align-items: center;
         text-align: center;
     }
+    .user-auth-container{
+        width: 40%;
+    }
     
 }
 @media (min-width: 600px) and (min-height: 900px),
@@ -1053,7 +1056,6 @@
         align-items: center;
         text-align: center;
     }
-    
 }
 
 @media (min-width: 1000px) and (min-height: 1000px) {
@@ -1095,6 +1097,9 @@
     .nav-item{
         width: 23%;
         font-size: 45px !important;
+    }
+    .user-auth-container{
+        width: 20%;
     }
     
 } 

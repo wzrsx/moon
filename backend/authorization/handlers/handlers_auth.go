@@ -328,6 +328,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 		return
 	}
 	rw.Header().Add("Authorization", string_tocken)
+	setCookie(rw, string_tocken)
 
 	// Удаляем код из слайса
 	delete(registrationCodes, creds.Email)
