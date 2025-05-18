@@ -543,34 +543,124 @@ function checkAllFilled() {
   return allFilled;
 }
 
-function handleKeyDown(event, inputElement) {
-  if (event.key === "Backspace") {
-    const currentIndex = parseInt(inputElement.id.replace("inputCode", ""));
-    if (inputElement.value === "") {
-      // только если input уже пустой
-      inputElement.value = "";
-      const previousInput = document.getElementById(
-        "inputCode" + (currentIndex - 1)
-      );
-      if (previousInput) {
-        previousInput.focus();
-      }
-      checkAllFilled();
-    } else {
-      if (currentIndex == 4) {
-        const inputsRegistration = document.querySelectorAll(
-          "#confirmationCodeRegistration .code-input"
-        );
-        resetErrorStyles(inputsRegistration);
-        const inputsRecovery = document.querySelectorAll(
-          "#confirmationCodeRecovery .code-input"
-        );
-        resetErrorStyles(inputsRecovery);
-      }
-      inputElement.value = ""; // если есть значение - просто очищаем, не переходим
+// 1. Функция для удаления цифры с переходом на предыдущий input
+function handleDeleteCodeInput(currentInput, event) {
+    // Предотвращаем стандартное поведение Backspace
+    event.preventDefault();
+    
+    const currentId = currentInput.id;
+    const currentIndex = parseInt(currentId.match(/\d+$/)[0]);
+    
+    // Если input не пустой - просто очищаем его
+    if (currentInput.value !== "") {
+        currentInput.value = "";
+        return;
     }
-  }
+    
+    // Если input пустой - переходим на предыдущий
+    if (currentInput.value === "") {
+        const prevInput = document.getElementById(
+            currentId.replace(/\d+$/, (currentIndex - 1))
+        );
+        if (prevInput) {
+            prevInput.focus();
+            // Очищаем предыдущий input при фокусировке
+            prevInput.value = "";
+        }
+    }
 }
+
+// 2. Функция для вставки кода из буфера обмена
+async function handlePasteCodeInput(event, inputsContainerId) {
+    let pasteData;
+    
+    if (event.type === 'paste') {
+        // Для обычного события paste
+        event.preventDefault();
+        pasteData = event.clipboardData.getData('text/plain').trim();
+    } else {
+        // Для Ctrl+V попробуем получить данные из буфера
+        try {
+            pasteData = await navigator.clipboard.readText();
+        } catch (error) {
+            console.error('Ошибка чтения буфера обмена:', error);
+            return;
+        }
+    }
+
+    // Проверяем что в буфере 4 цифры
+    if (pasteData && /^\d{4}$/.test(pasteData)) {
+        const inputs = document.querySelectorAll(`#${inputsContainerId} .code-input`);
+        
+        // Заполняем все inputs
+        inputs.forEach((input, index) => {
+            input.value = pasteData[index] || '';
+        });
+        
+        // Фокусируемся на последнем input
+        inputs[inputs.length - 1].focus();
+        
+        // Проверяем все ли заполнено
+        checkAllFilled();
+    }
+}
+
+// 3. Обновленная функция handleKeyDown с учетом новой логики удаления
+async function handleKeyDown(event, inputElement) {
+    // Обработка удаления
+    if (event.key === "Backspace") {
+        handleDeleteCodeInput(inputElement, event);
+        return;
+    }
+    
+    // Обработка Ctrl+V
+    if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+        const containerId = inputElement.closest('.code-input-block').id;
+        await handlePasteCodeInput(event, containerId);
+        return;
+    }
+    
+    // Проверка что вводится цифра
+    if (!isNumberKey(event)) {
+        event.preventDefault();
+        return;
+    }
+}
+// 4. Обновление инициализации - добавление обработчика paste
+function initCodeInputs() {
+    document.querySelectorAll('.code-input-block').forEach(container => {
+        const inputs = container.querySelectorAll('.code-input');
+        
+        inputs.forEach(input => {
+            // Добавляем обработчик paste
+            input.addEventListener('paste', (e) => {
+                handlePasteCodeInput(e, container.id);
+            });
+            
+            // Обработчик keydown
+            input.addEventListener('keydown', function(e) {
+                handleKeyDown(e, this);
+            });
+            
+            // Обработчик input для автоматического перехода
+            input.addEventListener('input', function() {
+                const nextId = this.id.replace(/\d+$/, 
+                    (match) => String(parseInt(match) + 1));
+                const nextInput = document.getElementById(nextId);
+                
+                if (this.value.length >= 1 && nextInput) {
+                    nextInput.focus();
+                }
+                
+                checkAllFilled();
+            });
+        });
+    });
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', initCodeInputs);
+
 
 function resetInputStyles(inputs) {
   inputs.forEach((input) => {
