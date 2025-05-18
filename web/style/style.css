@@ -572,6 +572,34 @@ h3{
     border-bottom: 5px solid white;
     color: white;
 }
+.module-info-toggle {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+  .module-info-toggle label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 5px;
+    border-radius: 10px;
+    font-size: 1.5vh;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  .module-info-toggle label:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  .module-info-toggle input {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
 .canvas-moon{
     width: 100%;
     height: calc(100vh - 79px);

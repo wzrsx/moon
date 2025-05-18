@@ -1,6 +1,8 @@
 const popupElement = document.createElement('div');
 let currentPopupFeature = null;
 let currentModuleInfo = null;
+let visibilityModulesInfo = bboxVisibilityModulesInfo.checked;
+let isDraggingMove = false; // Флаг перемещения
 const popup = new ol.Overlay({
     element: document.createElement('div'),
     positioning: 'bottom-center',
@@ -13,7 +15,61 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', confirmModuleDeletion);
     }
+    
 });
+map.on('pointerdrag', function() {
+    isDraggingMove = true;
+});
+map.on('pointerup', function() {
+    if (isDraggingMove && currentPopupFeature) {
+        adjustPopupPosition();
+    }
+    isDraggingMove = false;
+});
+bboxVisibilityModulesInfo.addEventListener('change', function() {
+        visibilityModulesInfo = this.checked;
+        console.log('Module info visibility changed to:', visibilityModulesInfo); // Для отладки
+
+        // Здесь можно добавить логику показа/скрытия информации
+        if (!visibilityModulesInfo) {
+            const popupElement = popup.getElement();
+            popupElement.style.display = 'none';
+        }
+    
+    });
+
+// Функция для корректировки позиции popup
+function adjustPopupPosition() {
+    if (!currentPopupFeature || !visibilityModulesInfo) return;
+    
+    const popupElement = popup.getElement();
+    const feature = currentPopupFeature;
+    const coordinates = feature.getGeometry().getCoordinates();
+    const pixel = map.getPixelFromCoordinate(coordinates);
+    
+    // Получаем размеры карты и popup
+    const mapSize = map.getSize();
+    const popupRect = popupElement.getBoundingClientRect();
+    const mapRect = map.getTargetElement().getBoundingClientRect();
+    
+    // Проверяем, выходит ли popup за верхнюю границу
+    const topEdge = pixel[1] - popupRect.height - 20; // 20 - offset
+    
+    // Если popup выходит за верхнюю границу, показываем его снизу
+    if (topEdge < 0) {
+        popup.setPositioning('top-center');
+        popup.setOffset([0, 20]);
+    } 
+    // Иначе возвращаем стандартное позиционирование
+    else {
+        popup.setPositioning('bottom-center');
+        popup.setOffset([0, -20]);
+    }
+    
+    // Обновляем позицию popup
+    popup.setPosition(coordinates);
+}
+
 function showPopupForFeature(feature) {
     const popupElement = popup.getElement();
     const moduleType = feature.get('type');
@@ -27,9 +83,14 @@ function showPopupForFeature(feature) {
         feature.get('habitation')
     );
     
-    popup.setPosition(coordinates);
-    popupElement.style.display = 'block';
+    // Первоначально устанавливаем стандартное позиционирование
+    popup.setPositioning('bottom-center');
+    popup.setOffset([0, -20]);
     
+    // Корректируем позицию
+    adjustPopupPosition();
+    
+    popupElement.style.display = 'block';
     initPopupEventListeners(popupElement, moduleInfo);
 }
 
@@ -131,13 +192,13 @@ function createPopupContent(moduleInfo, habitationType) {
         }
         
         // Если клик по модулю - показываем/обновляем popup
-        if (feature && feature.get('type')) {
+        if (feature && feature.get('type') && visibilityModulesInfo) {
             currentPopupFeature = feature;
             showPopupForFeature(feature);
         }
     });
   // Добавляем обработчик движения курсора
-  map.on('pointermove', function(evt) {
+map.on('pointermove', function(evt) {
     const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
         return feature;
     });
@@ -150,7 +211,7 @@ function createPopupContent(moduleInfo, habitationType) {
         mapTarget.style.cursor = 'pointer';
         
         // Если нет текущего открытого popup - показываем popup
-        if (!currentPopupFeature) {
+        if (!currentPopupFeature && visibilityModulesInfo) {
             showPopupForFeature(feature);
         }
     } 
@@ -168,6 +229,11 @@ function createPopupContent(moduleInfo, habitationType) {
     // Если курсор над открытым popup - оставляем стандартный курсор
     if (currentPopupFeature && popupElement.contains(evt.originalEvent.target)) {
         mapTarget.style.cursor = '';
+    }
+    
+    // Если карта движется и popup открыт - корректируем его позицию
+    if (isDraggingMove && currentPopupFeature) {
+        adjustPopupPosition();
     }
 });
 
