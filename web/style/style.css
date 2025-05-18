@@ -17,9 +17,13 @@
     align-items: center;
     gap: 15px;
 }
-.user-name {
+.username {
     color: white;
     font-size: 18px;
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .logout-btn {
     background: none;
@@ -386,6 +390,7 @@ body{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: end;
     padding-top: 30px;
 }
 .nav-item {
@@ -425,6 +430,7 @@ body{
 /* Специфичный стиль для кнопки выхода */
 .nav-item.exit {
     background-color: rgba(252, 0, 0, 0.3);
+    width: 100%;
 }
 
 /* Специфичный hover для кнопки выхода */
@@ -436,7 +442,11 @@ body{
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;              
+    gap: 5px;           
+    overflow: hidden; /* Обрезает контент, выходящий за границы */   
+    white-space: nowrap; /* Запрет переноса */
+    width: fit-content; /* Ширина по содержимому */
+    text-overflow: ellipsis; /* "..." если текст не помещается */
 }
 @keyframes drawBorder {
     0% {

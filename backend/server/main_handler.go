@@ -40,10 +40,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Printf("Invalid token: %v", err)
 		}
-	} else {
-		log.Printf("No JWT cookie: %v", err)
 	}
-
 	// Рендерим шаблон с данными
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Template execution error: %v", err)

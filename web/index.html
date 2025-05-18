@@ -17,15 +17,11 @@
                 <!-- Показываем если пользователь авторизован -->
                 <div class="user-auth-container">
                     <span class="username">{{.Username}}</span>
-                    <li class="nav-item exit">
-                        <button id="logoutBtn">Выйти</button>
-                    </li>
+                    <li class="nav-item exit" id="logoutBtn" onclick="logoutBtn()">Выйти</li>
                 </div>
             {{else}}
                 <!-- Показываем если пользователь не авторизован -->
-                <li class="nav-item">
-                    <button id="authBtn">Вход/Регистрация</button>
-                </li>
+                <li class="nav-item" id="authBtn" onclick="openSignInDialogBtn()">Вход/Регистрация</li>
             {{end}}
         
     </ul>

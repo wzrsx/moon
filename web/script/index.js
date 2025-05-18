@@ -5,15 +5,20 @@ const deleteMapDialog = document.getElementById("deleteMapDialog");
 const projectSelectionDialog = document.getElementById(
   "projectSelectionDialog"
 );
-const checkCodeRegistrationDialog = document.getElementById("checkCodeRegistrationDialog");
-const checkCodeRecoverDialog = document.getElementById("checkCodeRecoverDialog");
+const checkCodeRegistrationDialog = document.getElementById(
+  "checkCodeRegistrationDialog"
+);
+const checkCodeRecoverDialog = document.getElementById(
+  "checkCodeRecoverDialog"
+);
 const blurDiv = document.getElementById("blurDiv");
 const EMAIL_REGEXP =
   /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
 
 const buildingPageBtn = document.getElementById("buildingPageBtn");
-const authBtn = document.getElementById("authBtn");
+
+const logoutBtn = document.getElementById("logoutBtn");
 
 //переключение между диалогами
 const registrateBtnForm = document.getElementById("registrateBtnForm");
@@ -58,7 +63,9 @@ const repeatPassRegistrationError = document.getElementById(
   "repeatPassRegistrationError"
 );
 const emailForgetPassError = document.getElementById("emailForgetPassError");
-const passwordForgetPassError = document.getElementById("passwordForgetPassError");
+const passwordForgetPassError = document.getElementById(
+  "passwordForgetPassError"
+);
 
 const codeForgetPassError = document.getElementById("codeForgetPassError");
 const codeRegistrationPassError = document.getElementById(
@@ -68,37 +75,6 @@ const codeRegistrationPassError = document.getElementById(
 let authHeader;
 let isReg = false;
 
-
-//DOM ELEMENTS
-// Обработчик кнопки выхода
-document.addEventListener("DOMContentLoaded", function () {
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-
-      fetch("/auth/logout", {
-        method: "POST",
-        credentials: "same-origin",
-      })
-        .then((response) => {
-          if (response.ok) {
-            location.reload();
-          }
-        })
-        .catch((error) => console.error("Ошибка выхода:", error));
-    });
-  }
-
-  // Обработчик кнопки входа (если пользователь не авторизован)
-  const authBtn = document.getElementById("authBtn");
-  if (authBtn && !authBtn.classList.contains("auth-user")) {
-    authBtn.addEventListener("click", function () {
-      signInDialog.showModal();
-    });
-  }
-});
-
 // обработчики кнопок
 closeButtons.forEach((button) => {
   button.addEventListener("click", (e) => {
@@ -106,16 +82,28 @@ closeButtons.forEach((button) => {
     const dialog = button.closest("dialog");
     dialog.close();
     isSwitching = false;
+    blurDiv.classList.remove("blur");
   });
 });
 
 let isSwitching = false; //переключение
 
-authBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  blurDiv.classList.add("blur");
-  signInDialog.showModal();
-});
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    fetch("/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    })
+      .then((response) => {
+        if (response.ok) {
+          location.reload();
+        }
+      })
+      .catch((error) => console.error("Ошибка выхода:", error));
+  });
+}
+
 buildingPageBtn.addEventListener("click", (e) => {
   e.preventDefault();
 });
@@ -196,15 +184,15 @@ function closeDeleteMapDialog() {
 }
 
 function updateBlurState() {
-  const isProjectDialogOpen = projectSelectionDialog && 
-                            (projectSelectionDialog.hasAttribute('open') || 
-                             projectSelectionDialog.open);
-  
+  const isProjectDialogOpen =
+    projectSelectionDialog &&
+    (projectSelectionDialog.hasAttribute("open") ||
+      projectSelectionDialog.open);
+
   if (!isProjectDialogOpen && blurDiv) {
-      blurDiv.classList.remove("blur");
-      return true;
-  }
-  else{
+    blurDiv.classList.remove("blur");
+    return true;
+  } else {
     return false;
   }
 }
@@ -415,6 +403,11 @@ recoverPassBtn.addEventListener("click", (e) => {
   resetRecoverErrors();
 });
 
+function openSignInDialogBtn() {
+  blurDiv.classList.add("blur");
+  signInDialog.showModal();
+}
+
 //переход к некст инпуту кода
 function moveToNext(currentInput, nextInputId) {
   // Если текущее поле не пустое, перемещаем фокус на следующее поле
@@ -437,9 +430,11 @@ function isNumberKey(evt) {
 //проверяем 6 инпутов
 function checkAllFilled() {
   let id;
-  if (isReg){
+  if (isReg) {
     id = "#confirmationCodeRegistration";
-  }else {id = "#confirmationCodeRecovery";}
+  } else {
+    id = "#confirmationCodeRecovery";
+  }
   const inputsRegistration = document.querySelectorAll(id + " .code-input"); //получаем все инпуты внутри блока
   const allFilled = Array.from(inputsRegistration).every(
     (input) => input.value.length === 1
@@ -513,7 +508,11 @@ function checkAllFilled() {
           console.log(now);
           if (diff <= 0) {
             clearInterval(interval);
-            showCanField(errField, "Можете пробовать снова.", inputsRegistration);
+            showCanField(
+              errField,
+              "Можете пробовать снова.",
+              inputsRegistration
+            );
             return;
           }
 
@@ -545,122 +544,124 @@ function checkAllFilled() {
 
 // 1. Функция для удаления цифры с переходом на предыдущий input
 function handleDeleteCodeInput(currentInput, event) {
-    // Предотвращаем стандартное поведение Backspace
-    event.preventDefault();
-    
-    const currentId = currentInput.id;
-    const currentIndex = parseInt(currentId.match(/\d+$/)[0]);
-    
-    // Если input не пустой - просто очищаем его
-    if (currentInput.value !== "") {
-        currentInput.value = "";
-        return;
+  // Предотвращаем стандартное поведение Backspace
+  event.preventDefault();
+
+  const currentId = currentInput.id;
+  const currentIndex = parseInt(currentId.match(/\d+$/)[0]);
+
+  // Если input не пустой - просто очищаем его
+  if (currentInput.value !== "") {
+    currentInput.value = "";
+    return;
+  }
+
+  // Если input пустой - переходим на предыдущий
+  if (currentInput.value === "") {
+    const prevInput = document.getElementById(
+      currentId.replace(/\d+$/, currentIndex - 1)
+    );
+    if (prevInput) {
+      prevInput.focus();
+      // Очищаем предыдущий input при фокусировке
+      prevInput.value = "";
     }
-    
-    // Если input пустой - переходим на предыдущий
-    if (currentInput.value === "") {
-        const prevInput = document.getElementById(
-            currentId.replace(/\d+$/, (currentIndex - 1))
-        );
-        if (prevInput) {
-            prevInput.focus();
-            // Очищаем предыдущий input при фокусировке
-            prevInput.value = "";
-        }
-    }
+  }
 }
 
 // 2. Функция для вставки кода из буфера обмена
 async function handlePasteCodeInput(event, inputsContainerId) {
-    let pasteData;
-    
-    if (event.type === 'paste') {
-        // Для обычного события paste
-        event.preventDefault();
-        pasteData = event.clipboardData.getData('text/plain').trim();
-    } else {
-        // Для Ctrl+V попробуем получить данные из буфера
-        try {
-            pasteData = await navigator.clipboard.readText();
-        } catch (error) {
-            console.error('Ошибка чтения буфера обмена:', error);
-            return;
-        }
-    }
+  let pasteData;
 
-    // Проверяем что в буфере 4 цифры
-    if (pasteData && /^\d{4}$/.test(pasteData)) {
-        const inputs = document.querySelectorAll(`#${inputsContainerId} .code-input`);
-        
-        // Заполняем все inputs
-        inputs.forEach((input, index) => {
-            input.value = pasteData[index] || '';
-        });
-        
-        // Фокусируемся на последнем input
-        inputs[inputs.length - 1].focus();
-        
-        // Проверяем все ли заполнено
-        checkAllFilled();
+  if (event.type === "paste") {
+    // Для обычного события paste
+    event.preventDefault();
+    pasteData = event.clipboardData.getData("text/plain").trim();
+  } else {
+    // Для Ctrl+V попробуем получить данные из буфера
+    try {
+      pasteData = await navigator.clipboard.readText();
+    } catch (error) {
+      console.error("Ошибка чтения буфера обмена:", error);
+      return;
     }
+  }
+
+  // Проверяем что в буфере 4 цифры
+  if (pasteData && /^\d{4}$/.test(pasteData)) {
+    const inputs = document.querySelectorAll(
+      `#${inputsContainerId} .code-input`
+    );
+
+    // Заполняем все inputs
+    inputs.forEach((input, index) => {
+      input.value = pasteData[index] || "";
+    });
+
+    // Фокусируемся на последнем input
+    inputs[inputs.length - 1].focus();
+
+    // Проверяем все ли заполнено
+    checkAllFilled();
+  }
 }
 
 // 3. Обновленная функция handleKeyDown с учетом новой логики удаления
 async function handleKeyDown(event, inputElement) {
-    // Обработка удаления
-    if (event.key === "Backspace") {
-        handleDeleteCodeInput(inputElement, event);
-        return;
-    }
-    
-    // Обработка Ctrl+V
-    if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
-        const containerId = inputElement.closest('.code-input-block').id;
-        await handlePasteCodeInput(event, containerId);
-        return;
-    }
-    
-    // Проверка что вводится цифра
-    if (!isNumberKey(event)) {
-        event.preventDefault();
-        return;
-    }
+  // Обработка удаления
+  if (event.key === "Backspace") {
+    handleDeleteCodeInput(inputElement, event);
+    return;
+  }
+
+  // Обработка Ctrl+V
+  if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+    const containerId = inputElement.closest(".code-input-block").id;
+    await handlePasteCodeInput(event, containerId);
+    return;
+  }
+
+  // Проверка что вводится цифра
+  if (!isNumberKey(event)) {
+    event.preventDefault();
+    return;
+  }
 }
 // 4. Обновление инициализации - добавление обработчика paste
 function initCodeInputs() {
-    document.querySelectorAll('.code-input-block').forEach(container => {
-        const inputs = container.querySelectorAll('.code-input');
-        
-        inputs.forEach(input => {
-            // Добавляем обработчик paste
-            input.addEventListener('paste', (e) => {
-                handlePasteCodeInput(e, container.id);
-            });
-            
-            // Обработчик keydown
-            input.addEventListener('keydown', function(e) {
-                handleKeyDown(e, this);
-            });
-            
-            // Обработчик input для автоматического перехода
-            input.addEventListener('input', function() {
-                const nextId = this.id.replace(/\d+$/, 
-                    (match) => String(parseInt(match) + 1));
-                const nextInput = document.getElementById(nextId);
-                
-                if (this.value.length >= 1 && nextInput) {
-                    nextInput.focus();
-                }
-                
-                checkAllFilled();
-            });
-        });
+  document.querySelectorAll(".code-input-block").forEach((container) => {
+    const inputs = container.querySelectorAll(".code-input");
+
+    inputs.forEach((input) => {
+      // Добавляем обработчик paste
+      input.addEventListener("paste", (e) => {
+        handlePasteCodeInput(e, container.id);
+      });
+
+      // Обработчик keydown
+      input.addEventListener("keydown", function (e) {
+        handleKeyDown(e, this);
+      });
+
+      // Обработчик input для автоматического перехода
+      input.addEventListener("input", function () {
+        const nextId = this.id.replace(/\d+$/, (match) =>
+          String(parseInt(match) + 1)
+        );
+        const nextInput = document.getElementById(nextId);
+
+        if (this.value.length >= 1 && nextInput) {
+          nextInput.focus();
+        }
+
+        checkAllFilled();
+      });
     });
+  });
 }
 
 // Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', initCodeInputs);
-
+document.addEventListener("DOMContentLoaded", initCodeInputs);
 
 function resetInputStyles(inputs) {
   inputs.forEach((input) => {
@@ -759,37 +760,54 @@ function isPassValid(value, field, input) {
   return true;
 }
 function showCreateProjectForm() {
-  projectSelectionDialog.style.height = "35%";
+  // Получаем высоту окна просмотра
+  const viewportHeight = window.innerHeight;
+
+  // Определяем высоту диалога в зависимости от высоты экрана
+  let dialogHeight;
+  if (viewportHeight < 700) {
+    dialogHeight = "50%";
+  } else if (viewportHeight < 800) {
+    dialogHeight = "40%";
+  } else {
+    dialogHeight = "35%";
+  }
+
+  // Применяем изменения
+  projectSelectionDialog.style.height = dialogHeight;
   document.querySelector(".content-project-selection-dialog").style.display =
     "none";
   document.querySelector(".create-project-section").style.display = "flex";
 }
-function toggleErrorNameProject(message = '', show = false) {
-  const errorElement = document.getElementById('nameProjectError');
+function toggleErrorNameProject(message = "", show = false) {
+  const errorElement = document.getElementById("nameProjectError");
   if (show && message) {
     errorElement.textContent = message;
-    errorElement.style.display = 'block';
-    nameProj.style.borderColor = '#a90000'
-    document.getElementById('nameProject').classList.add('input-error');
+    errorElement.style.display = "block";
+    nameProj.style.borderColor = "#a90000";
+    document.getElementById("nameProject").classList.add("input-error");
   } else {
-    errorElement.style.display = 'none';
-    nameProj.style.borderColor = ''
-    
-    document.getElementById('nameProject').classList.remove('input-error');
+    errorElement.style.display = "none";
+    nameProj.style.borderColor = "";
+
+    document.getElementById("nameProject").classList.remove("input-error");
   }
 }
 function createNewProject() {
   let nameProjVal = nameProj.value;
-  toggleErrorNameProject('', false);
-  if(!nameProjVal){
+  toggleErrorNameProject("", false);
+  if (!nameProjVal) {
     toggleErrorNameProject("Название проекта не может быть пустым", true);
     return;
   }
-  if(nameProjVal.length < 5){
-    toggleErrorNameProject("Название должно содержать минимум 5 символов", true);
+  if (nameProjVal.length < 5) {
+    toggleErrorNameProject(
+      "Название должно содержать минимум 5 символов",
+      true
+    );
     return;
   }
-  if(nameProjVal.length > 100){
+  if (nameProjVal.length > 100) {
     toggleErrorNameProject("Название не должно превышать 100 символов", true);
     return;
   }
@@ -807,11 +825,14 @@ function createNewProject() {
     },
     body: JSON.stringify(requestData),
   })
-  .then((response) => {
+    .then((response) => {
       if (!response.ok) {
-        return response.json().then(err => {
+        return response.json().then((err) => {
           // Показываем пользователю сообщение об ошибке
-          toggleErrorNameProject(err.error || "Ошибка при создании карты", true);
+          toggleErrorNameProject(
+            err.error || "Ошибка при создании карты",
+            true
+          );
           throw new Error(err.error || `Ошибка сервера: ${response.status}`);
         });
       }
@@ -902,13 +923,13 @@ function renderMaps(maps) {
                 </svg>
             </button>
         `;
-      const deleteBtn = projectItem.querySelector('.project-delete');
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showDeleteMapDialog(map.map_name, map.map_id, projectItem);
-      });
-    
-      projectsSection.appendChild(projectItem);
+    const deleteBtn = projectItem.querySelector(".project-delete");
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showDeleteMapDialog(map.map_name, map.map_id, projectItem);
+    });
+
+    projectsSection.appendChild(projectItem);
   });
 
   // Добавляем обработчики событий
@@ -916,19 +937,19 @@ function renderMaps(maps) {
 }
 // Функция показа диалога удаления
 function showDeleteMapDialog(mapName, mapId, element) {
-  const dialog = document.getElementById('deleteMapDialog');
-  const title = document.getElementById('titleDialog');
-  
+  const dialog = document.getElementById("deleteMapDialog");
+  const title = document.getElementById("titleDialog");
+
   // Устанавливаем название карты в диалог
   title.textContent = `Вы уверены что хотите удалить проект ${mapName}?`;
-  
+
   // Показываем диалог
   dialog.showModal();
-  
+
   // Обработчик подтверждения удаления
-  const confirmBtn = document.getElementById('confirmDelMapBtn');
+  const confirmBtn = document.getElementById("confirmDelMapBtn");
   const oldHandler = confirmBtn.onclick;
-  confirmBtn.onclick = function() {
+  confirmBtn.onclick = function () {
     if (oldHandler) oldHandler();
     handleDeleteMap(mapId, element);
     dialog.close();
@@ -936,27 +957,27 @@ function showDeleteMapDialog(mapName, mapId, element) {
 }
 async function handleDeleteMap(mapId, element) {
   try {
-    const response = await fetch('http://localhost:5050/maps/delete', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-            map_id: mapId
-        })
+    const response = await fetch("http://localhost:5050/maps/delete", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        map_id: mapId,
+      }),
     });
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete module');
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to delete module");
     }
-    
+
     element.remove();
 
     return await response.json();
   } catch (error) {
-      console.error('Delete module error:', error);
-      throw error;
+    console.error("Delete module error:", error);
+    throw error;
   }
 }
 function addMapEventListeners() {
