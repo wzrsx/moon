@@ -20,6 +20,8 @@ type ModulesRequirements struct {
 	MaxSlopeDegrees int    `json:"max_slope_degrees"`
 	WidthMeters     int    `json:"width_meters"`
 	LengthMeters    int    `json:"length_meters"`
+	HeightMeters    int    `json:"height_meters"`
+	HabitationType  string `json:"habitation_type"`
 	Description     string `json:"description"`
 }
 type ModulesDistance struct {
@@ -112,6 +114,8 @@ func TakeModulesRequirements(pool *pgxpool.Pool) ([]ModulesRequirements, error) 
 			max_slope_degrees, 
 			width_meters, 
 			length_meters,
+			height_meters,
+			habitation_type,
 			description
 		FROM module_requirements`)
 	if err != nil {
@@ -121,7 +125,7 @@ func TakeModulesRequirements(pool *pgxpool.Pool) ([]ModulesRequirements, error) 
 	var req []ModulesRequirements
 	for rows.Next() {
 		var module ModulesRequirements
-		err = rows.Scan(&module.ModuleType, &module.ModuleName, &module.MaxSlopeDegrees, &module.WidthMeters, &module.LengthMeters, &module.Description)
+		err = rows.Scan(&module.ModuleType, &module.ModuleName, &module.MaxSlopeDegrees, &module.WidthMeters, &module.LengthMeters, &module.HeightMeters, &module.HabitationType, &module.Description)
 		if err != nil {
 			return nil, err
 		}

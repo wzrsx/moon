@@ -53,16 +53,17 @@ document.addEventListener('DOMContentLoaded', function() {
           const moduleType = {
             module_type: radio.value,
           };
+          currentModuleType = radio.getAttribute('data-module-habitation');
           await toggleExclusionRadius(true, cachedModules, moduleType);
           
           if (moduleType.module_type === 'medical_module' || moduleType.module_type === 'repair_module') {
             onlyGreenInZone = true;
-            await updateClippedLayer();
           }
           else{
             onlyGreenInZone = false;
-            await updateClippedLayer();
           }
+          await updateClippedLayer();
+
         }
       });
 });
@@ -93,6 +94,6 @@ function updateDialogHeight() {
   } else if(extentVisible){
       saveDialog.style.height = '60%'; 
   }else{
-    saveDialog.style.height = ''; // или '50%' как базовое значение
+    saveDialog.style.height = ''; 
 }
 }

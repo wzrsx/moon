@@ -281,6 +281,9 @@ backMainButtons.addEventListener('click', (e) => {
     radio.checked = false;
     updateOptionStyle(radio);
   });
+  //сбрасываем текущий тип модуля
+  currentModuleType = null;
+  backToTypes();
   hideAllLayers();
 });
 notificationsBtn.addEventListener('click', (e) => {
@@ -378,7 +381,6 @@ function sendNotification(text, success) {
     notification.classList.remove('show');
   }, 2000);
 }
-/*можно будет с бд подтянуть модули*/
 function openInhabitedModules() {
   // Сохраняем тип выбранных модулей
   currentModuleType = 'inhabited';
@@ -1517,7 +1519,7 @@ function updateOptionStyle(inputElement) {
     option.classList.remove('checked');
   }
 }
-// Функция для создания чекбоксов типов модулей 
+// Функция для создания радиокнопок типов модулей 
 function populateModuleCheckboxes() {
   const optionsContainer = document.getElementById('checkboxesModulesName');
   const groupRadioName = 'moduleSelection';
@@ -1532,7 +1534,7 @@ function populateModuleCheckboxes() {
     const radioId = `${module.module_type}Radio`;
     
     optionDiv.innerHTML = `
-      <input type="radio" id="${radioId}" name="moduleSelection" value="${module.module_type}" onchange="updateOptionStyle(this)">
+      <input type="radio" id="${radioId}" name="moduleSelection" value="${module.module_type}" data-module-habitation="${module.habitation_type}" onchange="updateOptionStyle(this)">
       <label for="${radioId}">${module.module_name}</label>
     `;
     
@@ -1544,7 +1546,8 @@ async function hideAllLayers() {
   await toggleExclusionRadius(false);
   const layers = map.getLayers().getArray();
   layers.forEach(layer => {
-    if (layer.get("name") ) { // Проверяем, есть ли у слоя имя
+    // Проверяем, есть ли у слоя имя и не слой ли это модулей
+    if (layer.get("name") && layer.get("name") !== 'modules_layer') { 
       layer.setOpacity(0); // Скрываем слой
     }
     else if(layer.get('isClippedLayer')){
