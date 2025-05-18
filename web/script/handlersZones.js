@@ -46,26 +46,48 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       document.getElementById('checkboxesModulesName').addEventListener('change', async function(e) {
         const radio = e.target.closest('input[type="radio"]');
-        if (!radio) return;
+        if (!radio || !radio.checked) return;
     
-        if (radio.checked) {
-          isDragging = true; //для updateClippedLayer при перемещении карты
-          const moduleType = {
-            module_type: radio.value,
-          };
-          currentModuleType = radio.getAttribute('data-module-habitation');
-          await toggleExclusionRadius(true, cachedModules, moduleType);
-          
-          if (moduleType.module_type === 'medical_module' || moduleType.module_type === 'repair_module') {
-            onlyGreenInZone = true;
-          }
-          else{
-            onlyGreenInZone = false;
-          }
-          await updateClippedLayer();
-
+        // Отменяем предыдущую операцию
+        if (abortController) {
+            abortController.abort();
         }
-      });
+        abortController = new AbortController();
+    
+        try {
+            showSatelliteSpinner("Подготовка...");
+            const moduleType =  radio.value;
+            const moduleNameRu =  document.querySelector(`label[for="${radio.id}"]`).textContent;
+            currentModuleType = radio.getAttribute('data-module-habitation');
+            isDragging = true;
+            await toggleExclusionRadius(true, cachedModules, moduleType, {
+                signal: abortController.signal
+            });
+            showSatelliteSpinner(`${moduleNameRu}: обновление зон...`);
+            onlyGreenInZone = ['medical_module', 'repair_module'].includes(moduleType);
+            if (moduleType === 'medical_module') {
+              sendNotification('Медицинский модуль должен быть расположен только вблизи других модулей.', 1);
+            } else if (moduleType === 'repair_module') {
+              sendNotification('Ремонтный модуль должен быть расположен только вблизи других модулей.', 1);
+            }
+            // Создаем и добавляем новый clippedLayer
+            await updateClippedLayer({
+                signal: abortController.signal
+            });
+    
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Ошибка:', err);
+            }
+            isDragging = false;
+        } finally{
+          setTimeout(() => {
+            if (!document.getElementById('loadingSpinner').classList.contains('hidden')) {
+                hideSatelliteSpinner();
+            }
+        }, 500);
+        }
+    });
 });
 
 

@@ -12,6 +12,7 @@ let currentDangerZone = null;
 let currentSafeZone = null;
 
 let onlyGreenInZone = false;
+let abortController = null;
 
 // Функция загрузки модулей с сервера
 function loadModules() {
@@ -465,7 +466,11 @@ let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', async function (e) {
     const moduleType =  module.getAttribute('data-name-en-db');
-
+    // Отменяем предыдущую операцию, если она была
+    if (abortController) {
+      abortController.abort();
+    }
+    abortController = new AbortController();
     //Получаем требования к модулю
     try {
       // 1. Получаем требования 
@@ -478,16 +483,20 @@ modules.forEach(module => {
       sidebar.classList.remove('visible');
       isOpenAside = false;
       checkboxDropMenu.checked = false;
-      sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
       // 3. Показываем радиусы и уклоны (?)
-      await toggleExclusionRadius(true, cachedModules, moduleRequirements);
+      showSatelliteSpinner("Высчитываем расстояния...");
+      await toggleExclusionRadius(true, cachedModules, moduleRequirements, {
+        signal: abortController.signal
+      });
+      sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
 
       if (moduleRequirements.module_type === 'medical_module' || moduleRequirements.module_type === 'repair_module') {
         onlyGreenInZone = true;
       }else{
         onlyGreenInZone = false;
       }
-      await updateClippedLayer();
+      showSatelliteSpinner("Загружаем зоны...");
+      await updateClippedLayer({ signal: abortController.signal });
       // 4. Создаем drag-элемент
       const originalImg = this.querySelector('.photo-item-module');
       clone = originalImg.cloneNode(true);
@@ -537,10 +546,19 @@ modules.forEach(module => {
     
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
+        // Удаляем старые clipped layers
+        map.getLayers().getArray().forEach(layer => {
+          if (layer && layer.get && layer.get('isClippedLayer')) {
+              map.removeLayer(layer);
+          }
+        });
         isDragging = false;
-        if (currentClippedLayer && currentClippedLayer !== greenLayerInhabit && currentClippedLayer !== greenLayerTech) {
-          map.removeLayer(currentClippedLayer);
-        }
+        const layers = map.getLayers();
+        layers.forEach(function(layer) {
+          if (layer.get('isClippedLayer')) {
+              map.removeLayer(layer);
+          }
+        });
         toggleExclusionRadius(false);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
@@ -613,8 +631,13 @@ modules.forEach(module => {
       document.addEventListener('mouseup', onMouseUp);
       module.ondragstart = () => false;
     } catch (error) {
-      sendNotification('Ошибка при получении требований модуля', 0);
-      console.error(error);
+      if (error.name !== 'AbortError') {
+        console.error('Ошибка:', error);
+      }else{
+        sendNotification('Ошибка при получении требований модуля', 0);
+        console.error(error);
+      }
+      
     }
   });
   module.addEventListener('dragstart', (e) => {
@@ -722,6 +745,7 @@ greenLayerInhabit.set('name', 'greenLayerInhabit');
 
 map.on('moveend', async function() {
   if (isDragging) {
+    showSatelliteSpinner("Обновляем зоны...");
     await updateClippedLayer();
   }
 });
@@ -1110,8 +1134,10 @@ function loadImage(url) {
   // Функция для добавления/удаления радиуса
 const exclusionRadiusLayers = [];
 
-async function toggleExclusionRadius(show, modules, moduleToAdd) {
-  // Очищаем предыдущие слои
+async function toggleExclusionRadius(show, modules, moduleToAdd, options = {}) {
+  if (options.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+  }
   exclusionRadiusLayers.forEach(layer => map.removeLayer(layer));
   exclusionRadiusLayers.length = 0;
   dangerSource.clear();
@@ -1200,6 +1226,8 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
     console.error('Error building zones:', error);
     dangerSource.clear();
     safeSource.clear();
+  }finally{
+    hideSatelliteSpinner();
   }
 } 
 function disableExclusionZones() {
@@ -1352,8 +1380,10 @@ function getBoundingBox(multiPolygonGeometry) {
   return [minX, minY, maxX, maxY]; // Возвращаем массив, а не объект
 }
 
-function getGreenLayerBbox(bbox, typeModule, width, height) {
-  console.log(bbox);
+function getGreenLayerBbox(bbox, typeModule, width, height, options = {}) {
+  if (options.signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
   const imgUrl = `http://localhost:8080/geoserver/wms?` +
     `service=WMS&version=1.1.0&request=GetMap&` +
     `layers=moon-workspace:${typeModule}&` +
@@ -1367,7 +1397,11 @@ function getGreenLayerBbox(bbox, typeModule, width, height) {
   return loadImage(imgUrl);
 }
 
-async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 10) {
+async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 10, options = {}) {
+  // Проверяем отмену в начале
+  if (options.signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
   const mapSize = map.getSize();
   const dpr = window.devicePixelRatio || 1;
   const width = Math.floor(mapSize[0] * dpr);
@@ -1376,9 +1410,11 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   const view = map.getView();
   const bbox = view.calculateExtent(map.getSize());
   const [minX, minY, maxX, maxY] = bbox;
-  const image = await getGreenLayerBbox(bbox, typeModule, width, height);
+  const image = await getGreenLayerBbox(bbox, typeModule, width, height, { signal: options.signal });
   console.log("image", image.src);
   console.log("bbox", bbox);
+  // Проверяем, нужно ли вообще выполнять обрезание
+  const shouldClip = !(greenZone == null && redZone == null);
 
   // 2. Создаем canvas
   const canvas = document.createElement('canvas');
@@ -1390,7 +1426,20 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   
   // 3. Рисуем исходное изображение
   ctx.drawImage(image, 0, 0, mapSize[0], mapSize[1]);
-
+  // Если не нужно обрезать - сразу возвращаем слой
+  if (!shouldClip) {
+    const clippedLayer = new ol.layer.Image({
+      source: new ol.source.ImageStatic({
+        url: canvas.toDataURL('image/png'),
+        imageExtent: bbox,
+        projection: 'EPSG:100000'
+      }),
+      opacity: 0.7,
+      zIndex: 4
+    });
+    clippedLayer.set('isClippedLayer', true);
+    return clippedLayer;
+  }
   // 4. Функция проекции координат
   function projectToCanvas(x, y) {
     return [
@@ -1401,48 +1450,49 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
 
   // 5. Сохраняем состояние
   ctx.save();
-  if (!greenZone && redZone) {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    processCoordinates(redZone, ctx, projectToCanvas);
-    ctx.fill();
+  try {
+    if (!greenZone && redZone) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      processCoordinates(redZone, ctx, projectToCanvas);
+      ctx.fill();
+    }
+    else if (onlyGreenInZone && greenZone) {
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      processCoordinates(greenZone, ctx, projectToCanvas);
+      ctx.fill();
+      
+      if (redZone) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        processCoordinates(redZone, ctx, projectToCanvas);
+        ctx.fill();
+      }
+    } else if (greenZone) {
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = 'rgba(0, 100, 0, 0.5)';
+      ctx.beginPath();
+      processCoordinates(greenZone, ctx, projectToCanvas);
+      ctx.fill();
+            
+      if (redZone) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        processCoordinates(redZone, ctx, projectToCanvas);
+        ctx.fill();
+      }
+    }
+  } finally {
+    ctx.restore();
   }
-  else if (!greenZone) {
-    // Если нет зеленой зоны (и возможно нет красной) - просто оставляем изображение как есть
-    // Ничего не делаем, уже нарисовали исходное изображение
+  if (options.signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
   }
-  else if (onlyGreenInZone) {
-    // Режим только зеленые зоны - делаем прозрачным все вне зеленых зон
-    ctx.globalCompositeOperation = 'destination-in';
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    processCoordinates(greenZone, ctx, projectToCanvas);
-    ctx.fill();
-
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    processCoordinates(redZone, ctx, projectToCanvas);
-    ctx.fill();
-  } else {
-    // Стандартный режим - затемняем зеленые зоны и вырезаем красные
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = 'rgba(0, 100, 0, 0.5)';
-    ctx.beginPath();
-    processCoordinates(greenZone, ctx, projectToCanvas);
-    ctx.fill();
-    
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    processCoordinates(redZone, ctx, projectToCanvas);
-    ctx.fill();
-  }
-
-  // Восстанавливаем состояние
-  ctx.restore();
-
   // Возвращаем слой
   const clippedLayer = new ol.layer.Image({
     source: new ol.source.ImageStatic({
@@ -1456,7 +1506,6 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   clippedLayer.set('isClippedLayer', true);
   return clippedLayer;
 }
-let currentClippedLayer = null;
 function processCoordinates(zone, ctx, projectFn) {
   if (zone.geometry.type === 'MultiPolygon') {
     zone.geometry.coordinates.forEach(polygon => {
@@ -1478,23 +1527,45 @@ function processCoordinates(zone, ctx, projectFn) {
     ctx.closePath();
   }
 }
-async function updateClippedLayer() {
-  let nameLayer;
-  // Удаляем старый clippedLayer (если он не greenLayer)
-  if (currentClippedLayer && currentClippedLayer !== greenLayerTech && currentClippedLayer !== greenLayerInhabit) {
-    map.removeLayer(currentClippedLayer);
-    currentClippedLayer = null;
-  }
-  if(currentModuleType === 'inhabited'){
-    nameLayer = 'cmps_15deg';
-  }else if(currentModuleType === 'technological'){
-    nameLayer = 'cmps_5deg';
-  }
-  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, nameLayer);
-  currentClippedLayer = clippedLayer;
-  map.addLayer(clippedLayer);
-}
+async function updateClippedLayer(options = {}) {
+  // Удаляем старые clipped layers
+  map.getLayers().getArray().forEach(layer => {
+    if (layer && layer.get && layer.get('isClippedLayer')) {
+        map.removeLayer(layer);
+    }
+  });
 
+  // Проверка на отмену
+  if (options.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+  }
+
+  // Определяем имя слоя
+  let nameLayer;
+  if (currentModuleType === 'inhabited') {
+      nameLayer = 'cmps_15deg';
+  } else if (currentModuleType === 'technological') {
+      nameLayer = 'cmps_5deg';
+  }
+
+  // Создаем новый слой
+  const clippedLayer = await getClippedImage(
+      currentSafeZone,
+      currentDangerZone,
+      nameLayer,
+      10, // meterPerPixel
+      { signal: options.signal }
+  );
+
+  // Проверяем, не была ли операция отменена перед добавлением
+  if (options.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+  }
+
+  // Добавляем слой напрямую здесь
+  map.addLayer(clippedLayer);
+  hideSatelliteSpinner();
+}
 function toggleSlopeOptions(header) {
   const control = header.parentElement;
   control.classList.toggle('expanded');
@@ -1552,6 +1623,51 @@ async function hideAllLayers() {
     }
     else if(layer.get('isClippedLayer')){
       map.removeLayer(layer); 
+      console.log("удален");
     }
+
   });
+}
+
+/*управление спиннером*/
+let spinnerTimeoutId = null;
+function showSatelliteSpinner(message = "Загрузка...") {
+  const spinner = document.getElementById('loadingSpinner');
+  const textElement = spinner.querySelector('.spinner-text');
+  if (textElement) {
+    textElement.textContent = message;
+  }
+  if (spinner) {
+      spinner.classList.remove('hidden');
+  }
+  // Очищаем предыдущий таймер, если был
+  if (spinnerTimeoutId) {
+    clearTimeout(spinnerTimeoutId);
+  }
+  // Устанавливаем новый таймер на 1 сек.
+  spinnerTimeoutId = setTimeout(() => {
+    const updatedTextElement = document.getElementById('loadingSpinner')?.querySelector('.spinner-text');
+    if (updatedTextElement) {
+        updatedTextElement.textContent = "Еще чуть-чуть...";
+        updatedTextElement.classList.add('long-wait');
+    }
+  }, 1000); 
+}
+
+function hideSatelliteSpinner() {
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) {
+      spinner.classList.add('hidden');
+
+      const textElement = spinner.querySelector('.spinner-text');
+      if (textElement && textElement.classList.contains('long-wait')) {
+          textElement.classList.remove('long-wait');
+      }
+  }
+
+  // Очищаем таймер
+  if (spinnerTimeoutId) {
+      clearTimeout(spinnerTimeoutId);
+      spinnerTimeoutId = null;
+  }
 }
