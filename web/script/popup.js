@@ -285,7 +285,7 @@ function confirmModuleDeletion() {
     const popupElement = popup.getElement();
     popupElement.style.display = 'none';
     
-    deleteModuleFromDB();
+    deleteModuleFromDB(idModule);
     
     // Сбрасываем текущие данные
     currentModuleInfo = null;
