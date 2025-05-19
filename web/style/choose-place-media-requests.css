@@ -158,7 +158,7 @@
         font-size: 30px;
     }
     .card-place{
-        flex: 1 1 calc(33% - 20px); /* 33.33% минус gap */
+        flex: 1 1 calc(32% - 20px); /* 33.33% минус gap */
         min-width: 350px; /* Минимальная ширина карточки */
         max-width: calc(33% - 20px); /* Одинаковая ширина для всех */
     }   
@@ -185,7 +185,7 @@
         font-size: 20px
     }
     .card-place{
-        flex: 1 1 calc(33% - 20px); /* 33.33% минус gap */
+        flex: 1 1 calc(32% - 20px); /* 33.33% минус gap */
         min-width: 350px; /* Минимальная ширина карточки */
         max-width: calc(33% - 20px); /* Одинаковая ширина для всех */
     }   

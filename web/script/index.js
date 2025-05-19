@@ -440,7 +440,7 @@ function checkAllFilled() {
     if (isReg) {
       email = emailRegistration.value.trim();
       url = "http://localhost:5050/auth/check_code_registration";
-      errField = codeRegistrationPassError;
+      errField = codeRegistrationError;
     } else {
       email = emailForgetPass.value.trim();
       url = "http://localhost:5050/auth/check_code_recover";

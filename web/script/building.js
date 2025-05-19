@@ -186,11 +186,11 @@ function addModuleToMap(moduleData) {
     geometry: new ol.geom.Point(moduleData.points),
     type: moduleData.module_type,
     habitation: moduleData.habitation_type,
-    id: moduleData.module_id
+    id: moduleData.id_module
   });
   //сохраняем в кэш
   cachedModules.push({
-    id: moduleData.module_id,
+    id: moduleData.id_module,
     points: moduleData.points,
     module_type: moduleData.module_type,
     habitation_type: moduleData.habitation_type,
@@ -486,7 +486,7 @@ modules.forEach(module => {
       checkboxDropMenu.checked = false;
       // 3. Показываем радиусы и уклоны (?)
       showSatelliteSpinner("Высчитываем расстояния...");
-      await toggleExclusionRadius(true, cachedModules, moduleRequirements, {
+      await toggleExclusionRadius(true, cachedModules, moduleRequirements.module_type, {
         signal: abortController.signal
       });
       sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
@@ -1178,7 +1178,7 @@ async function toggleExclusionRadius(show, modules, moduleToAdd, options = {}) {
         continue;
       }
 
-      const pair = findModulePair(module.module_type, moduleToAdd.module_type);
+      const pair = findModulePair(module.module_type, moduleToAdd);
       // Создаем опасные зоны (min_distance)
       if (pair.min_distance > 0) {
         const polygon = fromCircle(module.points, pair.min_distance); // Используем нашу функцию преобразования
@@ -1455,46 +1455,48 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
 
   // 5. Сохраняем состояние
   ctx.save();
-  try {
-    if (!greenZone && redZone) {
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.fillStyle = 'black';
-      ctx.beginPath();
-      processCoordinates(redZone, ctx, projectToCanvas);
-      ctx.fill();
-    }
-    else if (onlyGreenInZone && greenZone) {
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.fillStyle = 'black';
-      ctx.beginPath();
-      processCoordinates(greenZone, ctx, projectToCanvas);
-      ctx.fill();
-      
-      if (redZone) {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        processCoordinates(redZone, ctx, projectToCanvas);
-        ctx.fill();
-      }
-    } else if (greenZone) {
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.fillStyle = 'rgba(0, 100, 0, 0.5)';
-      ctx.beginPath();
-      processCoordinates(greenZone, ctx, projectToCanvas);
-      ctx.fill();
-            
-      if (redZone) {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        processCoordinates(redZone, ctx, projectToCanvas);
-        ctx.fill();
-      }
-    }
-  } finally {
-    ctx.restore();
+  if (!greenZone && redZone) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(redZone, ctx, projectToCanvas);
+    ctx.fill();
   }
+  else if (!greenZone) {
+    // Если нет зеленой зоны (и возможно нет красной) - просто оставляем изображение как есть
+    // Ничего не делаем, уже нарисовали исходное изображение
+  }
+  else if (onlyGreenInZone) {
+    // Режим только зеленые зоны - делаем прозрачным все вне зеленых зон
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(greenZone, ctx, projectToCanvas);
+    ctx.fill();
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(redZone, ctx, projectToCanvas);
+    ctx.fill();
+  } else {
+    // Стандартный режим - затемняем зеленые зоны и вырезаем красные
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(0, 100, 0, 0.5)';
+    ctx.beginPath();
+    processCoordinates(greenZone, ctx, projectToCanvas);
+    ctx.fill();
+    
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    processCoordinates(redZone, ctx, projectToCanvas);
+    ctx.fill();
+  }
+
+  // Восстанавливаем состояние
+  ctx.restore();
+
   if (options.signal?.aborted) {
     throw new DOMException('Aborted', 'AbortError');
   }

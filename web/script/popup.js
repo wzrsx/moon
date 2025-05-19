@@ -279,14 +279,13 @@ function getModuleDistanceTemplate(module, useMaxDistance = false) {
 function confirmModuleDeletion() {
     if (!currentModuleInfo || !currentPopupFeature) return;
     moduleLayers[0].getSource().removeFeature(currentPopupFeature);
-    
-    cachedInfoModules = cachedInfoModules.filter(m => m.module_type !== currentModuleInfo.module_type);
-    cachedRadiusModules = cachedRadiusModules.filter(m => m.module_type !== currentModuleInfo.module_type);
+    let idModule = currentPopupFeature.get('id');
+    cachedModules = cachedModules.filter(m => m.id_module !== idModule);
     
     const popupElement = popup.getElement();
     popupElement.style.display = 'none';
     
-    deleteModuleFromDB(currentPopupFeature.get('id'));
+    deleteModuleFromDB();
     
     // Сбрасываем текущие данные
     currentModuleInfo = null;
@@ -297,10 +296,15 @@ function confirmModuleDeletion() {
 }
 async function deleteModuleFromDB(id) {
     try {
+        // Проверка на ID
+        if (!id) {
+            throw new Error('Id модуля не найден');
+        }
+
         const response = await fetch('http://localhost:5050/maps/redactor/page/delete_module', {
             method: 'POST',
             headers: {
-                'content-type': 'application/json'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 id_module: id
@@ -309,10 +313,14 @@ async function deleteModuleFromDB(id) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete module');
+            throw new Error(errorData.error || 'Не удалось удалить модуль');
         }
 
-        return await response.json();
+        // Успешное удаление
+        const result = await response.json();
+        sendNotification('Модуль успешно удален', true);
+        return result;
+
     } catch (error) {
         console.error('Delete module error:', error);
         sendNotification(`Ошибка удаления: ${error.message}`, false);

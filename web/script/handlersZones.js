@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
         try {
             showSatelliteSpinner("Подготовка...");
-            const moduleType =  radio.value;
+            const moduleType = radio.value;
             const moduleNameRu =  document.querySelector(`label[for="${radio.id}"]`).textContent;
             currentModuleType = radio.getAttribute('data-module-habitation');
             isDragging = true;
