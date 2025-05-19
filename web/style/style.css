@@ -1718,6 +1718,7 @@ h3{
     background-color: black;
     color: white;
     scroll-snap-align: start; 
+    overflow-x: hidden;
 }
 
 .about-us-container {
@@ -1830,7 +1831,6 @@ h3{
     display: flex;
     justify-content: space-between; 
     gap: 10rem; 
-    flex-wrap: wrap; 
     padding: 2rem;
 }
 .requirements-btn {
@@ -1948,7 +1948,7 @@ h3{
 }
 
 .call-to-action {
-    font-size: 30px; /* Больший размер */
+    font-size: 28px; /* Больший размер */
     font-weight: bold;
     color: white;
     text-align: center;
@@ -1965,6 +1965,7 @@ h3{
     width: 50px;
     height: 50px;
     transition: all 0.5s ease-in;
+    transform: translateX(-50%);
 }
 .next-section.about{
     color: black;

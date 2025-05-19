@@ -1,0 +1,272 @@
+/* ----------- Большие экраны (1441px и выше) ----------- */
+@media (min-width: 1441px) {
+    .description-block {
+        font-size: 1.25rem;
+    }
+
+    .call-to-action {
+        font-size: 2.2rem;
+    }
+
+    .next-section {
+        font-size: 30px;
+        width: 60px;
+        height: 60px;
+    }
+}
+/* ----------- Маленькие десктопы или ноутбуки (1025px — 1440px) ----------- */
+@media (min-width: 1025px) and (max-width: 1440px) {
+    .slider-container, .slide {
+        max-width: 400px;
+    }
+
+    .description-block {
+        font-size: 1.15rem;
+    }
+
+    .call-to-action {
+        font-size: 2rem;
+    }
+    
+    .next-section {
+        font-size: 26px;
+        width: 50px;
+        height: 50px;
+    }
+    .requirements-btn{
+        font-size: 14px;
+        bottom: 10px;
+    }
+}
+@media (max-width: 1024px) {
+    .slider-wrapper{
+        height: 300px;
+    }
+    .sliders-container{
+        flex-direction: column;
+        gap: 2px;
+    }
+    .slider-container {
+        margin: 0 auto;
+    }
+    .content-slide{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+    .slide img {
+        display: block;
+        height: 250px;
+    }
+
+    .content-slide h4 {
+        font-size: 1.3rem;
+    }
+
+    .description-block {
+        font-size: 1.1rem;
+    }
+
+    .call-to-action {
+        font-size: 1.8rem;
+    }
+
+    .next-section {
+        font-size: 24px;
+        width: 45px;
+        height: 45px;
+    }
+    .category-title{
+        margin-top: 10px;
+    }
+    .scroll-section{
+        padding-top: 1rem;
+    }
+}
+/* ----------- Базовые стили для мобильных устройств ----------- */
+@media (max-width: 768px) {
+    .scroll-section {
+        padding: 2rem 1rem;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    h1, h2 {
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 1.5rem;
+    }
+
+    .about-us {
+        font-size: 2rem;
+    }
+
+    .description-block {
+        font-size: 1rem;
+        line-height: 1.5;
+        max-width: 100%;
+    }
+
+    .call-to-action {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .modules-title,
+    .category-title {
+        font-size: 1.5rem;
+    }
+
+    .sliders-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .slider-section {
+        width: 90%;
+        max-width: 100%;
+    }
+
+    .slider-container {
+    }
+    .slider-wrapper {
+        height: 210px;
+    }
+
+    .slide {
+        width: 90%;
+        max-width: 90%;
+        padding: 1rem;
+    }
+
+    .slide img {
+        height: 150px;
+        object-fit: contain;
+    }
+
+    .content-slide p:first-of-type {
+        font-size: 1rem;
+    }
+
+    .requirements-btn {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .next-section {
+        bottom: 20px;
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .next-section.about {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .slider-btn {
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .prev {
+        left: -20px;
+    }
+
+    .next {
+        right: -20px;
+    }
+}
+@media (max-width: 576px){
+    .content-slide{
+        flex-direction: column;
+    }
+    .slider-wrapper{
+        height: 330px;
+    }
+    .slider-section{
+        width: 80%;
+    }
+    .slide {
+        width: 80%;
+        max-width: 80%;
+        padding: 0.5rem;
+    }
+    .about-text{
+        font-size: 1rem;
+    }
+}
+/* ----------- Очень маленькие экраны (например, смартфоны в портретной ориентации) ----------- */
+@media (max-width: 480px) {
+    h1, h2 {
+        font-size: 1.75rem;
+    }
+
+    .about-us {
+        font-size: 1.8rem;
+    }
+
+    .description-block {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .call-to-action {
+        font-size: 1.3rem;
+    }
+
+    .slide img {
+        height: 150px;
+    }
+
+    .content-slide h4 {
+        font-size: 1.1rem;
+    }
+
+    .content-slide p {
+        font-size: 0.9rem;
+    }
+
+    .slider-btn {
+        font-size: 1rem;
+        padding: 0.3rem 0.5rem;
+    }
+
+    .next-section {
+        font-size: 18px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .requirements-dialog .requirements-window {
+        font-size: 1rem;
+    }
+
+    .requirements-list li {
+        font-size: 0.9rem;
+    }
+    .requirements-btn{
+        font-size: 0.8rem;
+    }
+    .slide {
+        width: 55%;
+        max-width: 60%;
+        padding: 0.5rem;
+    }
+    .slider-section{
+        width: 55%;
+    }
+}
+
+
+
+
+
+
