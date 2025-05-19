@@ -562,6 +562,33 @@ func setRecoverCode(confirmation_code string, email, password string) {
 		}
 	})
 }
+func (a *AuthHandlers) CheckAuthHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Получаем куку jwt_token
+	cookie, err := r.Cookie("jwt_token")
+	if err != nil {
+		http.Error(w, `{"message": "Токен отсутствует"}`, http.StatusUnauthorized)
+		return
+	}
+
+	tokenStr := cookie.Value
+
+	log.Println(tokenStr)
+	// 2. Парсим и проверяем токен
+	token, err := jwt_logic.VerifyToken(tokenStr)
+
+	if err != nil || !token.Valid {
+		http.Error(w, `{"message": "Неверный токен"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// 3. Токен валиден — возвращаем успех
+	w.Header().Set("Content-Type", "application/json")
+	respondWithJSON(w, http.StatusAccepted, map[string]interface{}{
+		"authenticated": true,
+		"token":         tokenStr,
+		"claims":        token.Claims,
+	})
+}
 func setCookie(rw http.ResponseWriter, string_tocken string) {
 	http.SetCookie(rw, &http.Cookie{
 		Name:     "jwt_token",

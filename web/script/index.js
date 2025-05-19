@@ -48,6 +48,9 @@ const nameProj = document.getElementById("nameProject");
 const emailForgetPass = document.getElementById("emailForgetPass");
 const passwordForgetPass = document.getElementById("passwordForgetPass");
 
+//уведы всплывающие
+const notification = document.getElementById("customNotification");
+
 //errors
 const loginSignInError = document.getElementById("loginSignInError");
 const passwordSignInError = document.getElementById("passwordSignInError");
@@ -70,7 +73,6 @@ const passwordForgetPassError = document.getElementById(
 const codeForgetPassError = document.getElementById("codeForgetPassError");
 const codeRegistrationError = document.getElementById("codeRegistrationError");
 
-let authHeader;
 let isReg = false;
 
 // обработчики кнопок
@@ -223,6 +225,7 @@ signInBtn.addEventListener("click", (e) => {
     headers: {
       "Content-Type": "application/json", // Убедитесь, что заголовок установлен
     },
+    credentials: "include",
     body: JSON.stringify(formData),
   })
     .then((response) => {
@@ -306,6 +309,7 @@ registrateBtn.addEventListener("click", (e) => {
   fetch("http://localhost:5050/auth/registration", {
     method: "POST",
     contentType: "application/json",
+    credentials: "include",
     body: JSON.stringify(bodyrequest),
   }).then((response) => {
     return response.json().then((data) => {
@@ -317,7 +321,6 @@ registrateBtn.addEventListener("click", (e) => {
         return Promise.reject(data);
       }
       console.log(data.code); // TEST
-      authHeader = response.headers.get("Authorization");
       isReg = true;
       e.preventDefault();
       isSwitching = true;
@@ -381,7 +384,6 @@ recoverPassBtn.addEventListener("click", (e) => {
         return Promise.reject(data);
       }
       console.log(data.code); // TEST
-      authHeader = response.headers.get("Authorization");
       isReg = false;
       e.preventDefault();
       isSwitching = true;
@@ -392,6 +394,7 @@ recoverPassBtn.addEventListener("click", (e) => {
   });
   //отправка на сервер
 });
+
 
 function openSignInDialogBtn() {
   blurDiv.classList.add("blur");
@@ -649,6 +652,7 @@ function initCodeInputs() {
 // Инициализация при загрузке страницы
 document.addEventListener("DOMContentLoaded", initCodeInputs);
 
+
 function resetInputStyles(inputs) {
   inputs.forEach((input) => {
     input.style.borderColor = "";
@@ -658,10 +662,21 @@ function resetInputStyles(inputs) {
 }
 
 function selectProject() {
+  if (!checkAuthStatus()) {
+    sendNotification("Ошибка: пользователь не авторизован.", false);
+    return;
+  }
   blurDiv.classList.add("blur");
   projectSelectionDialog.showModal();
 }
-function goBuilding() {
+async function goBuilding() {
+  const token = await checkAuthStatus();
+
+  if (!token) {
+    // Пользователь не авторизован
+    await sendNotification("Пользователь не авторизован", false);
+    return;
+  }
   fetch("http://localhost:5050/maps/redactor", {
     method: "GET",
     credentials: "include",
@@ -682,6 +697,19 @@ function goBuilding() {
       console.error("Ошибка:", error);
       // Можно показать пользователю сообщение об ошибке
     });
+}
+
+function sendNotification(text, success) {
+  if (!success) {
+    notification.style.backgroundColor = "#ff0000";
+  } else {
+    notification.style.backgroundColor = "#4CAF50";
+  }
+  notification.innerText = `${text}`;
+  notification.classList.add('show');
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 2000);
 }
 
 function showError(input, field, text) {

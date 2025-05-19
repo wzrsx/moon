@@ -372,6 +372,7 @@ function closeAside() {
   sidebar.classList.remove('visible');
   isOpenAside = false;
 }
+
 function sendNotification(text, success) {
   if (!success) {
     notification.style.backgroundColor = "#ff0000";
@@ -405,6 +406,7 @@ document.querySelectorAll('.format-file-btn').forEach(button => {
       this.classList.add('clicked');
   });
 });
+
 function showModules() {
   typeModulesTitle.innerText = currentModuleType === 'inhabited'
     ? "Обитаемые модули"
