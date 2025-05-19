@@ -1,4 +1,4 @@
-
+let bboxVisibilityModulesInfo;
 let checkboxBbox;
 let toggleBtn;
 let inputsExtent;
@@ -7,6 +7,7 @@ let inputsBbox;
 document.addEventListener('DOMContentLoaded', function() {
   const place = sessionStorage.getItem('temp_selected_place');
   checkboxBbox = document.getElementById('bboxUserMapExport');
+  bboxVisibilityModulesInfo = document.getElementById('bboxVisibilityModulesInfo');
   toggleBtn = document.getElementById('toggleExtentButton');
   inputsExtent = document.getElementById('customExtentInputs');
   arrow = toggleBtn.querySelector('.toggle-extent-arrow');
@@ -20,7 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     inputsExtent.style.display = 'none';
     updateDialogHeight();
-});
+  });
+  
   toggleBtn.addEventListener('click', () => {
     const isVisible = inputsExtent.style.display === 'block';
     inputsExtent.style.display = isVisible ? 'none' : 'block';

@@ -68,9 +68,7 @@ const passwordForgetPassError = document.getElementById(
 );
 
 const codeForgetPassError = document.getElementById("codeForgetPassError");
-const codeRegistrationPassError = document.getElementById(
-  "codeRegistrationPassError"
-);
+const codeRegistrationError = document.getElementById("codeRegistrationError");
 
 let authHeader;
 let isReg = false;
@@ -314,26 +312,27 @@ registrateBtn.addEventListener("click", (e) => {
       if (!response.ok) {
         // Если ответ не успешен, проверяем наличие сообщения
         if (data.message) {
-          showError(null, passRegistrationError, data.message);
+          showError(null, repeatPassRegistrationError, data.message);
         }
         return Promise.reject(data);
       }
       console.log(data.code); // TEST
       authHeader = response.headers.get("Authorization");
+      isReg = true;
+      e.preventDefault();
+      isSwitching = true;
+      registrationDialog.close();
+      checkCodeRegistrationDialog.showModal();
       return data; // Возвращаем успешно полученные данные
     });
   });
   //отправка на сервер
-  isReg = true;
-  e.preventDefault();
-  isSwitching = true;
-  registrationDialog.close();
-  checkCodeRegistrationDialog.showModal();
 });
 
 recoverPassBtn.addEventListener("click", (e) => {
   e.preventDefault();
   resetRegErrors();
+  resetRecoverErrors();
   const email = emailForgetPass.value.trim();
   const newpass = passwordForgetPass.value.trim();
 
@@ -353,10 +352,6 @@ recoverPassBtn.addEventListener("click", (e) => {
     );
     return;
   }
-  if (!isPassValid(newpass, passwordForgetPassError, passwordForgetPass)) {
-    return;
-  }
-
   if (!isEmailValid(email)) {
     showError(
       emailForgetPass,
@@ -387,20 +382,15 @@ recoverPassBtn.addEventListener("click", (e) => {
       }
       console.log(data.code); // TEST
       authHeader = response.headers.get("Authorization");
+      isReg = false;
+      e.preventDefault();
+      isSwitching = true;
+      forgetPassDialog.close();
+      checkCodeRecoverDialog.showModal();
       return data; // Возвращаем успешно полученные данные
     });
   });
   //отправка на сервер
-  isReg = false;
-  e.preventDefault();
-  isSwitching = true;
-  forgetPassDialog.close();
-  checkCodeRecoverDialog.showModal();
-});
-
-recoverPassBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  resetRecoverErrors();
 });
 
 function openSignInDialogBtn() {
@@ -469,28 +459,24 @@ function checkAllFilled() {
       body: JSON.stringify(body),
     })
       .then((response) => {
-        if (response.status === 423) {
-          showBlockInput(inputsRegistration);
-          return response.json(); // Преобразуем ответ в JSON
-        }
-        if (response.status === 409) {
-          applyErrorStyles(inputsRegistration);
-          throw new Error("Invalid code");
-        }
-        if (response.ok) {
-          resetInputStyles(inputsRegistration);
-          if (isReg) {
-            location.href = "/";
-            isReg = false;
-            return;
+        return response.json().then((data) => {
+          if (!response.ok) {
+            if (data.message) {
+              showError(null, errField, data.message);
+            }
+            throw new Error(data.message || "Ошибка сервера");
           }
+          return data;
+        });
+      })
+      .then((data) => {
+        if (isReg) {
           location.href = "/";
+        } else {
           isSwitching = true;
           checkCodeRecoverDialog.close();
           signInDialog.showModal();
-          return;
         }
-        return Promise.reject();
       })
       .then((data) => {
         if (!data?.unlock_at) {
