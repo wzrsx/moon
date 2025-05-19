@@ -3,45 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style/reset.css">
-    <link rel="stylesheet" href="/static/style/style.css">
-    <link rel="stylesheet" href="/static/style/media-requests.css">
-    <title>Moon</title>
+    <link rel="stylesheet" href="style/reset.css">
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="stylesheet" href="style/media-requests.css">
+    <title>LunaX</title>
 </head>
 <body>
     <div id="blurDiv"></div>
-    <header>
-    <ul class="header-menu">
-        <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
-            {{if .Username}}
-                <!-- Показываем если пользователь авторизован -->
-                <div class="user-auth-container">
-                    <span class="username">{{.Username}}</span>
-                    <li class="nav-item exit" id="logoutBtn" onclick="logoutBtn()">Выйти</li>
-                </div>
-            {{else}}
-                <!-- Показываем если пользователь не авторизован -->
-                <li class="nav-item" id="authBtn" onclick="openSignInDialogBtn()">Вход/Регистрация</li>
-            {{end}}
-        
-    </ul>
+    <header id="mainHeader"> 
+        <ul class="header-menu">
+            <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
+                {{if .Username}}
+                    <!-- Показываем если пользователь авторизован -->
+                    <div class="user-auth-container">
+                        <span class="username">{{.Username}}</span>
+                        <li class="nav-item exit" id="logoutBtn" onclick="logoutBtn()">Выйти</li>
+                    </div>
+                {{else}}
+                    <!-- Показываем если пользователь не авторизован -->
+                    <li class="nav-item" id="authBtn" onclick="openSignInDialogBtn()">Вход/Регистрация</li>
+                {{end}}
+        </ul>
     </header>
-    <main class="main-page">
-        <h1>
-            Откройте новые горизонты: 
-        </h1>
-        <br>
-        <h2>
-            колонизация Луны начинается здесь!
-        </h2>
-        <div class="description-section">
-            
-            <h2>Описание сайта</h2>
-            <p>Здесь вы можете добавить текст, который будет описывать ваш сайт. Например, вы можете рассказать о его функциональности, целях и особенностях.</p>
-            <p>Добавьте больше информации, чтобы пользователи могли лучше понять, что предлагает ваш сайт.</p>
-            <p>Вы можете использовать различные HTML-теги для форматирования текста, добавления изображений и других элементов.</p>
-        </div>
-    </main>
+    <div class="scroll-container">
+        <main id="mainSection" class="scroll-section main-page">
+            <h1>
+                Откройте новые горизонты: 
+            </h1>
+            <br>
+            <h2>
+                колонизация Луны начинается здесь!
+            </h2>
+            <button class="next-section" id="nextAboutSection">&#8595;</button>
+        </main>
+    
+        <section id="aboutSection" class="scroll-section" >
+            <div class="about-us-container">
+                <h1 class="about-us">О нас</h1>
+            </div>
+    
+            <div class="description-block">
+                <p class="about-text">
+                    Проект <strong>LunaX</strong> — это шаг к будущему, где человечество не ограничивается только Землёй, а смело осваивает новые горизонты. Мы — команда энтузиастов, разработчиков и мечтателей, объединённых общей идеей: сделать колонизацию Луны не далёкой фантазией, а реальным проектом, доступным каждому.
+                </p>
+                
+                <p class="about-text">
+                    Наше веб-решение создано с одной целью — помочь будущим лунным колонистам, исследователям и проектировщикам строить устойчивую и функциональную базу на Южном полюсе Луны. С помощью <strong>интуитивно понятного интерфейса</strong>, <strong>интерактивной карты</strong> и <strong>умного анализа условий</strong> LunaX позволяет заранее спланировать расположение модулей, учитывая требования безопасности, взаимосвязи объектов и наличия ресурсов.
+                </p>
+                
+                <p class="about-text">
+                    Мы верим, что первые шаги на Луне должны быть продуманными, точными и вдохновляющими. Поэтому <strong>LunaX</strong> — не просто карта, а инструмент для создания будущего, мощная платформа для исследования, проектирования и навигации по поверхности Луны.
+                </p>
+                
+                <p class="call-to-action">
+                    Присоединяйтесь к нам. Исследуйте. Проектируйте. Колонизируйте.
+                </p>
+            </div>
+            <button class="next-section about" id="nextModulesSection">&#8595;</button>
+        </section>
+    
+        <section id="modulesSection" class="scroll-section">
+            <h2 class="modules-title">Доступные модули</h2>
+            <div class="sliders-container">
+                <div class="slider-section">
+                    <h3 class="category-title">Обитаемые</h3>
+                    <div class="slider-container">
+                        <button class="slider-btn prev">&#8592;</button>
+                        <div class="slider-wrapper">
+                            <div class="slider-track">
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/living_module.png" alt="Жилой модуль">
+                                        <h4>Жилой модуль</h4>
+                                        <p>Габариты: 3 × 4 × 5 м</p>
+                                        <p>Жилые модули необходимы для обеспечения комфортного проживания колонистов.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="living_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/sport_module.png" alt="Спортивный модуль">
+                                        <h4>Спортивный модуль</h4>
+                                        <p>Габариты: 10 × 3 × 15 м</p>
+                                        <p>Спортивные модули необходимы для поддержания физической формы колонистов в условиях низкой гравитации.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="sport_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/administrative_module.png" alt="Административный модуль">
+                                        <h4>Административный модуль</h4>
+                                        <p>Габариты: 8 × 3 × 12 м</p>
+                                        <p>Административные модули необходимы для управления базой и координации деятельности колонистов.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="administrative_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/medical_module.png" alt="Медицинский модуль">
+                                        <h4>Медицинский модуль</h4>
+                                        <p>Габариты: 10 × 3 × 20 м</p>
+                                        <p>Медицинские модули необходимы для оказания медицинской помощи и проведения исследований.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="medical_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/research_module.png" alt="Исследовательский модуль">
+                                        <h4>Исследовательский модуль</h4>
+                                        <p>Габариты: 12 × 3 × 25 м</p>
+                                        <p>Исследовательские модули необходимы для проведения научных экспериментов и исследований.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="research_module">Показать требования</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="slider-btn next">&#8594;</button>
+                    </div>
+                </div>
+                <div class="slider-section">
+                    <h3 class="category-title">Технологические</h3>
+                    <div class="slider-container">
+                        <button class="slider-btn prev">&#8592;</button>
+                        <div class="slider-wrapper">
+                            <div class="slider-track">
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/spaceport_module.png" alt="Космодром">
+                                        <h4>Космодром</h4>
+                                        <p>Габариты: 40 × 1 × 50 м</p>
+                                        <p>Космодромы необходимы для запуска и посадки космических аппаратов, имеют зоны разгрузки и загрузки, транспортную и ремонтную инфраструктуры.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="spaceport_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/landfill_module.png" alt="Мусорный полигон">
+                                        <h4>Мусорный полигон</h4>
+                                        <p>Габариты: 40 × 2 × 50 м</p>
+                                        <p>Мусорные полигоны необходимы для утилизации отходов.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="landfill_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/production_module.png" alt="Производственное предприятие">
+                                        <h4>Производственное предприятие</h4>
+                                        <p>Габариты: 30 × 5 × 70 м</p>
+                                        <p>Производственные предприятия необходимы для производства материалов и топлива.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="production_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/astro_site_module.png" alt="Астрономическая площадка">
+                                        <h4>Астрономическая площадка</h4>
+                                        <p>Габариты: 15 × 2 × 20 м</p>
+                                        <p>Астрономические площадки необходимы для проведения астрономических наблюдений.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="astro_site_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/mine_module.png" alt="Шахта">
+                                        <h4>Шахта</h4>
+                                        <p>Габариты: 20 × 5 × 30 м</p>
+                                        <p>Добывающие шахты необходимы для добычи полезных ископаемых, таких как водяной лед.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="mine_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/communication_tower_module.png" alt="Вышка связи">
+                                        <h4>Вышка связи</h4>
+                                        <p>Габариты: 10 × 40 × 10 м</p>
+                                        <p>Вышки связи необходимы для обеспечения связи между объектами базы и с Землей.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="communication_tower_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/solar_power_module.png" alt="Солнечная электростанция">
+                                        <h4>Солнечная электростанция</h4>
+                                        <p>Габариты: 30 × 2 × 50 м</p>
+                                        <p>Солнечные электростанции необходимы для обеспечения базы электроэнергией.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="solar_power_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/repair_module.png" alt="Ремонтный модуль">
+                                        <h4>Ремонтный модуль</h4>
+                                        <p>Габариты: 15 × 4 × 30 м</p>
+                                        <p>Ремонтные модули необходимы для обслуживания и ремонта оборудования базы.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="repair_module">Показать требования</button>
+                                </div>
+                                <div class="slide">
+                                    <div class="content-slide">
+                                        <img src="style/photos/plantation_module.png" alt="Плантация">
+                                        <h4>Плантация</h4>
+                                        <p>Габариты: 30 × 3 × 50 м</p>
+                                        <p>Плантации необходимы для выращивания пищи и производства кислорода.</p>
+                                    </div>
+                                    <button class="requirements-btn" data-module_type="plantation_module">Показать требования</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="slider-btn next">&#8594;</button>
+                    </div>
+                </div>
+            </div>
+            <button class="next-section" id="backAboutSection">&#8593;</button>
+        </section>
+    </div>
+    
     <dialog class="sign-in-dialog" id="signInDialog">
         <div class="content-sign-in-dialog">
             <div class="header-form">
@@ -197,6 +373,8 @@
             </div>
         </div>
     </dialog>
-    <script src="/static/script/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.min.js"></script>
+    <script src="script/requirments.js"></script>
+    <script src="script/index.js"></script>
 </body>
 </html>

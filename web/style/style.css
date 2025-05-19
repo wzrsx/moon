@@ -148,7 +148,7 @@
 }
 
 body{
-    width: 95%;
+    width: 100%;
     font-family: 'Jacoby';
     background-image: url('photos/bg.jpg');
     background-size: cover; 
@@ -392,6 +392,8 @@ body{
     justify-content: space-between;
     align-items: end;
     padding-top: 30px;
+    width: 95%;
+    margin: 0 auto;
 }
 .nav-item {
     position: relative;
@@ -524,13 +526,27 @@ h3{
     font-size: 40px;
     margin: 0; 
 }
+#mainHeader.hide {
+    transform: translateY(-100%);
+}
+#mainHeader{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transition: transform 0.3s ease-in-out;
+    height: 160px; /* Пример высоты хедера */
+}
 .main-page {
     display: flex;
+    position: relative;
     flex-direction: column; 
     justify-content: center;
     align-items: center; 
     height: calc(100vh - 80px);
     text-align: center; 
+    background-color: transparent !important;
+    color: black !important; 
 }
 .blur {
     position: absolute;
@@ -1676,4 +1692,288 @@ h3{
 }
 .hidden {
     display: none;
+}
+.scroll-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    z-index: 1;
+}
+#aboutSection, #modulesSection{
+    font-family: 'Jura';
+}
+.scroll-section {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    padding: 4rem 2rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    color: white;
+    scroll-snap-align: start; 
+}
+
+.about-us-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.about-us {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.description-block {
+    max-width: 800px;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+}
+
+.modules-title,
+.category-title {
+    text-align: center;
+    margin: 2rem 0 1rem;
+    font-size: 2rem;
+    color: white;
+
+}
+.slider-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Один элемент в ширину */
+    margin: 0 auto 3rem;
+    box-shadow: 0px 1px 2px 0px rgba(255, 255, 255, 0.7),
+            0px 1px 4px 0px rgba(255, 255, 255, 0.7),
+            0px 1px 8px 0px rgba(255, 255, 255, 0.7),
+            0px 1px 16px 0px rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    transition: all 0.5s ease-in;
+}
+.slider-container:hover{
+    box-shadow: 0px 1px 4px 0px rgba(255, 255, 255, 0.7),
+            0px 1px 8px 0px rgba(255, 255, 255, 0.7),
+            0px 1px 16px 0px rgba(255, 255, 255, 0.7),
+            0px 1px 32px 0px rgba(255, 255, 255, 0.7);
+}
+.slider-wrapper {
+    overflow: hidden;
+    position: relative;
+    z-index: 1; /* Убедитесь, что слайдер находится над кнопками */
+    border-radius: 15px;
+    height: 500px;
+}
+
+.slider-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    height: 100%;
+}
+
+.slide {
+    position: relative;
+    min-width: 100%; /* Один слайд занимает всю ширину контейнера */
+    box-sizing: border-box;
+    background-color: #1a1a1a;
+    padding: 1rem;
+    text-align: center;
+    flex-shrink: 0;
+    border-radius: 15px;
+    max-width: 600px; /* Фиксируем максимальную ширину */
+    margin: 0 auto;
+}
+.slide h4{
+    font-size: 22px;
+}
+.slide img {
+    width: 100%;           /* Ширина — на всю карточку */
+    height: 300px;         /* Фиксируем высоту (можешь выбрать любую) */
+    object-fit: contain;     /* Обрезает края, сохраняя пропорции */
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.7); /* Полупрозрачный белый фон */
+    border: none;
+    color: black; /* Цвет стрелок */
+    font-size: 1.5rem;
+    padding: 0.5rem 0.7rem;
+    cursor: pointer;
+    z-index: 10;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* Тень для лучшей видимости */
+}
+
+.slider-btn:hover {
+    background-color: white;
+}
+
+.prev {
+    left: -40px; /* Сдвигаем кнопку налево */
+}
+
+.next {
+    right: -40px; /* Сдвигаем кнопку направо */
+}
+.sliders-container {
+    display: flex;
+    justify-content: space-between; 
+    gap: 10rem; 
+    flex-wrap: wrap; 
+    padding: 2rem;
+}
+.requirements-btn {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 1rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.requirements-btn:hover {
+    background-color: white;
+}
+
+.content-slide p:first-of-type{
+    font-size: 22px;
+}
+/* Основной контейнер модального окна */
+.requirements-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    font-family: 'Jura';
+    font-size: 22px;
+}
+
+/* Окно с требованиями */
+.requirements-window {
+    background-color: #1a1a1a;
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    max-width: 700px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Заголовок диалога */
+.requirements-title {
+    margin-top: 0;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+/* Список требований */
+.requirements-list {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    text-align: left;
+}
+
+/* Отдельный пункт списка */
+.requirements-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+/* Подзаголовки (например, "Рельеф", "Системы жизнеобеспечения") */
+.requirements-subtitle {
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #ccc;
+}
+
+/* Кнопка закрытия */
+.requirements-close-btn {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: white;
+    color: black;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.requirements-close-btn:hover {
+    background-color: #eee;
+}
+.about-text {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    text-align: left;
+    color: #ccc;
+    margin-bottom: 1.5rem;
+}
+
+.about-text strong {
+    color: white;
+}
+
+.call-to-action {
+    font-size: 30px; /* Больший размер */
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    margin-top: 1rem;
+    display: block;
+}
+.next-section{
+    position: absolute;
+    bottom: 50px;
+    font-size: 26px;
+    border-radius: 50%;
+    background-color: rgba(139, 139, 139, 0.8);
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    transition: all 0.5s ease-in;
+}
+.next-section.about{
+    color: black;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+.next-section.about:hover{
+    background-color: rgba(255, 255, 255, 0.5);
+}
+.next-section:hover {
+    background-color: rgba(139, 139, 139, 0.5);
+    border: 1px solid black;
 }

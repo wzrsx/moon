@@ -1011,3 +1011,66 @@ function formatDate(date) {
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
 }
+document.addEventListener("DOMContentLoaded", function () {
+  let lastScrollTop = 0;
+  const header = document.getElementById("mainHeader");
+  const scrollContainer = document.querySelector(".scroll-container");
+
+  scrollContainer.addEventListener("scroll", function () {
+      const scrollTop = scrollContainer.scrollTop;
+
+      if (scrollTop > lastScrollTop) {
+          // Прокрутка вниз — скрываем хедер
+          header.classList.add("hide");
+      } else {
+          // Прокрутка вверх — показываем хедер
+          header.classList.remove("hide");
+      }
+
+      lastScrollTop = scrollTop;
+  }); 
+  let nextSection = null;
+  document.getElementById('nextAboutSection').addEventListener('click', () => {
+    nextSection = document.getElementById('aboutSection');
+    nextSection.scrollIntoView({ behavior: 'smooth' });
+  });
+  document.getElementById('nextModulesSection').addEventListener('click', () => {
+    nextSection = document.getElementById('modulesSection');
+    nextSection.scrollIntoView({ behavior: 'smooth' });
+  });
+  document.getElementById('backAboutSection').addEventListener('click', () => {
+    nextSection = document.getElementById('aboutSection');
+    nextSection.scrollIntoView({ behavior: 'smooth' });
+  });
+  const sliders = document.querySelectorAll('.slider-container');
+
+  sliders.forEach(slider => {
+      const track = slider.querySelector('.slider-track');
+      const slides = slider.querySelectorAll('.slide');
+      const prevBtn = slider.querySelector('.slider-btn.prev');
+      const nextBtn = slider.querySelector('.slider-btn.next');
+
+      let index = 0;
+
+      function updateSlider() {
+          const offset = -index * 100;
+          track.style.transform = `translateX(${offset}%)`;
+      }
+
+      prevBtn.addEventListener('click', () => {
+          index = (index - 1 + slides.length) % slides.length;
+          updateSlider();
+      });
+
+      nextBtn.addEventListener('click', () => {
+          index = (index + 1) % slides.length;
+          updateSlider();
+      });
+  });
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.classList.contains('requirements-btn')) {
+        const moduleType = e.target.getAttribute('data-module_type');
+        showRequirementsDialog(moduleType);
+    }
+  });
+});
