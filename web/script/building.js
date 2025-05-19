@@ -705,6 +705,16 @@ proj4.defs("EPSG:100000",
 );
 ol.proj.proj4.register(proj4);
 
+// Параметры проекций
+const lunarRadius = 1737400; // Метры — средний радиус Луны
+
+// Стереографическая проекция на южный полюс Луны
+const stereMoonSouth = "+proj=stere +lat_0=-90 +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=" +
+    lunarRadius + " +b=" + lunarRadius + " +units=m +no_defs";
+
+// Географическая система (широта/долгота) на сфере Луны
+const geodeticLunar = "+proj=longlat +a=" + lunarRadius + " +b=" + lunarRadius + " +no_defs";
+
 // 2. Настройка полноэкранной карты
 const map = new ol.Map({
   target: 'map',
@@ -1050,35 +1060,56 @@ const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
 
 // Функция для обновления текста высоты
 function updateElevationText(coordinate, elevationText) {
-  mousePositionElement.innerHTML = `
-    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-    Высота над уровнем моря: ${elevationText}
-  `;
+   try {
+    // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
+    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    // Форматируем вывод
+    mousePositionElement.innerHTML = `
+      Широта: ${Math.abs(lat).toFixed(6)}° <br>
+      Долгота: ${lon.toFixed(6)}° <br>
+      Высота над уровнем моря: ${elevationText}
+    `;
+    mousePositionElement.style.display = 'block';
+  } catch (error) {
+    console.error("Ошибка преобразования координат:", error);
+    mousePositionElement.style.display = 'none'; // или показать сообщение об ошибке
+  }
 }
+
+
 
 // Функция для обновления позиции и содержимого координат
 function updateMousePosition(coordinate, pixel, clientX, clientY) {
-  // Обновляем позицию элемента
-  if (pixel) {
-    mousePositionElement.style.left = (pixel[0] + 10) + 'px';
-    mousePositionElement.style.top = (pixel[1] + 10) + 'px';
-  } else {
-    mousePositionElement.style.left = (clientX + 10) + 'px';
-    mousePositionElement.style.top = (clientY + 10) + 'px';
+  try {
+    // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
+    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+
+    // Обновляем позицию элемента
+    if (pixel) {
+      mousePositionElement.style.left = (pixel[0] + 10) + 'px';
+      mousePositionElement.style.top = (pixel[1] + 10) + 'px';
+    } else {
+      mousePositionElement.style.left = (clientX + 10) + 'px';
+      mousePositionElement.style.top = (clientY + 10) + 'px';
+    }
+
+    // Форматируем вывод
+    mousePositionElement.innerHTML = `
+      Широта: ${Math.abs(lat).toFixed(6)}° <br>
+      Долгота: ${lon.toFixed(6)}° <br>
+      Высота над уровнем моря: загрузка...
+    `;
+    mousePositionElement.style.display = 'block';
+
+    // Запрашиваем высоту с debounce и кэшированием
+    const viewResolution = map.getView().getResolution();
+    fetchElevationDebounced(coordinate, viewResolution);
+
+  } catch (error) {
+    console.error("Ошибка преобразования координат:", error);
+    mousePositionElement.style.display = 'none'; // или показать сообщение об ошибке
   }
-
-  // Показываем элемент с координатами
-  mousePositionElement.innerHTML = `
-    Проекционные: ${coordinate[0].toFixed(2)} м, ${coordinate[1].toFixed(2)} м <br>
-    Высота над уровнем моря: загрузка...
-  `;
-  mousePositionElement.style.display = 'block';
-
-  // Запрашиваем высоту с debounce и кэшированием
-  const viewResolution = map.getView().getResolution();
-  fetchElevationDebounced(coordinate, viewResolution);
 }
-
 // Функция debounce для ограничения частоты вызовов
 function debounce(func, wait) {
   let timeout;

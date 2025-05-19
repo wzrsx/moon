@@ -389,6 +389,35 @@ func (a *MapsHandlers) DeleteMapHandler(rw http.ResponseWriter, r *http.Request)
 		"message": "Map deleted successfully",
 	})
 }
+
+func (a *MapsHandlers) GetNameMapFromJWT(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+	map_id, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("map_id not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "map_id not found"})
+		return
+	}
+
+	name_map, err := queries_maps.TakeMapName(map_id, a.Pool)
+	if err != nil {
+		a.Logger.Error("Failed to take name module:", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to take name module"})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"name_map": name_map,
+		"status":  "success",
+		"message": "Map taked name successfully",
+	})
+}
+
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)

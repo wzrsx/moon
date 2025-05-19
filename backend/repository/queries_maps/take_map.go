@@ -148,3 +148,19 @@ func TakeMaps(user_id string, pool *pgxpool.Pool) ([]Map, error) {
 
 	return maps, nil
 }
+func TakeMapName(map_id string, pool *pgxpool.Pool) (string, error) {
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		return "", err
+	}
+	defer conn.Release()
+	var name_map string
+	err = conn.QueryRow(context.Background(),
+		"SELECT name_map FROM maps WHERE id = $1",
+		map_id).Scan(&name_map)
+	if err != nil {
+		return "", err
+	}
+
+	return name_map, nil
+}

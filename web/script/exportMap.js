@@ -552,37 +552,54 @@ function calculateExtentWithMargins(minX, minY, maxX, maxY) {
 }
 
 //для JSON экспорта
-function exportMapToJSON(){
-  if(!cachedInfoModules){
-    alert("Не удалось получить информацию о модулях");
-    return;
-  }
-  if(!cachedModules){
-    alert("Сначала разместите хотя бы 1 модуль");
-    return;
-  }
-  const jsonStr = JSON.stringify(mergeModuleData(), null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'modules_export.json';
-  link.click();
-}
-function mergeModuleData() {
-  const infoMap = new Map();
-  cachedInfoModules.forEach(info => {
-      infoMap.set(info.module_type, info);
-  });
-  // Объединяем данные
-  const modules = cachedModules.map(module => {
-    const info = infoMap.get(module.module_type);
+async function exportMapToJSON() {
+  try {
+    const result = await mergeModuleData();
 
-    if (!info) {
-        console.warn(`Нет информации для module_type: ${module.module_type}`);
-        return null;
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${result.name_map}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Ошибка экспорта:', err);
+    alert('Не удалось экспортировать данные');
+  }
+}
+// ==== Функция mergeModuleData ====
+async function mergeModuleData() {
+  try {
+    // Запрашиваем имя карты с сервера
+    const response = await fetch("http://localhost:5050/maps/get_map_name", {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (!response.ok) {
+      throw new Error("Ошибка при получении имени карты");
     }
 
-    return {
+    const data = await response.json();
+    const mapName = data.name_map || "Безымянная_карта";
+
+    // Создаём Map для ускорения поиска по module_type
+    const infoMap = new Map();
+    cachedInfoModules.forEach(info => {
+      infoMap.set(info.module_type, info);
+    });
+
+    // Объединяем данные модулей
+    const modules = cachedModules.map(module => {
+      const info = infoMap.get(module.module_type);
+
+      if (!info) {
+        console.warn(`Нет информации для module_type: ${module.module_type}`);
+        return null;
+      }
+
+      return {
         module_type: module.module_type,
         habitation_type: module.habitation_type,
         points: module.points,
@@ -591,13 +608,25 @@ function mergeModuleData() {
         length_meters: info.length_meters,
         width_meters: info.width_meters,
         max_slope_degrees: info.max_slope_degrees
+      };
+    }).filter(Boolean); // Убираем null
+
+    // Возвращаем результат
+    return {
+      name_map: mapName,
+      modules: modules
     };
-  }).filter(Boolean); // Убираем null
-  return {
-    name_map: "mapName",//to do
-    modules: modules
+
+  } catch (error) {
+    console.error("Ошибка при получении имени карты:", error);
+    // Если произошла ошибка, возвращаем fallback значение
+    return {
+      name_map: "Безымянная_карта",
+      modules: []
+    };
   }
-};
+}
+// ==== Конец функции mergeModuleData ====
 
 // Функции для выбора формата
 function selectJSON() {
