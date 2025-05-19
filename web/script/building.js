@@ -101,15 +101,16 @@ function createModuleStyleFunction(zoom) {
       ];
 
       return new ol.style.Style({
-          geometry: new ol.geom.Polygon([squareCoords]),
-          fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
-          text: new ol.style.Text({
-            text: moduleType,
-            offsetY: -20,
-            font: 'bold 12px Jura',
-            fill: new ol.style.Fill({ color: '#fff' }),
-            stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
-          }),
+        geometry: new ol.geom.Polygon([squareCoords]),
+        fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
+        text: new ol.style.Text({
+          text: moduleType,
+          offsetY: 22,
+          font: 'bold 12px Jura',
+          overflow: true,
+          fill: new ol.style.Fill({ color: '#fff' }),
+          stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
+        })
       });
     } else if (zoom >= 12) {
       return new ol.style.Style({
