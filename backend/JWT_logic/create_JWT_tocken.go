@@ -15,7 +15,7 @@ var jwtSecretKey = []byte("very-secret-key")
 func CreateTocken(c *context.Context, username string, user_id string, map_id string, logger *zap.Logger) (string, error) {
 	payload := jwt.MapClaims{
 		"user_id": user_id,
-		"usename": username,
+		"username": username,
 		"map_id":  map_id,
 		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	}

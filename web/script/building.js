@@ -12,6 +12,8 @@ let currentDangerZone = null;
 let currentSafeZone = null;
 
 let onlyGreenInZone = false;
+let abortController = null;
+let isClippedLayerLoading = false;
 
 // Функция загрузки модулей с сервера
 function loadModules() {
@@ -86,7 +88,6 @@ function createModuleStyleFunction(zoom) {
       const x = coordinates[0];
       const y = coordinates[1];
 
-      // Остальной код
       const size = 6; // Размер квадрата в пикселях
       const halfSize = size / 2;
 
@@ -99,24 +100,18 @@ function createModuleStyleFunction(zoom) {
         [x - halfSize, y - halfSize], // замыкание квадрата
       ];
 
-      return [
-        new ol.style.Style({
-          fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
-        }),
-        new ol.style.Style({
-          geometry: new ol.geom.Polygon([squareCoords]),
-          fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
-        }),
-        new ol.style.Style({
-          text: new ol.style.Text({
-            text: moduleType,
-            offsetY: -20,
-            font: 'bold 12px Jura',
-            fill: new ol.style.Fill({ color: '#fff' }),
-            stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
-          }),
-        }),
-      ];
+      return new ol.style.Style({
+        geometry: new ol.geom.Polygon([squareCoords]),
+        fill: new ol.style.Fill({ color: getColorByModuleType(habitationType) }),
+        text: new ol.style.Text({
+          text: moduleType,
+          offsetY: 22,
+          font: 'bold 12px Jura',
+          overflow: true,
+          fill: new ol.style.Fill({ color: '#fff' }),
+          stroke: new ol.style.Stroke({ color: '#000', width: 2 }),
+        })
+      });
     } else if (zoom >= 12) {
       return new ol.style.Style({
         image: new ol.style.Icon({
@@ -194,7 +189,13 @@ function addModuleToMap(moduleData) {
     habitation: moduleData.habitation_type,
     id: moduleData.id_module
   });
-
+  //сохраняем в кэш
+  cachedModules.push({
+    id: moduleData.id_module,
+    points: moduleData.points,
+    module_type: moduleData.module_type,
+    habitation_type: moduleData.habitation_type,
+  });
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
 
@@ -227,6 +228,7 @@ const confirmBtn = document.getElementById("confirmBtn");
 //диалоги
 const confirmDialog = document.getElementById("confirmDialog");
 const saveDialog = document.getElementById("saveDialog");
+const deleteDialog = document.getElementById("deleteModuleDialog");
 //боковая панель
 const sidebar = document.getElementById("modulesSidebar");
 
@@ -282,6 +284,9 @@ backMainButtons.addEventListener('click', (e) => {
     radio.checked = false;
     updateOptionStyle(radio);
   });
+  //сбрасываем текущий тип модуля
+  currentModuleType = null;
+  backToTypes();
   hideAllLayers();
 });
 notificationsBtn.addEventListener('click', (e) => {
@@ -343,6 +348,19 @@ confirmBtn.addEventListener('click', (e) => {
 confirmDialog.addEventListener("close", () => {
   blurDiv.classList.remove("blur");
 });
+deleteDialog.addEventListener("close", () => {
+  blurDiv.classList.remove("blur");
+});
+function closeDeleteModuleDialog() {
+  blurDiv.classList.remove("blur");
+  deleteDialog.close();
+}
+function showDeleteModuleDialog(moduleName) {
+  blurDiv.classList.add("blur");
+  document.getElementById("titleDeleteDialog").innerText = 
+  `Вы уверены, что хотите удалить ${moduleName.toLowerCase()}?`;
+  deleteDialog.showModal();
+}
 /*to do ПРИМЕНИТЬ НА ВСЕ БОКОВЫЕ ПО КЛАССУ*/
 document.addEventListener('keydown', event => {
   if (event.key === "Escape" || event.keyCode === 27) {
@@ -366,7 +384,6 @@ function sendNotification(text, success) {
     notification.classList.remove('show');
   }, 2000);
 }
-/*можно будет с бд подтянуть модули*/
 function openInhabitedModules() {
   // Сохраняем тип выбранных модулей
   currentModuleType = 'inhabited';
@@ -429,8 +446,8 @@ function backToTypes() {
   });
 
   setTimeout(() => {
-    modulesContainerInhabited.style.display = currentModuleType === 'inhabited' ? 'none' : 'block';
-    modulesContainerTechnological.style.display = currentModuleType === 'technological' ? 'none' : 'block';
+    modulesContainerInhabited.style.display = (currentModuleType === 'inhabited' || currentModuleType === null) ? 'none' : 'block';
+    modulesContainerTechnological.style.display = (currentModuleType === 'technological' || currentModuleType === null)  ? 'none' : 'block';
     notificationsContainer.style.display = 'none'; // Скрываем уведомления
     modulesChoiceType.style.display = 'grid';
 
@@ -451,7 +468,11 @@ let startX, startY;
 modules.forEach(module => {
   module.addEventListener('mousedown', async function (e) {
     const moduleType =  module.getAttribute('data-name-en-db');
-
+    // Отменяем предыдущую операцию, если она была
+    if (abortController) {
+      abortController.abort();
+    }
+    abortController = new AbortController();
     //Получаем требования к модулю
     try {
       // 1. Получаем требования 
@@ -464,17 +485,20 @@ modules.forEach(module => {
       sidebar.classList.remove('visible');
       isOpenAside = false;
       checkboxDropMenu.checked = false;
-      sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
       // 3. Показываем радиусы и уклоны (?)
-      await toggleExclusionRadius(true, cachedModules, moduleRequirements);
+      showSatelliteSpinner("Высчитываем расстояния...");
+      await toggleExclusionRadius(true, cachedModules, moduleRequirements.module_type, {
+        signal: abortController.signal
+      });
+      sendNotification('Зоны для размещения модуля выделены зеленым цветом.', 1);
 
       if (moduleRequirements.module_type === 'medical_module' || moduleRequirements.module_type === 'repair_module') {
         onlyGreenInZone = true;
-        await updateClippedLayer();
       }else{
         onlyGreenInZone = false;
-        await updateClippedLayer();
       }
+      showSatelliteSpinner("Загружаем зоны...");
+      await updateClippedLayer({ signal: abortController.signal });
       // 4. Создаем drag-элемент
       const originalImg = this.querySelector('.photo-item-module');
       clone = originalImg.cloneNode(true);
@@ -524,10 +548,23 @@ modules.forEach(module => {
     
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
+        if (isClippedLayerLoading) {
+          sendNotification("Слой еще загружается", 0);
+          return;
+        }
+        // Удаляем старые clipped layers
+        map.getLayers().getArray().forEach(layer => {
+          if (layer && layer.get && layer.get('isClippedLayer')) {
+              map.removeLayer(layer);
+          }
+        });
         isDragging = false;
-        if (currentClippedLayer && currentClippedLayer !== greenLayer) {
-          map.removeLayer(currentClippedLayer);
-      }
+        const layers = map.getLayers();
+        layers.forEach(function(layer) {
+          if (layer.get('isClippedLayer')) {
+              map.removeLayer(layer);
+          }
+        });
         toggleExclusionRadius(false);
         //Проверка зоны
         const pixel = [e.clientX, e.clientY];
@@ -540,7 +577,7 @@ modules.forEach(module => {
         };
         //ЕСЛИ Жилой -> 15deg 
         if (currentModuleType === 'inhabited') {
-          checkAreaAllOnes("cmps_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
+          checkAreaAllOnes("cmps_15deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
             .then(async result => {
               if (!result) {
                 sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
@@ -600,8 +637,13 @@ modules.forEach(module => {
       document.addEventListener('mouseup', onMouseUp);
       module.ondragstart = () => false;
     } catch (error) {
-      sendNotification('Ошибка при получении требований модуля', 0);
-      console.error(error);
+      if (error.name !== 'AbortError') {
+        console.error('Ошибка:', error);
+      }else{
+        sendNotification('Ошибка при получении требований модуля', 0);
+        console.error(error);
+      }
+      
     }
   });
   module.addEventListener('dragstart', (e) => {
@@ -631,16 +673,15 @@ function saveModule(moduleData){
       });
     })
     .then(data => {
-      cachedModules.push({
-        points: moduleData.points,
-        module_type: moduleData.module_type,
-        habitation_type: moduleData.habitation_type,
-      });
-      addModuleToMap(moduleData);
+      // Создаем новый объект с добавленным module_id
+      const fullModuleData = {
+          ...moduleData, 
+          id_module: data.module_id
+      };
+      addModuleToMap(fullModuleData);
     })
     .catch(error => {
       console.error('Ошибка сохранения модуля:', error);
-      // Здесь можно также обработать другие ошибки, если нужно
     });
 }
 // 1. Регистрация проекции
@@ -702,12 +743,15 @@ const createFullscreenLayer = (layerName, opacity, zIndex) => {
 const ldem = createFullscreenLayer('ldem-83s', 1.0, 1);
 const ldsm = createFullscreenLayer('ldsm-83s', 0.3, 2);
 const hillshade = createFullscreenLayer('ldem-hill', 0.6, 3);
-const greenLayer = createFullscreenLayer('cmps_5deg', 0, 4);
-greenLayer.set('name', 'greenLayer');
+const greenLayerTech = createFullscreenLayer('cmps_5deg', 0, 4);
+const greenLayerInhabit = createFullscreenLayer('cmps_15deg', 0, 4);
+greenLayerTech.set('name', 'greenLayerTech');
+greenLayerInhabit.set('name', 'greenLayerInhabit');
 // Создаем WMS-слой с возможностью обновления фильтра
 
 map.on('moveend', async function() {
   if (isDragging) {
+    showSatelliteSpinner("Обновляем зоны...");
     await updateClippedLayer();
   }
 });
@@ -760,7 +804,8 @@ haworthLayer.set('name', 'haworthLayer');
 map.addLayer(ldem);
 map.addLayer(ldsm);
 map.addLayer(hillshade);
-map.addLayer(greenLayer);
+map.addLayer(greenLayerTech);
+map.addLayer(greenLayerInhabit);
 map.addLayer(malapertLayer);
 map.addLayer(shackletonLayer);
 map.addLayer(haworthLayer);
@@ -1095,8 +1140,10 @@ function loadImage(url) {
   // Функция для добавления/удаления радиуса
 const exclusionRadiusLayers = [];
 
-async function toggleExclusionRadius(show, modules, moduleToAdd) {
-  // Очищаем предыдущие слои
+async function toggleExclusionRadius(show, modules, moduleToAdd, options = {}) {
+  if (options.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+  }
   exclusionRadiusLayers.forEach(layer => map.removeLayer(layer));
   exclusionRadiusLayers.length = 0;
   dangerSource.clear();
@@ -1132,7 +1179,7 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
         continue;
       }
 
-      const pair = findModulePair(module.module_type, moduleToAdd.module_type);
+      const pair = findModulePair(module.module_type, moduleToAdd);
       // Создаем опасные зоны (min_distance)
       if (pair.min_distance > 0) {
         const polygon = fromCircle(module.points, pair.min_distance); // Используем нашу функцию преобразования
@@ -1185,6 +1232,8 @@ async function toggleExclusionRadius(show, modules, moduleToAdd) {
     console.error('Error building zones:', error);
     dangerSource.clear();
     safeSource.clear();
+  }finally{
+    hideSatelliteSpinner();
   }
 } 
 function disableExclusionZones() {
@@ -1337,8 +1386,10 @@ function getBoundingBox(multiPolygonGeometry) {
   return [minX, minY, maxX, maxY]; // Возвращаем массив, а не объект
 }
 
-function getGreenLayerBbox(bbox, typeModule, width, height) {
-  console.log(bbox);
+function getGreenLayerBbox(bbox, typeModule, width, height, options = {}) {
+  if (options.signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
   const imgUrl = `http://localhost:8080/geoserver/wms?` +
     `service=WMS&version=1.1.0&request=GetMap&` +
     `layers=moon-workspace:${typeModule}&` +
@@ -1352,7 +1403,11 @@ function getGreenLayerBbox(bbox, typeModule, width, height) {
   return loadImage(imgUrl);
 }
 
-async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 10) {
+async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 10, options = {}) {
+  // Проверяем отмену в начале
+  if (options.signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
   const mapSize = map.getSize();
   const dpr = window.devicePixelRatio || 1;
   const width = Math.floor(mapSize[0] * dpr);
@@ -1361,9 +1416,11 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   const view = map.getView();
   const bbox = view.calculateExtent(map.getSize());
   const [minX, minY, maxX, maxY] = bbox;
-  const image = await getGreenLayerBbox(bbox, typeModule, width, height);
+  const image = await getGreenLayerBbox(bbox, typeModule, width, height, { signal: options.signal });
   console.log("image", image.src);
   console.log("bbox", bbox);
+  // Проверяем, нужно ли вообще выполнять обрезание
+  const shouldClip = !(greenZone == null && redZone == null);
 
   // 2. Создаем canvas
   const canvas = document.createElement('canvas');
@@ -1375,7 +1432,20 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   
   // 3. Рисуем исходное изображение
   ctx.drawImage(image, 0, 0, mapSize[0], mapSize[1]);
-
+  // Если не нужно обрезать - сразу возвращаем слой
+  if (!shouldClip) {
+    const clippedLayer = new ol.layer.Image({
+      source: new ol.source.ImageStatic({
+        url: canvas.toDataURL('image/png'),
+        imageExtent: bbox,
+        projection: 'EPSG:100000'
+      }),
+      opacity: 0.7,
+      zIndex: 4
+    });
+    clippedLayer.set('isClippedLayer', true);
+    return clippedLayer;
+  }
   // 4. Функция проекции координат
   function projectToCanvas(x, y) {
     return [
@@ -1428,6 +1498,9 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   // Восстанавливаем состояние
   ctx.restore();
 
+  if (options.signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
   // Возвращаем слой
   const clippedLayer = new ol.layer.Image({
     source: new ol.source.ImageStatic({
@@ -1441,7 +1514,6 @@ async function getClippedImage(greenZone, redZone, typeModule, meterPerPixel = 1
   clippedLayer.set('isClippedLayer', true);
   return clippedLayer;
 }
-let currentClippedLayer = null;
 function processCoordinates(zone, ctx, projectFn) {
   if (zone.geometry.type === 'MultiPolygon') {
     zone.geometry.coordinates.forEach(polygon => {
@@ -1463,18 +1535,48 @@ function processCoordinates(zone, ctx, projectFn) {
     ctx.closePath();
   }
 }
-async function updateClippedLayer() {
-  // Удаляем старый clippedLayer (если он не greenLayer)
-  if (currentClippedLayer && currentClippedLayer !== greenLayer) {
-    map.removeLayer(currentClippedLayer);
-    currentClippedLayer = null;
+async function updateClippedLayer(options = {}) {
+  isClippedLayerLoading = true;
+  // Удаляем старые clipped layers
+  map.getLayers().getArray().forEach(layer => {
+    if (layer && layer.get && layer.get('isClippedLayer')) {
+        map.removeLayer(layer);
+    }
+  });
+
+  // Проверка на отмену
+  if (options.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
   }
 
-  const clippedLayer = await getClippedImage(currentSafeZone, currentDangerZone, 'cmps_5deg');
-  currentClippedLayer = clippedLayer;
-  map.addLayer(clippedLayer);
-}
+  // Определяем имя слоя
+  let nameLayer;
+  if (currentModuleType === 'inhabited') {
+      nameLayer = 'cmps_15deg';
+  } else if (currentModuleType === 'technological') {
+      nameLayer = 'cmps_5deg';
+  }
 
+  // Создаем новый слой
+  const clippedLayer = await getClippedImage(
+      currentSafeZone,
+      currentDangerZone,
+      nameLayer,
+      10, // meterPerPixel
+      { signal: options.signal }
+  );
+
+  // Проверяем, не была ли операция отменена перед добавлением
+  if (options.signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+  }
+
+  if (!options.signal?.aborted) {
+    map.addLayer(clippedLayer);
+  }
+  isClippedLayerLoading = false;
+  hideSatelliteSpinner();
+}
 function toggleSlopeOptions(header) {
   const control = header.parentElement;
   control.classList.toggle('expanded');
@@ -1499,7 +1601,7 @@ function updateOptionStyle(inputElement) {
     option.classList.remove('checked');
   }
 }
-// Функция для создания чекбоксов типов модулей 
+// Функция для создания радиокнопок типов модулей 
 function populateModuleCheckboxes() {
   const optionsContainer = document.getElementById('checkboxesModulesName');
   const groupRadioName = 'moduleSelection';
@@ -1514,7 +1616,7 @@ function populateModuleCheckboxes() {
     const radioId = `${module.module_type}Radio`;
     
     optionDiv.innerHTML = `
-      <input type="radio" id="${radioId}" name="moduleSelection" value="${module.module_type}" onchange="updateOptionStyle(this)">
+      <input type="radio" id="${radioId}" name="moduleSelection" value="${module.module_type}" data-module-habitation="${module.habitation_type}" onchange="updateOptionStyle(this)">
       <label for="${radioId}">${module.module_name}</label>
     `;
     
@@ -1526,11 +1628,57 @@ async function hideAllLayers() {
   await toggleExclusionRadius(false);
   const layers = map.getLayers().getArray();
   layers.forEach(layer => {
-    if (layer.get("name") ) { // Проверяем, есть ли у слоя имя
+    // Проверяем, есть ли у слоя имя и не слой ли это модулей
+    if (layer.get("name") && layer.get("name") !== 'modules_layer') { 
       layer.setOpacity(0); // Скрываем слой
     }
     else if(layer.get('isClippedLayer')){
       map.removeLayer(layer); 
+      console.log("удален");
     }
+
   });
+}
+
+/*управление спиннером*/
+let spinnerTimeoutId = null;
+function showSatelliteSpinner(message = "Загрузка...") {
+  const spinner = document.getElementById('loadingSpinner');
+  const textElement = spinner.querySelector('.spinner-text');
+  if (textElement) {
+    textElement.textContent = message;
+  }
+  if (spinner) {
+      spinner.classList.remove('hidden');
+  }
+  // Очищаем предыдущий таймер, если был
+  if (spinnerTimeoutId) {
+    clearTimeout(spinnerTimeoutId);
+  }
+  // Устанавливаем новый таймер на 1 сек.
+  spinnerTimeoutId = setTimeout(() => {
+    const updatedTextElement = document.getElementById('loadingSpinner')?.querySelector('.spinner-text');
+    if (updatedTextElement) {
+        updatedTextElement.textContent = "Еще чуть-чуть...";
+        updatedTextElement.classList.add('long-wait');
+    }
+  }, 1000); 
+}
+
+function hideSatelliteSpinner() {
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) {
+      spinner.classList.add('hidden');
+
+      const textElement = spinner.querySelector('.spinner-text');
+      if (textElement && textElement.classList.contains('long-wait')) {
+          textElement.classList.remove('long-wait');
+      }
+  }
+
+  // Очищаем таймер
+  if (spinnerTimeoutId) {
+      clearTimeout(spinnerTimeoutId);
+      spinnerTimeoutId = null;
+  }
 }

@@ -9,6 +9,7 @@ import (
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -30,7 +31,7 @@ func CreateMapsHandlers(cfg_db *config_db.ConfigDB, logger *zap.Logger, pool *pg
 		Pool:       pool,
 	}
 }
-func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request){
+func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
 		a.Logger.Error("No claims in context")
@@ -39,71 +40,81 @@ func (a *MapsHandlers) CreateMapHandler(rw http.ResponseWriter, r *http.Request)
 	}
 
 	userID, ok := claims["user_id"].(string)
-    if !ok {
-        a.Logger.Error("User ID not found in claims")
-        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
-        return
-    }
+	if !ok {
+		a.Logger.Error("User ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
 	var request struct {
-        Name string `json:"name_map"`
-    }
+		Name string `json:"name_map"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-        a.Logger.Error("Invalid request body:", zap.Error(err))
-        respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
-        return
-    }
+		a.Logger.Error("Invalid request body:", zap.Error(err))
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+		return
+	}
 	newMap, err := queries_maps.CreateMap(userID, request.Name, a.Pool)
-    if err != nil {
-        a.Logger.Error("Failed to create map:", zap.Error(err))
-        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Map creation failed"})
-        return
-    }
+	if err != nil {
+		a.Logger.Error("Failed to create map:", zap.Error(err))
 
-    // 6. Успешный ответ
-    respondWithJSON(rw, http.StatusCreated, map[string]string{
-        "map_id":       newMap.MapID,
-        "redirect_url": "/maps/redactor?map_id=" + newMap.MapID + "?is_first_launch=true",
-    })
+		// Проверяем, содержит ли ошибка сообщение о существующей карте
+		if strings.Contains(err.Error(), "уже существует") {
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+		} else {
+			respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+				"error": "Ошибка при создании карты",
+			})
+		}
+		return
+	}
+
+	// 6. Успешный ответ
+	respondWithJSON(rw, http.StatusCreated, map[string]string{
+		"map_id":       newMap.MapID,
+		"redirect_url": "/maps/redactor?map_id=" + newMap.MapID + "?is_first_launch=true",
+	})
 }
 func (a *MapsHandlers) OpenMapsRedactor(rw http.ResponseWriter, r *http.Request) {
-    // Получаем ID карты из query параметров, а не из JWT
-    id_map := r.URL.Query().Get("map_id")
-    if id_map == "" {
-        a.Logger.Error("Map ID not provided")
-        respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Map ID is required"})
-        return
-    }
+	// Получаем ID карты из query параметров, а не из JWT
+	id_map := r.URL.Query().Get("map_id")
+	if id_map == "" {
+		a.Logger.Error("Map ID not provided")
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Map ID is required"})
+		return
+	}
 	isFirstLaunch := r.URL.Query().Get("is_first_launch")
 	firstLaunch := isFirstLaunch == "true"
-    // Создаем новый JWT с map_id или обновляем существующий
-    tokenString, err := jwt_logic.CreateTokenWithMapID(r, id_map)
-    if err != nil {
-        a.Logger.Error("Failed to create token", zap.Error(err))
-        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to create token"})
-        return
-    }
+	// Создаем новый JWT с map_id или обновляем существующий
+	tokenString, err := jwt_logic.CreateTokenWithMapID(r, id_map)
+	if err != nil {
+		a.Logger.Error("Failed to create token", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to create token"})
+		return
+	}
 
-    // Устанавливаем токен в куки
-    http.SetCookie(rw, &http.Cookie{
-        Name:     "jwt_token",
-        Value:    tokenString,
-        Path:     "/",
-        HttpOnly: true,
-        Secure:   false, //для http
-        SameSite: http.SameSiteStrictMode,
-        Expires:  time.Now().Add(time.Hour * 72), // Явно устанавливаем срок действия
-    })
+	// Устанавливаем токен в куки
+	http.SetCookie(rw, &http.Cookie{
+		Name:     "jwt_token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, //для http
+		SameSite: http.SameSiteStrictMode,
+		Expires:  time.Now().Add(time.Hour * 72), // Явно устанавливаем срок действия
+	})
 
-    // Перенаправляем на выбор места или сразу карту
+	// Перенаправляем на выбор места или сразу карту
 	if firstLaunch {
-        respondWithJSON(rw, http.StatusOK, map[string]interface{}{
-            "redirect_url": "/maps/redactor/page",
-        })
-    } else {
-        respondWithJSON(rw, http.StatusOK, map[string]interface{}{
-            "redirect_url": "/maps/redactor/page/map",
-        })
-    }
+		respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+			"redirect_url": "/maps/redactor/page",
+		})
+	} else {
+		respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+			"redirect_url": "/maps/redactor/page/map",
+		})
+	}
 }
 func (a *MapsHandlers) RenderMapRedactor(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
@@ -154,29 +165,30 @@ func (a *MapsHandlers) TakeMaps(rw http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(rw, http.StatusOK, maps)
 }
+
 // Отдельный обработчик для рендеринга HTML
 func (a *MapsHandlers) RenderChoosePlace(rw http.ResponseWriter, r *http.Request) {
-    claims, ok := r.Context().Value("claims").(jwt.MapClaims)
-    if !ok {
-        a.Logger.Error("No claims in context")
-        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
-        return
-    }
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in context"})
+		return
+	}
 
-    id_map, ok := claims["map_id"].(string)
-    if !ok {
-        a.Logger.Error("Map ID not found in claims")
-        respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
-        return
-    }
+	id_map, ok := claims["map_id"].(string)
+	if !ok {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
+		return
+	}
 
-    tmpl := template.Must(template.ParseFiles("web/pages/choose_place.html"))
-    err := tmpl.Execute(rw, id_map)
-    if err != nil {
-        a.Logger.Error("Template error", zap.Error(err))
-        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error"})
-        return
-    }
+	tmpl := template.Must(template.ParseFiles("web/pages/choose_place.html"))
+	err := tmpl.Execute(rw, id_map)
+	if err != nil {
+		a.Logger.Error("Template error", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Template error"})
+		return
+	}
 }
 
 func (a *MapsHandlers) TakeModules(rw http.ResponseWriter, r *http.Request) {
@@ -210,7 +222,7 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
 		a.Logger.Error("No claims in context")
-		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in tocken"})
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "No claims in token"})
 		return
 	}
 
@@ -220,88 +232,162 @@ func (a *MapsHandlers) SaveModule(rw http.ResponseWriter, r *http.Request) {
 		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found"})
 		return
 	}
+
 	module := queries_maps.NewModule()
 	err := json.NewDecoder(r.Body).Decode(&module)
-
 	if err != nil {
-		a.Logger.Sugar().Errorf("Error Decoding credentials: %v", err)
+		a.Logger.Sugar().Errorf("Error decoding module data: %v", err)
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-			"error": fmt.Sprintf("Error save module: %v", err),
+			"error": fmt.Sprintf("Error saving module: %v", err),
 		})
 		return
 	}
+
 	module.MapId = id_map
 
-	err = module.SaveModule(a.Pool)
+	moduleID, err := module.SaveModule(a.Pool)
 	if err != nil {
-		a.Logger.Error("Error querying module", zap.Error(err))
+		a.Logger.Error("Error saving module to DB", zap.Error(err))
 		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("Error save module: %v", err),
+			"error": fmt.Sprintf("Error saving module: %v", err),
 		})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+		"message":   "Successfully saved module",
+		"module_id": moduleID,
+	})
+}
+func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
+	// Получаем данные о расстоянии
+	requirements, err := queries_maps.TakeModulesRequirements(a.Pool)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error getting modules requirements: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Failed to get modules requirements: %v", err),
+		})
+		return
+	}
+
+	// Отправляем успешный ответ
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+		"message":           "Success response",
+		"requirements_json": requirements,
+	})
+
+}
+func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Request) {
+	// Получаем данные о расстоянии
+	distances, err := queries_maps.TakeModulesDistance(a.Pool)
+	if err != nil {
+		a.Logger.Sugar().Errorf("Error getting module distance: %v", err)
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Failed to get module distance: %v", err),
+		})
+		return
+	}
+	log.Println(distances)
+
+	// Отправляем успешный ответ
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+		"message":           "Success response",
+		"requirements_json": distances,
+	})
+}
+func (a *MapsHandlers) ClearMapToken(rw http.ResponseWriter, r *http.Request) {
+	// Генерируем новый токен без map_id
+	tokenString, err := jwt_logic.CreateTokenWithoutMapID(r)
+	if err != nil {
+		a.Logger.Error("Failed to create cleared token", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to clear map token"})
+		return
+	}
+
+	// Устанавливаем новый токен в куки
+	http.SetCookie(rw, &http.Cookie{
+		Name:     "jwt_token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, //для http
+		SameSite: http.SameSiteStrictMode,
+	})
+	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
+		"message": "Success exit",
+	})
+}
+func (a *MapsHandlers) DeleteModuleFromMap(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+
+	id_map, ok := claims["map_id"].(string)
+	if !ok || id_map == "" {
+		a.Logger.Error("Map ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Map ID not found in token"})
+		return
+	}
+
+	var request struct {
+		IDModule string `json:"id_module"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		a.Logger.Error("Invalid request body:", zap.Error(err))
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+		return
+	}
+
+	err := queries_maps.DeleteModule(request.IDModule, a.Pool)
+	if err != nil {
+		a.Logger.Error("Failed to delete module:", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to delete module"})
 		return
 	}
 
 	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"message": "Successfuly saved module",
+		"status":  "success",
+		"message": "Module deleted successfully",
 	})
 }
-func (a *MapsHandlers) TakeModulesRequirements(rw http.ResponseWriter, r *http.Request) {
-// Получаем данные о расстоянии
-    requirements, err := queries_maps.TakeModulesRequirements(a.Pool)
-    if err != nil {
-        a.Logger.Sugar().Errorf("Error getting modules requirements: %v", err)
-        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-            "error": fmt.Sprintf("Failed to get modules requirements: %v", err),
-        })
-        return
-    }
-    
-    // Отправляем успешный ответ
-    respondWithJSON(rw, http.StatusOK, map[string]interface{}{
-        "message": "Success response",
-        "requirements_json": requirements,
-    })
+func (a *MapsHandlers) DeleteMapHandler(rw http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
+	if !ok {
+		a.Logger.Error("No claims in context")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+	id_user, ok := claims["user_id"].(string)
+	if !ok {
+		a.Logger.Error("User ID not found in claims")
+		respondWithJSON(rw, http.StatusUnauthorized, map[string]string{"error": "User ID not found"})
+		return
+	}
+	var request struct {
+		IDMap string `json:"map_id"`
+	}
 
-}
-func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Request) {
-    // Получаем данные о расстоянии
-    distances, err := queries_maps.TakeModulesDistance(a.Pool)
-    if err != nil {
-        a.Logger.Sugar().Errorf("Error getting module distance: %v", err)
-        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{
-            "error": fmt.Sprintf("Failed to get module distance: %v", err),
-        })
-        return
-    }
-	log.Println(distances)
-    
-    // Отправляем успешный ответ
-    respondWithJSON(rw, http.StatusOK, map[string]interface{}{
-        "message": "Success response",
-        "requirements_json": distances,
-    })
-}
-func (a *MapsHandlers) ClearMapToken(rw http.ResponseWriter, r *http.Request) {
-    // Генерируем новый токен без map_id
-    tokenString, err := jwt_logic.CreateTokenWithoutMapID(r)
-    if err != nil {
-        a.Logger.Error("Failed to create cleared token", zap.Error(err))
-        respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to clear map token"})
-        return
-    }
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		a.Logger.Error("Invalid request body:", zap.Error(err))
+		respondWithJSON(rw, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+		return
+	}
 
-    // Устанавливаем новый токен в куки
-    http.SetCookie(rw, &http.Cookie{
-        Name:     "jwt_token",
-        Value:    tokenString,
-        Path:     "/",
-        HttpOnly: true,
-        Secure:   false, //для http
-        SameSite: http.SameSiteStrictMode,
-    })
-	respondWithJSON(rw, http.StatusOK, map[string]interface{}{
-        "message": "Success exit",
-    })
+	err := queries_maps.DeleteMap(request.IDMap, id_user, a.Pool)
+	if err != nil {
+		a.Logger.Error("Failed to delete module:", zap.Error(err))
+		respondWithJSON(rw, http.StatusInternalServerError, map[string]string{"error": "Failed to delete module"})
+		return
+	}
+
+	respondWithJSON(rw, http.StatusOK, map[string]string{
+		"status":  "success",
+		"message": "Map deleted successfully",
+	})
 }
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")

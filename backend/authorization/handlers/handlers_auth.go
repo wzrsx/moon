@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/repository/queries_auth"
@@ -96,7 +97,6 @@ func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверяем есть ли email в БД
 	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
 		if err.Error() != "email exists" {
 			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
@@ -105,17 +105,13 @@ func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 			a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
 			return
 		}
+		a.sendWelcomeEmail(creds.Email, "", creds.Password, false, rw)
+		return
 	}
-	if err = queries_auth.ExistsEmail(creds.Email, a.Pool); err != nil {
-		if err.Error() != "email exists" {
-			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-				"message": "Error check email exists DB",
-			})
-			a.Logger.Sugar().Errorf("Error check email exists DB: %v", err)
-			return
-		}
-	}
-	a.sendWelcomeEmail(creds.Email, "", creds.Password, false, rw)
+	respondWithJSON(rw, http.StatusNotFound, map[string]string{
+		"message": "email not exists",
+	})
+
 }
 
 func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg bool, rw http.ResponseWriter) {
@@ -183,6 +179,11 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 
 		// Устанавливаем код в слайс
 		setCode(confirmationCode, email, username, password)
+		respondWithJSON(rw, http.StatusOK, map[string]string{
+			"message": "Registration successful. Please check your email",
+			"next":    "codeDialog",
+			"code":    confirmationCode, // Отправляем код и в ответе (для удобства тестирования)
+		})
 	} else {
 		body = fmt.Sprintf(`
 				<html>
@@ -238,13 +239,14 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 
 		// Устанавливаем код в слайс
 		setRecoverCode(confirmationCode, email, password)
+		log.Println("установлен")
+		respondWithJSON(rw, http.StatusOK, map[string]string{
+			"message": "Recover successful. Please check your email",
+			"next":    "codeDialog",
+			"code":    confirmationCode, // Отправляем код и в ответе (для удобства тестирования)
+		})
 	}
 
-	respondWithJSON(rw, http.StatusOK, map[string]string{
-		"message": "Registration successful. Please check your email",
-		"next":    "codeDialog",
-		"code":    confirmationCode, // Отправляем код и в ответе (для удобства тестирования)
-	})
 }
 
 func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *http.Request) {
@@ -328,6 +330,7 @@ func (a *AuthHandlers) CheckCodeRegistrationHandler(rw http.ResponseWriter, r *h
 		return
 	}
 	rw.Header().Add("Authorization", string_tocken)
+	setCookie(rw, string_tocken)
 
 	// Удаляем код из слайса
 	delete(registrationCodes, creds.Email)
@@ -391,6 +394,8 @@ func (a *AuthHandlers) CheckCodeRecoverHandler(rw http.ResponseWriter, r *http.R
 	}
 
 	if code_info.Code != creds.Code {
+		log.Println(creds.Code)
+		log.Println(code_info.Code)
 		code_info.Attempts++
 		respondWithJSON(rw, http.StatusBadRequest, map[string]string{
 			"message": "Code is not match",

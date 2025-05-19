@@ -1,17 +1,24 @@
 const signInDialog = document.getElementById("signInDialog");
 const registrationDialog = document.getElementById("registrationDialog");
 const forgetPassDialog = document.getElementById("forgetPassDialog");
+const deleteMapDialog = document.getElementById("deleteMapDialog");
 const projectSelectionDialog = document.getElementById(
   "projectSelectionDialog"
 );
-const checkCodeRegistrationDialog = document.getElementById("checkCodeRegistrationDialog");
-const checkCodeRecoverDialog = document.getElementById("checkCodeRecoverDialog");
+const checkCodeRegistrationDialog = document.getElementById(
+  "checkCodeRegistrationDialog"
+);
+const checkCodeRecoverDialog = document.getElementById(
+  "checkCodeRecoverDialog"
+);
 const blurDiv = document.getElementById("blurDiv");
 const EMAIL_REGEXP =
   /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
+const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
 
 const buildingPageBtn = document.getElementById("buildingPageBtn");
-const authBtn = document.getElementById("authBtn");
+
+const logoutBtn = document.getElementById("logoutBtn");
 
 //переключение между диалогами
 const registrateBtnForm = document.getElementById("registrateBtnForm");
@@ -36,6 +43,7 @@ const passRegistration = document.getElementById("passRegistration");
 const repeatPassRegistration = document.getElementById(
   "repeatPassRegistration"
 );
+const nameProj = document.getElementById("nameProject");
 
 const emailForgetPass = document.getElementById("emailForgetPass");
 const passwordForgetPass = document.getElementById("passwordForgetPass");
@@ -55,47 +63,15 @@ const repeatPassRegistrationError = document.getElementById(
   "repeatPassRegistrationError"
 );
 const emailForgetPassError = document.getElementById("emailForgetPassError");
-const passwordForgetPassError = document.getElementById("passwordForgetPassError");
+const passwordForgetPassError = document.getElementById(
+  "passwordForgetPassError"
+);
 
 const codeForgetPassError = document.getElementById("codeForgetPassError");
-const codeRegistrationPassError = document.getElementById(
-  "codeRegistrationPassError"
-);
-const nameProjectError = document.getElementById("nameProjectError");
+const codeRegistrationError = document.getElementById("codeRegistrationError");
 
 let authHeader;
 let isReg = false;
-
-
-//DOM ELEMENTS
-// Обработчик кнопки выхода
-document.addEventListener("DOMContentLoaded", function () {
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-
-      fetch("/auth/logout", {
-        method: "POST",
-        credentials: "same-origin",
-      })
-        .then((response) => {
-          if (response.ok) {
-            location.reload();
-          }
-        })
-        .catch((error) => console.error("Ошибка выхода:", error));
-    });
-  }
-
-  // Обработчик кнопки входа (если пользователь не авторизован)
-  const authBtn = document.getElementById("authBtn");
-  if (authBtn && !authBtn.classList.contains("auth-user")) {
-    authBtn.addEventListener("click", function () {
-      signInDialog.showModal();
-    });
-  }
-});
 
 // обработчики кнопок
 closeButtons.forEach((button) => {
@@ -103,18 +79,29 @@ closeButtons.forEach((button) => {
     e.preventDefault();
     const dialog = button.closest("dialog");
     dialog.close();
-    blurDiv.classList.remove("blur");
     isSwitching = false;
+    blurDiv.classList.remove("blur");
   });
 });
 
 let isSwitching = false; //переключение
 
-authBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  blurDiv.classList.add("blur");
-  signInDialog.showModal();
-});
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    fetch("/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    })
+      .then((response) => {
+        if (response.ok) {
+          location.reload();
+        }
+      })
+      .catch((error) => console.error("Ошибка выхода:", error));
+  });
+}
+
 buildingPageBtn.addEventListener("click", (e) => {
   e.preventDefault();
 });
@@ -186,6 +173,27 @@ signInBtnForm2.addEventListener("click", (e) => {
   signInDialog.showModal();
 });
 
+deleteMapDialog.addEventListener("close", () => {
+  updateBlurState();
+});
+
+function closeDeleteMapDialog() {
+  deleteMapDialog.close();
+}
+
+function updateBlurState() {
+  const isProjectDialogOpen =
+    projectSelectionDialog &&
+    (projectSelectionDialog.hasAttribute("open") ||
+      projectSelectionDialog.open);
+
+  if (!isProjectDialogOpen && blurDiv) {
+    blurDiv.classList.remove("blur");
+    return true;
+  } else {
+    return false;
+  }
+}
 //отправка формы
 signInBtn.addEventListener("click", (e) => {
   e.preventDefault();
@@ -304,26 +312,27 @@ registrateBtn.addEventListener("click", (e) => {
       if (!response.ok) {
         // Если ответ не успешен, проверяем наличие сообщения
         if (data.message) {
-          showError(null, passRegistrationError, data.message);
+          showError(null, repeatPassRegistrationError, data.message);
         }
         return Promise.reject(data);
       }
       console.log(data.code); // TEST
       authHeader = response.headers.get("Authorization");
+      isReg = true;
+      e.preventDefault();
+      isSwitching = true;
+      registrationDialog.close();
+      checkCodeRegistrationDialog.showModal();
       return data; // Возвращаем успешно полученные данные
     });
   });
   //отправка на сервер
-  isReg = true;
-  e.preventDefault();
-  isSwitching = true;
-  registrationDialog.close();
-  checkCodeRegistrationDialog.showModal();
 });
 
 recoverPassBtn.addEventListener("click", (e) => {
   e.preventDefault();
   resetRegErrors();
+  resetRecoverErrors();
   const email = emailForgetPass.value.trim();
   const newpass = passwordForgetPass.value.trim();
 
@@ -343,10 +352,6 @@ recoverPassBtn.addEventListener("click", (e) => {
     );
     return;
   }
-  if (!isPassValid(newpass, passwordForgetPassError, passwordForgetPass)) {
-    return;
-  }
-
   if (!isEmailValid(email)) {
     showError(
       emailForgetPass,
@@ -377,21 +382,21 @@ recoverPassBtn.addEventListener("click", (e) => {
       }
       console.log(data.code); // TEST
       authHeader = response.headers.get("Authorization");
+      isReg = false;
+      e.preventDefault();
+      isSwitching = true;
+      forgetPassDialog.close();
+      checkCodeRecoverDialog.showModal();
       return data; // Возвращаем успешно полученные данные
     });
   });
   //отправка на сервер
-  isReg = false;
-  e.preventDefault();
-  isSwitching = true;
-  forgetPassDialog.close();
-  checkCodeRecoverDialog.showModal();
 });
 
-recoverPassBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  resetRecoverErrors();
-});
+function openSignInDialogBtn() {
+  blurDiv.classList.add("blur");
+  signInDialog.showModal();
+}
 
 //переход к некст инпуту кода
 function moveToNext(currentInput, nextInputId) {
@@ -415,9 +420,11 @@ function isNumberKey(evt) {
 //проверяем 6 инпутов
 function checkAllFilled() {
   let id;
-  if (isReg){
+  if (isReg) {
     id = "#confirmationCodeRegistration";
-  }else {id = "#confirmationCodeRecovery";}
+  } else {
+    id = "#confirmationCodeRecovery";
+  }
   const inputsRegistration = document.querySelectorAll(id + " .code-input"); //получаем все инпуты внутри блока
   const allFilled = Array.from(inputsRegistration).every(
     (input) => input.value.length === 1
@@ -433,7 +440,7 @@ function checkAllFilled() {
     if (isReg) {
       email = emailRegistration.value.trim();
       url = "http://localhost:5050/auth/check_code_registration";
-      errField = codeRegistrationPassError;
+      errField = codeRegistrationError;
     } else {
       email = emailForgetPass.value.trim();
       url = "http://localhost:5050/auth/check_code_recover";
@@ -452,28 +459,24 @@ function checkAllFilled() {
       body: JSON.stringify(body),
     })
       .then((response) => {
-        if (response.status === 423) {
-          showBlockInput(inputsRegistration);
-          return response.json(); // Преобразуем ответ в JSON
-        }
-        if (response.status === 409) {
-          applyErrorStyles(inputsRegistration);
-          throw new Error("Invalid code");
-        }
-        if (response.ok) {
-          resetInputStyles(inputsRegistration);
-          if (isReg) {
-            location.href = "/";
-            isReg = false;
-            return;
+        return response.json().then((data) => {
+          if (!response.ok) {
+            if (data.message) {
+              showError(null, errField, data.message);
+            }
+            throw new Error(data.message || "Ошибка сервера");
           }
+          return data;
+        });
+      })
+      .then((data) => {
+        if (isReg) {
           location.href = "/";
+        } else {
           isSwitching = true;
           checkCodeRecoverDialog.close();
           signInDialog.showModal();
-          return;
         }
-        return Promise.reject();
       })
       .then((data) => {
         if (!data?.unlock_at) {
@@ -491,7 +494,11 @@ function checkAllFilled() {
           console.log(now);
           if (diff <= 0) {
             clearInterval(interval);
-            showCanField(errField, "Можете пробовать снова.", inputsRegistration);
+            showCanField(
+              errField,
+              "Можете пробовать снова.",
+              inputsRegistration
+            );
             return;
           }
 
@@ -521,34 +528,126 @@ function checkAllFilled() {
   return allFilled;
 }
 
-function handleKeyDown(event, inputElement) {
-  if (event.key === "Backspace") {
-    const currentIndex = parseInt(inputElement.id.replace("inputCode", ""));
-    if (inputElement.value === "") {
-      // только если input уже пустой
-      inputElement.value = "";
-      const previousInput = document.getElementById(
-        "inputCode" + (currentIndex - 1)
-      );
-      if (previousInput) {
-        previousInput.focus();
-      }
-      checkAllFilled();
-    } else {
-      if (currentIndex == 4) {
-        const inputsRegistration = document.querySelectorAll(
-          "#confirmationCodeRegistration .code-input"
-        );
-        resetErrorStyles(inputsRegistration);
-        const inputsRecovery = document.querySelectorAll(
-          "#confirmationCodeRecovery .code-input"
-        );
-        resetErrorStyles(inputsRecovery);
-      }
-      inputElement.value = ""; // если есть значение - просто очищаем, не переходим
+// 1. Функция для удаления цифры с переходом на предыдущий input
+function handleDeleteCodeInput(currentInput, event) {
+  // Предотвращаем стандартное поведение Backspace
+  event.preventDefault();
+
+  const currentId = currentInput.id;
+  const currentIndex = parseInt(currentId.match(/\d+$/)[0]);
+
+  // Если input не пустой - просто очищаем его
+  if (currentInput.value !== "") {
+    currentInput.value = "";
+    return;
+  }
+
+  // Если input пустой - переходим на предыдущий
+  if (currentInput.value === "") {
+    const prevInput = document.getElementById(
+      currentId.replace(/\d+$/, currentIndex - 1)
+    );
+    if (prevInput) {
+      prevInput.focus();
+      // Очищаем предыдущий input при фокусировке
+      prevInput.value = "";
     }
   }
 }
+
+// 2. Функция для вставки кода из буфера обмена
+async function handlePasteCodeInput(event, inputsContainerId) {
+  let pasteData;
+
+  if (event.type === "paste") {
+    // Для обычного события paste
+    event.preventDefault();
+    pasteData = event.clipboardData.getData("text/plain").trim();
+  } else {
+    // Для Ctrl+V попробуем получить данные из буфера
+    try {
+      pasteData = await navigator.clipboard.readText();
+    } catch (error) {
+      console.error("Ошибка чтения буфера обмена:", error);
+      return;
+    }
+  }
+
+  // Проверяем что в буфере 4 цифры
+  if (pasteData && /^\d{4}$/.test(pasteData)) {
+    const inputs = document.querySelectorAll(
+      `#${inputsContainerId} .code-input`
+    );
+
+    // Заполняем все inputs
+    inputs.forEach((input, index) => {
+      input.value = pasteData[index] || "";
+    });
+
+    // Фокусируемся на последнем input
+    inputs[inputs.length - 1].focus();
+
+    // Проверяем все ли заполнено
+    checkAllFilled();
+  }
+}
+
+// 3. Обновленная функция handleKeyDown с учетом новой логики удаления
+async function handleKeyDown(event, inputElement) {
+  // Обработка удаления
+  if (event.key === "Backspace") {
+    handleDeleteCodeInput(inputElement, event);
+    return;
+  }
+
+  // Обработка Ctrl+V
+  if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+    const containerId = inputElement.closest(".code-input-block").id;
+    await handlePasteCodeInput(event, containerId);
+    return;
+  }
+
+  // Проверка что вводится цифра
+  if (!isNumberKey(event)) {
+    event.preventDefault();
+    return;
+  }
+}
+// 4. Обновление инициализации - добавление обработчика paste
+function initCodeInputs() {
+  document.querySelectorAll(".code-input-block").forEach((container) => {
+    const inputs = container.querySelectorAll(".code-input");
+
+    inputs.forEach((input) => {
+      // Добавляем обработчик paste
+      input.addEventListener("paste", (e) => {
+        handlePasteCodeInput(e, container.id);
+      });
+
+      // Обработчик keydown
+      input.addEventListener("keydown", function (e) {
+        handleKeyDown(e, this);
+      });
+
+      // Обработчик input для автоматического перехода
+      input.addEventListener("input", function () {
+        const nextId = this.id.replace(/\d+$/, (match) =>
+          String(parseInt(match) + 1)
+        );
+        const nextInput = document.getElementById(nextId);
+
+        if (this.value.length >= 1 && nextInput) {
+          nextInput.focus();
+        }
+
+        checkAllFilled();
+      });
+    });
+  });
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener("DOMContentLoaded", initCodeInputs);
 
 function resetInputStyles(inputs) {
   inputs.forEach((input) => {
@@ -622,7 +721,6 @@ function isEmailValid(value) {
 
 //проверка пароля
 function isPassValid(value, field, input) {
-  const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
   if (!value) {
     showError(input, field, "Пожалуйста, введите пароль.");
     input.style.borderColor = "red";
@@ -648,15 +746,63 @@ function isPassValid(value, field, input) {
   return true;
 }
 function showCreateProjectForm() {
-  projectSelectionDialog.style.height = "35%";
+  // Получаем высоту окна просмотра
+  const viewportHeight = window.innerHeight;
+
+  // Определяем высоту диалога в зависимости от высоты экрана
+  let dialogHeight;
+  if (viewportHeight < 700) {
+    dialogHeight = "50%";
+  } else if (viewportHeight < 800) {
+    dialogHeight = "40%";
+  } else {
+    dialogHeight = "35%";
+  }
+
+  // Применяем изменения
+  projectSelectionDialog.style.height = dialogHeight;
   document.querySelector(".content-project-selection-dialog").style.display =
     "none";
   document.querySelector(".create-project-section").style.display = "flex";
 }
+function toggleErrorNameProject(message = "", show = false) {
+  const errorElement = document.getElementById("nameProjectError");
+  if (show && message) {
+    errorElement.textContent = message;
+    errorElement.style.display = "block";
+    nameProj.style.borderColor = "#a90000";
+    document.getElementById("nameProject").classList.add("input-error");
+  } else {
+    errorElement.style.display = "none";
+    nameProj.style.borderColor = "";
+
+    document.getElementById("nameProject").classList.remove("input-error");
+  }
+}
 function createNewProject() {
-  let nameProj = document.getElementById("nameProject").value; //+валидация to do
+  let nameProjVal = nameProj.value;
+  toggleErrorNameProject("", false);
+  if (!nameProjVal) {
+    toggleErrorNameProject("Название проекта не может быть пустым", true);
+    return;
+  }
+  if (nameProjVal.length < 5) {
+    toggleErrorNameProject(
+      "Название должно содержать минимум 5 символов",
+      true
+    );
+    return;
+  }
+  if (nameProjVal.length > 100) {
+    toggleErrorNameProject("Название не должно превышать 100 символов", true);
+    return;
+  }
+  if (specialCharRegex.test(nameProjVal)) {
+    toggleErrorNameProject("Название содержит запрещенный символ", true);
+    return;
+  }
   const requestData = {
-    name_map: nameProj,
+    name_map: nameProjVal,
   };
   fetch("http://localhost:5050/maps/create", {
     method: "POST",
@@ -666,18 +812,13 @@ function createNewProject() {
     body: JSON.stringify(requestData),
   })
     .then((response) => {
-      const contentType = response.headers.get("content-type");
-
-      if (!contentType || !contentType.includes("application/json")) {
-        return response.text().then((text) => {
-          throw new Error(
-            `Ожидался JSON, но получен: ${text.slice(0, 100)}...`
-          );
-        });
-      }
-
       if (!response.ok) {
         return response.json().then((err) => {
+          // Показываем пользователю сообщение об ошибке
+          toggleErrorNameProject(
+            err.error || "Ошибка при создании карты",
+            true
+          );
           throw new Error(err.error || `Ошибка сервера: ${response.status}`);
         });
       }
@@ -689,6 +830,9 @@ function createNewProject() {
     })
     .catch((error) => {
       console.error("Ошибка:", error);
+      if (!error.message.includes("Ожидался JSON")) {
+        toggleErrorNameProject(error.message, true);
+      }
     });
 }
 function showProjects() {
@@ -765,12 +909,62 @@ function renderMaps(maps) {
                 </svg>
             </button>
         `;
+    const deleteBtn = projectItem.querySelector(".project-delete");
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showDeleteMapDialog(map.map_name, map.map_id, projectItem);
+    });
 
     projectsSection.appendChild(projectItem);
   });
 
   // Добавляем обработчики событий
   addMapEventListeners();
+}
+// Функция показа диалога удаления
+function showDeleteMapDialog(mapName, mapId, element) {
+  const dialog = document.getElementById("deleteMapDialog");
+  const title = document.getElementById("titleDialog");
+
+  // Устанавливаем название карты в диалог
+  title.textContent = `Вы уверены что хотите удалить проект ${mapName}?`;
+
+  // Показываем диалог
+  dialog.showModal();
+
+  // Обработчик подтверждения удаления
+  const confirmBtn = document.getElementById("confirmDelMapBtn");
+  const oldHandler = confirmBtn.onclick;
+  confirmBtn.onclick = function () {
+    if (oldHandler) oldHandler();
+    handleDeleteMap(mapId, element);
+    dialog.close();
+  };
+}
+async function handleDeleteMap(mapId, element) {
+  try {
+    const response = await fetch("http://localhost:5050/maps/delete", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        map_id: mapId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to delete module");
+    }
+
+    element.remove();
+
+    return await response.json();
+  } catch (error) {
+    console.error("Delete module error:", error);
+    throw error;
+  }
 }
 function addMapEventListeners() {
   document.querySelectorAll(".project-item").forEach((item) => {
@@ -782,16 +976,6 @@ function addMapEventListeners() {
         selectMap(mapId, false); // Ваша функция для открытия карты
       }
     });
-
-    // Обработчик для кнопки удаления
-    const deleteBtn = item.querySelector(".project-delete");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // Предотвращаем всплытие
-        const mapId = item.dataset.mapId;
-        deleteMap(mapId); // Ваша функция для удаления
-      });
-    }
   });
 }
 
@@ -821,9 +1005,6 @@ function selectMap(mapId, is_first_launch) {
       console.error("Ошибка:", error);
     });
 }
-//to do
-function deleteMap(mapId) {}
-// Функция для форматирования даты в формат DD-MM-YYYY
 function formatDate(date) {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");

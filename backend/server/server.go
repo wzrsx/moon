@@ -36,7 +36,7 @@ func StartServe(pool *pgxpool.Pool, logger *zap.Logger, cfg_auth *config_auth.Co
 	}
 
 	logger.Info("Starting server", zap.String("address", srv.Addr))
-	if err = srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Fatal("Server failed", zap.Error(err))
 	}
 	return srv

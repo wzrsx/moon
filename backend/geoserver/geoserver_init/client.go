@@ -36,6 +36,7 @@ func (g *GeoServerClient) GeoserverInit() error {
 		{"ldem-hill", "file:///maps/LDEM_83S_10MPP_ADJ_HILL.tiff"},
 		{"ldsm-83s", "file:///maps/LDSM_83S_10MPP_ADJ.tiff"},
 		{"cmps_5deg", "file:///maps/compress_5deg.tif"},
+		{"cmps_15deg", "file:///maps/compress_15deg.tif"},
 	}
 
 	log.Println(maps)
@@ -51,11 +52,20 @@ func (g *GeoServerClient) GeoserverInit() error {
 	}
 
 	// 3. Устанавливаем стиль
-	if err := g.SetLayerStyle("moon-workspace", "cmps_5deg", "raster-style"); err != nil {
+	// Для слоя cmps_5deg
+	if err := g.SetLayerStyle("moon-workspace", "cmps_5deg", "raster-style", "#00FF00"); err != nil {
 		if !strings.Contains(err.Error(), "exists") {
-			return fmt.Errorf("failed to add %s: %w", err)
+			return fmt.Errorf("failed to set style for cmps_5deg: %w", err)
 		}
-		log.Printf("failed to add %s: %w", err)
+		log.Printf("Style already exists for cmps_5deg: %v", err)
+	}
+
+	// Для слоя cmps_15deg
+	if err := g.SetLayerStyle("moon-workspace", "cmps_15deg", "raster-style-dark", "#00AA00"); err != nil {
+		if !strings.Contains(err.Error(), "exists") {
+			return fmt.Errorf("failed to set style for cmps_15deg: %w", err)
+		}
+		log.Printf("Style already exists for cmps_15deg: %v", err)
 	}
 
 	return nil
@@ -234,9 +244,9 @@ func (g *GeoServerClient) CreateAndPublishGeoTIFFLayer(workspace, storeName, lay
 	return nil
 }
 
-func (g *GeoServerClient) SetLayerStyle(workspace, layerName, styleName string) error {
+func (g *GeoServerClient) SetLayerStyle(workspace, layerName, styleName, color string) error {
 	// 1. First ensure the style exists (create if it doesn't)
-	if err := g.createStyleIfNotExists(workspace, styleName, layerName); err != nil {
+	if err := g.createStyleIfNotExists(workspace, styleName, layerName, color); err != nil {
 		return fmt.Errorf("failed to ensure style exists: %w", err)
 	}
 
@@ -262,7 +272,7 @@ func (g *GeoServerClient) SetLayerStyle(workspace, layerName, styleName string) 
 	return nil
 }
 
-func (g *GeoServerClient) createStyleIfNotExists(workspace, styleName, layerName string) error {
+func (g *GeoServerClient) createStyleIfNotExists(workspace, styleName, layerName, color string) error {
 	// Check if style exists
 	checkStyleURL := fmt.Sprintf("%s/rest/workspaces/%s/styles/%s",
 		g.ConfigGeoServer.BaseURL, workspace, styleName)
@@ -307,14 +317,14 @@ func (g *GeoServerClient) createStyleIfNotExists(workspace, styleName, layerName
                         <RasterSymbolizer>
                             <ColorMap>
                                 <ColorMapEntry color="#000000" quantity="0"/>
-                                <ColorMapEntry color="#00FF00" quantity="1"/>
+                                <ColorMapEntry color="%s" quantity="1"/>
                             </ColorMap>
                         </RasterSymbolizer>
                     </Rule>
                 </FeatureTypeStyle>
             </UserStyle>
         </NamedLayer>
-    </StyledLayerDescriptor>`, layerName, styleName)
+    </StyledLayerDescriptor>`, layerName, styleName, color)
 
 	uploadStyleURL := fmt.Sprintf("%s/rest/workspaces/%s/styles/%s",
 		g.ConfigGeoServer.BaseURL, workspace, styleName)

@@ -1,4 +1,4 @@
-
+let bboxVisibilityModulesInfo;
 let checkboxBbox;
 let toggleBtn;
 let inputsExtent;
@@ -7,6 +7,7 @@ let inputsBbox;
 document.addEventListener('DOMContentLoaded', function() {
   const place = sessionStorage.getItem('temp_selected_place');
   checkboxBbox = document.getElementById('bboxUserMapExport');
+  bboxVisibilityModulesInfo = document.getElementById('bboxVisibilityModulesInfo');
   toggleBtn = document.getElementById('toggleExtentButton');
   inputsExtent = document.getElementById('customExtentInputs');
   arrow = toggleBtn.querySelector('.toggle-extent-arrow');
@@ -20,7 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     inputsExtent.style.display = 'none';
     updateDialogHeight();
-});
+  });
+  
   toggleBtn.addEventListener('click', () => {
     const isVisible = inputsExtent.style.display === 'block';
     inputsExtent.style.display = isVisible ? 'none' : 'block';
@@ -46,25 +48,48 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       document.getElementById('checkboxesModulesName').addEventListener('change', async function(e) {
         const radio = e.target.closest('input[type="radio"]');
-        if (!radio) return;
+        if (!radio || !radio.checked) return;
     
-        if (radio.checked) {
-          isDragging = true; //для updateClippedLayer при перемещении карты
-          const moduleType = {
-            module_type: radio.value,
-          };
-          await toggleExclusionRadius(true, cachedModules, moduleType);
-          
-          if (moduleType.module_type === 'medical_module' || moduleType.module_type === 'repair_module') {
-            onlyGreenInZone = true;
-            await updateClippedLayer();
-          }
-          else{
-            onlyGreenInZone = false;
-            await updateClippedLayer();
-          }
+        // Отменяем предыдущую операцию
+        if (abortController) {
+            abortController.abort();
         }
-      });
+        abortController = new AbortController();
+    
+        try {
+            showSatelliteSpinner("Подготовка...");
+            const moduleType = radio.value;
+            const moduleNameRu =  document.querySelector(`label[for="${radio.id}"]`).textContent;
+            currentModuleType = radio.getAttribute('data-module-habitation');
+            isDragging = true;
+            await toggleExclusionRadius(true, cachedModules, moduleType, {
+                signal: abortController.signal
+            });
+            showSatelliteSpinner(`${moduleNameRu}: обновление зон...`);
+            onlyGreenInZone = ['medical_module', 'repair_module'].includes(moduleType);
+            if (moduleType === 'medical_module') {
+              sendNotification('Медицинский модуль должен быть расположен только вблизи других модулей.', 1);
+            } else if (moduleType === 'repair_module') {
+              sendNotification('Ремонтный модуль должен быть расположен только вблизи других модулей.', 1);
+            }
+            // Создаем и добавляем новый clippedLayer
+            await updateClippedLayer({
+                signal: abortController.signal
+            });
+    
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Ошибка:', err);
+            }
+            isDragging = false;
+        } finally{
+          setTimeout(() => {
+            if (!document.getElementById('loadingSpinner').classList.contains('hidden')) {
+                hideSatelliteSpinner();
+            }
+        }, 500);
+        }
+    });
 });
 
 
@@ -75,7 +100,7 @@ function toggleLayer(layerName, isVisible) {
         console.error("Layer not found:", layerName);
         return;
     }
-    if(layer.get("name") !== 'greenLayer' && isVisible){
+    if((layer.get("name") !== 'greenLayerTech' && layer.get("name") !== 'greenLayerInhabit') && isVisible){
       showPlacesZone(layer.get("name").replace("Layer", ""));
     }else{
       layer.setOpacity(isVisible ? 0.7 : 0)
@@ -93,6 +118,6 @@ function updateDialogHeight() {
   } else if(extentVisible){
       saveDialog.style.height = '60%'; 
   }else{
-    saveDialog.style.height = ''; // или '50%' как базовое значение
+    saveDialog.style.height = ''; 
 }
 }

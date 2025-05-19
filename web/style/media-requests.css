@@ -14,6 +14,11 @@
     .content-sign-in-dialog .btns button {
         font-size: 26px;
     }
+    .sign-in-dialog{
+        padding-bottom: 25px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
 }
 
 
@@ -21,10 +26,13 @@
     .sign-in-dialog {
         border-radius: 20px;
         width: 100%;
+        padding-bottom: 25px;
+        padding-left: 20px;
+        padding-right: 20px;
     }
     .btns {
         display: flex !important;
-        flex-direction: column !important;
+        flex-direction: column;
     }
     .input-sign-in-dialog {
         font-size: 22px;
@@ -41,7 +49,7 @@
     }
     .btns {
         display: flex !important;
-        flex-direction: column !important;
+        flex-direction: column;
     }
     .input-sign-in-dialog {
         font-size: 26px;
@@ -69,7 +77,7 @@
     .content-sign-in-dialog .btns button {
         font-size: 30px;
     }
-    .close-modal-button{
+    .sign-in-dialog .close-modal-button{
         width: 30px !important;
         height: 30px !important;
     }
@@ -590,13 +598,45 @@
 }
 
 
+@media (min-width: 1400px){
+    .check-code-dialog{
+        width: 30%;
+    }
+    .content-check-code-dialog .close-modal-button{
+        margin-top: 10px;
+        font-size: 30px;
+    }
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 35px;
+    }
+    .dialog-subtitle{
+        font-size: 25px;
+    }
+    .code-input-block .code-input{
+        width: 30%;
+    }
+    .enterCode .dialog-subtitle {
+        margin-top: 20px;
+    }
+    
+}
+
 
 @media (min-height: 600px){
     .check-code-dialog{
-        height: 45%;
+        height: 50%;
     }
     .content-check-code-dialog form {
         height: 22%;
+    }
+}
+
+@media (min-height: 700px){
+    .check-code-dialog{
+        height: 50%;
+    }
+    .content-check-code-dialog form {
+        height: 25%;
     }
 }
 
@@ -687,6 +727,20 @@
     
 }
 
+@media (min-width:1400px) and (min-height: 800px) {
+    .content-check-code-dialog .header-form .dialog-title{
+        font-size: 50px;
+    }
+    .check-code-dialog{
+        height: 50%;
+        width: 30%;
+    }
+    .content-check-code-dialog form  {
+        height: 23%;
+    }
+    
+}
+
 @media (min-width:1800px) and (min-height: 900px) {
     .content-check-code-dialog .close-modal-button{
         font-size: 50px;
@@ -714,6 +768,225 @@
         font-size: 30px;
     }
 }
+
+/*для выбора проекта*/
+
+@media (min-width: 300px){
+    .project-selection-dialog .close-modal-button{
+        margin-right: 0;
+    }
+    .project-selection-dialog{
+        width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    
+}
+
+@media (min-width: 700px){
+    .project-selection-dialog{
+        width: 65%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .project-selection-btn{
+        width: 70%;
+    }
+    
+    
+}
+
+@media (min-width: 800px){
+    .project-selection-btn{
+        width: 80%;
+    }
+    
+    
+}
+
+@media (min-width: 1400px){
+    .project-selection-btn{
+        width: 80%;
+    }
+    .project-selection-dialog{
+        width: 45%;
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+    
+    
+}
+@media (min-width: 1800px){
+    .project-selection-dialog{
+        width: 40%;
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+    
+    
+}
+
+
+@media (min-height: 500px){
+    .project-selection-dialog{
+        height: 60%;
+        padding-bottom: 35px;
+    }
+    
+}
+
+@media (min-height: 700px){
+    
+    .project-selection-dialog{
+        height: 55%;
+        padding-bottom: 35px;
+    }
+    
+}
+@media (min-height: 900px){
+    .project-selection-dialog{
+        height: 50%;
+        padding-bottom: 35px;
+    }
+    
+}
+
+@media (min-height: 1100px){
+    
+    .project-selection-dialog{
+        height: 45%;
+        padding-bottom: 35px;
+    }
+    .project-selection-btn{
+        height: 100px;
+    }
+    
+}
+
+@media (min-width: 300px) and (min-height: 500px){
+    .project-selection-dialog .close-modal-button{
+        margin-top: 0;
+        font-size: 35px;
+    }
+    .project-selection-title{
+        font-size: 35px;
+    }
+    .project-selection-btn {
+        font-size: 20px;
+    }
+    .input-project-selection-dialog{
+        font-size: 18px;
+    }
+
+}
+@media (min-width: 370px) and (min-height: 500px){
+    .project-selection-dialog .close-modal-button{
+        margin-top: 0;
+        font-size: 35px;
+    }
+    .project-selection-title{
+        font-size: 40px;
+    }
+    .project-selection-btn {
+        font-size: 25px;
+    }
+    .input-project-selection-dialog{
+        font-size: 20px;
+    }
+
+}
+@media (min-width: 600px) and (min-height: 900px){
+    .project-selection-dialog .close-modal-button{
+        margin-right: 5px;
+        margin-top: 5px;
+        font-size: 45px;
+
+    }
+    .project-selection-title{
+        font-size: 50px;
+    }
+    .project-selection-btn {
+        font-size: 25px;
+    }
+    .input-progect-selection-dialog{
+        font-size: 26px;
+    }
+
+}
+@media (min-width: 800px) and (min-height: 1100px){
+    .project-selection-dialog .close-modal-button{
+        margin-top: 0;
+        font-size: 50px;
+    }
+    .project-selection-title{
+        font-size: 60px;
+    }
+    .project-selection-btn {
+        font-size: 35px;
+    }
+    .input-progect-selection-dialog{
+        font-size: 36px;
+    }
+}
+
+@media (min-width: 1000px) and (min-height: 1300px){
+    .project-selection-dialog .close-modal-button{
+        margin-right: 5px;
+        margin-top: 5px;
+        font-size: 45px;
+    }
+    .project-selection-title{
+        font-size: 70px;
+    }
+    .project-selection-btn {
+        font-size: 40px;
+    }
+    .input-project-selection-dialog {
+        font-size: 26px;
+    }
+
+}
+
+@media (min-width: 1500px) and (min-height: 700px){
+    .project-selection-dialog .close-modal-button{
+        margin-right: 5px;
+        margin-top: 5px;
+        font-size: 50px;
+        width: 50px;
+        height: 50px;
+    }
+    .project-selection-title{
+        font-size: 60px;
+    }
+    .project-selection-btn {
+        height: 80px;
+        font-size: 30px;
+    }
+    .input-project-selection-dialog {
+        font-size: 30px;
+    }
+
+}
+
+@media (min-width: 1800px) and (min-height: 850px){
+    .project-selection-dialog .close-modal-button{
+        margin-right: 5px;
+        margin-top: 5px;
+        font-size: 50px;
+        width: 50px;
+        height: 50px;
+    }
+    .project-selection-title{
+        font-size: 65px;
+    }
+    .project-selection-btn {
+        height: 90px;
+        font-size: 40px;
+    }
+
+}
+
 
 
 /* Стили для Главного окна!!!!!!!----------->*/
@@ -750,6 +1023,9 @@
         align-items: center;
         text-align: center;
     }
+    .user-auth-container{
+        width: 40%;
+    }
     
 }
 @media (min-width: 600px) and (min-height: 900px),
@@ -780,7 +1056,6 @@
         align-items: center;
         text-align: center;
     }
-    
 }
 
 @media (min-width: 1000px) and (min-height: 1000px) {
@@ -823,195 +1098,10 @@
         width: 23%;
         font-size: 45px !important;
     }
+    .user-auth-container{
+        width: 20%;
+    }
     
 } 
 
 
-/* Для building.html*/
-
-@media (min-width: 300px){
-    .notification-title {
-        font-size: 18px;
-    }
-    .notification-text {
-        font-size: 15px;
-    }
-    .dropdown-menu{
-        width: 70%;
-    }
-    .dropdown-menu-btn{
-        width: 80%;
-        font-size: 15px;
-    }
-    .modules-sidebar{
-        width: 100%;
-    }
-    .sidebar-header{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    h2{
-        font-size: 30px;
-    }
-    .modules-sidebar-title{
-        font-size: 30px;
-    }
-    .close-modal-button{
-        width: 35px;
-        height: 35px;
-        margin-top: 2px;
-        margin-right: 7px;
-    }
-    .modules-back-button{
-        margin-bottom: 10px;
-    }
-    .modules-list {
-        grid-template-columns: repeat(1, 1fr); /* 3 колонки одинаковой ширины */
-        grid-template-rows: repeat(1, 1fr);
-        padding-right: 10px;
-    }
-    .item-module {
-        width: calc(100% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
-    }
-}
-@media (min-width: 500px){
-    .notification-title {
-        font-size: 22px;
-    }
-    .notification-text {
-        font-size: 18px;
-    }
-    .dropdown-menu{
-        width: 60%;
-    }
-    .dropdown-menu-btn{
-        width: 70%;
-        font-size: 20px;
-    }
-    h2{
-        font-size: 60px;
-        width: 80%;
-    }
-    .sidebar-header{
-        margin-top: 20px;
-        margin-bottom: 30px;
-    }
-    .close-modal-button{
-        width: 80px;
-        height: 80px;
-        font-size: 50px;
-        margin-top: 5px;
-    }
-    .modules-sidebar-title{
-        font-size: 50px;
-    }
-    .modules-back-button{
-        font-size: 30px ;
-        margin-bottom: 20px;
-    }
-    .modules-choice-type{
-        height: 80%;
-    }
-    .name-module{
-        font-size: 40px;
-    }
-
-}
-@media (min-width: 500px) and (min-height: 500px) and (max-width: 600px){
-    h2{
-        font-size: 50px;
-    }
-}
-@media (min-width: 800px){
-    .notification-title {
-        font-size: 26px;
-    }
-    .notification-text {
-        font-size: 20px;
-    }
-    .dropdown-menu{
-        width: 40%;
-    }
-    .dropdown-menu-btn{
-        font-size: 25px;
-        height: 60px;
-    }
-    .dropdown-menu-btn svg {
-        width: 30px;
-        height: 30px;
-        margin-right: 5px;
-    }
-    h2{
-        font-size: 70px;
-    }
-    .sidebar-header{
-        margin-top: 20px;
-        margin-bottom: 30px;
-    }
-    .close-modal-button{
-        width: 60px;
-        height: 60px;
-        font-size: 60px;
-        margin-top: 30px;
-    }
-    .modules-sidebar-title{
-        font-size: 60px;
-    }
-    .modules-back-button{
-        font-size: 50px ;
-    }
-    .name-module{
-        font-size: 35px;
-    }
-    .item-module {
-        width: calc(50% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
-    }
-
-}
-
-@media (min-width: 1000px){
-    .notification-title {
-        font-size: 32px;
-    }
-    .notification-text {
-        font-size: 22px;
-    }
-    .modules-sidebar{
-        width: 90%;
-        
-    }
-    
-    .dropdown-menu-btn{
-        padding-right: 7px;
-    }
-    
-}
-
-@media (min-width: 1600px){
-    .notification-title {
-        font-size: 40px;
-    }
-    .notification-text {
-        font-size: 26px;
-    }
-    .dropdown-menu{
-        width: 30%;
-    }
-    .dropdown-menu-btn{
-        font-size: 30px;
-    }
-    .modules-sidebar{
-        width: 80%;
-    }
-    .item-module {
-        width: calc(33.33% - 20px); /* Ширина элемента (3 колонки) с учетом отступов */
-    }
-    h2{
-        font-size: 90px;
-    }
-    .name-module{
-        font-size: 40px;
-    }
-}

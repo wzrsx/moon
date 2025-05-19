@@ -3,6 +3,7 @@ package queries_auth
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -22,6 +23,7 @@ func ExistsEmail(email string, pool *pgxpool.Pool) error {
 	if exists {
 		return errors.New("email exists")
 	}
+	log.Println(exists)
 
 	return nil
 }

@@ -1,404 +1,838 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style/reset.css">
-    <link rel="stylesheet" href="/static/style/style.css">
-    <link rel="stylesheet" href="/static/style/media-requests.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/static/style/reset.css" />
+    <link rel="stylesheet" href="/static/style/style.css" />
+    <link rel="stylesheet" href="/static/style/building-media-requests.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" />
     <style>
-        #map {
-            width: 100%;
-            height: 100%;
-        }
+      #map {
+        width: 100%;
+        height: 100%;
+      }
     </style>
     <title>Выбор места</title>
-</head>
-<body class="building-body">
-    <div id="blurDiv" style="z-index: 1001;"></div>
+  </head>
+  <body class="building-body">
+    <div id="blurDiv" style="z-index: 1001"></div>
     <main class="main-content">
-        <div class="map-container">
-            <nav class="nav-map-container">
-                <input type="checkbox" id="burger-checkbox" class="burger-checkbox">
-                <label for="burger-checkbox" class="burger">
-                    <svg viewBox="0 0 100 80" width="40" height="26">
-                        <rect class="burger-line top" width="100" height="15" rx="8"></rect>
-                        <rect class="burger-line middle" y="30" width="100" height="15" rx="8"></rect>
-                        <rect class="burger-line bottom" y="60" width="100" height="15" rx="8"></rect>
-                    </svg>
-                </label>
-    
-                <div class="dropdown-menu">
-                    <div class="main-buttons">
-                        <button class="dropdown-menu-btn" id="placeModulesBtn">
-                            <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M18 7.29175V27.7084M7.5 17.5001H28.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Разместить модули</span>
-                        </button>
-                        <button class="dropdown-menu-btn" id="showZonesBtn">
-                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g clip-path="url(#clip0_167_50)">
-                                <path d="M1.45833 17.4999C1.45833 17.4999 7.29167 5.83325 17.5 5.83325C27.7083 5.83325 33.5417 17.4999 33.5417 17.4999C33.5417 17.4999 27.7083 29.1666 17.5 29.1666C7.29167 29.1666 1.45833 17.4999 1.45833 17.4999Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M17.5 21.8749C19.9162 21.8749 21.875 19.9162 21.875 17.4999C21.875 15.0837 19.9162 13.1249 17.5 13.1249C15.0838 13.1249 13.125 15.0837 13.125 17.4999C13.125 19.9162 15.0838 21.8749 17.5 21.8749Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </g>
-                            <defs>
-                                <clipPath id="clip0_167_50">
-                                <rect width="35" height="35" fill="white"/>
-                                </clipPath>
-                            </defs>
-                            </svg>
-                            <span>Отображение зон</span>
-                        </button>
-                        <button class="dropdown-menu-btn" id="notificationsBtn">
-                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Уведомления</span>
-                        </button>
-                        <button class="dropdown-menu-btn" id="saveProjectBtn">
-                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Сохранить</span>
-                        </button>
-                        <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
-                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Выйти</span>
-                        </button>
-                    </div>
-                    <div class="zones-checkboxes">
-                        <div class="header-zones-checkboxes">
-                            <button id="backMainButtons">
-                                <svg width="20" height="20" viewBox="0 0 26.676 26.676" fill="#000000" style="margin-right: 8px; vertical-align: middle;">
-                                    <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59
+      <div class="map-container">
+        <nav class="nav-map-container">
+          <input type="checkbox" id="burger-checkbox" class="burger-checkbox" />
+          <label for="burger-checkbox" class="burger">
+            <svg viewBox="0 0 100 80" width="40" height="26">
+              <rect
+                class="burger-line top"
+                width="100"
+                height="15"
+                rx="8"
+              ></rect>
+              <rect
+                class="burger-line middle"
+                y="30"
+                width="100"
+                height="15"
+                rx="8"
+              ></rect>
+              <rect
+                class="burger-line bottom"
+                y="60"
+                width="100"
+                height="15"
+                rx="8"
+              ></rect>
+            </svg>
+          </label>
+          <div class="dropdown-menu">
+            <div class="main-buttons">
+              <button class="dropdown-menu-btn" id="placeModulesBtn">
+                <svg
+                  width="36"
+                  height="35"
+                  viewBox="0 0 36 35"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18 7.29175V27.7084M7.5 17.5001H28.5"
+                    stroke="#1E1E1E"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Разместить модули</span>
+              </button>
+              <button class="dropdown-menu-btn" id="showZonesBtn">
+                <svg
+                  width="35"
+                  height="35"
+                  viewBox="0 0 35 35"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clip-path="url(#clip0_167_50)">
+                    <path
+                      d="M1.45833 17.4999C1.45833 17.4999 7.29167 5.83325 17.5 5.83325C27.7083 5.83325 33.5417 17.4999 33.5417 17.4999C33.5417 17.4999 27.7083 29.1666 17.5 29.1666C7.29167 29.1666 1.45833 17.4999 1.45833 17.4999Z"
+                      stroke="#1E1E1E"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M17.5 21.8749C19.9162 21.8749 21.875 19.9162 21.875 17.4999C21.875 15.0837 19.9162 13.1249 17.5 13.1249C15.0838 13.1249 13.125 15.0837 13.125 17.4999C13.125 19.9162 15.0838 21.8749 17.5 21.8749Z"
+                      stroke="#1E1E1E"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_167_50">
+                      <rect width="35" height="35" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+                <span>Отображение зон</span>
+              </button>
+              <button class="dropdown-menu-btn" id="notificationsBtn">
+                <svg
+                  width="35"
+                  height="35"
+                  viewBox="0 0 35 35"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20.0229 30.6251C19.7665 31.0671 19.3985 31.434 18.9557 31.689C18.513 31.944 18.011 32.0782 17.5 32.0782C16.989 32.0782 16.487 31.944 16.0443 31.689C15.6015 31.434 15.2335 31.0671 14.9771 30.6251M26.25 11.6667C26.25 9.3461 25.3281 7.12051 23.6872 5.47956C22.0462 3.83862 19.8206 2.91675 17.5 2.91675C15.1794 2.91675 12.9538 3.83862 11.3128 5.47956C9.67187 7.12051 8.75 9.3461 8.75 11.6667C8.75 21.8751 4.375 24.7918 4.375 24.7918H30.625C30.625 24.7918 26.25 21.8751 26.25 11.6667Z"
+                    stroke="#1E1E1E"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Уведомления</span>
+              </button>
+              <button class="dropdown-menu-btn" id="saveProjectBtn">
+                <svg
+                  width="35"
+                  height="35"
+                  viewBox="0 0 35 35"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M24.7917 30.625V18.9583H10.2083V30.625M10.2083 4.375V11.6667H21.875M27.7083 30.625H7.29167C6.51812 30.625 5.77625 30.3177 5.22927 29.7707C4.68229 29.2237 4.375 28.4819 4.375 27.7083V7.29167C4.375 6.51812 4.68229 5.77625 5.22927 5.22927C5.77625 4.68229 6.51812 4.375 7.29167 4.375H23.3333L30.625 11.6667V27.7083C30.625 28.4819 30.3177 29.2237 29.7707 29.7707C29.2237 30.3177 28.4819 30.625 27.7083 30.625Z"
+                    stroke="#1E1E1E"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Сохранить</span>
+              </button>
+              <button class="dropdown-menu-btn exit-btn" id="exitToMainBtn">
+                <svg
+                  width="35"
+                  height="35"
+                  viewBox="0 0 35 35"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.125 20.4166L5.83337 13.1249M5.83337 13.1249L13.125 5.83325M5.83337 13.1249H23.3334C24.8805 13.1249 26.3642 13.7395 27.4582 14.8335C28.5521 15.9274 29.1667 17.4112 29.1667 18.9583V29.1666"
+                    stroke="white"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Выйти</span>
+              </button>
+            </div>
+            <div class="zones-checkboxes">
+              <div class="header-zones-checkboxes">
+                <button id="backMainButtons">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 26.676 26.676"
+                    fill="#000000"
+                    style="margin-right: 8px; vertical-align: middle"
+                  >
+                    <path
+                      d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59
                                         c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815
                                         C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029
                                         c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562
-                                        C26.18,21.891,26.141,21.891,26.105,21.891z"/>
-                                </svg>
-                            </button>
-                            <span class="title-zones-checkboxes">Отображение зон</span>
-                        </div>
-                        
-                        <div class="zones-panel">
-                            <div class="slope-control">
-                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
-                                <span class="slope-title">Допустимые уклоны</span>
-                                <span class="slope-arrow">▼</span>
-                              </div>
-                              <div class="slope-options">
-                                <div class="slope-option">
-                                  <input type="checkbox" id="habitableModulesCheckbox" data-layer="greenLayer" onchange="updateOptionStyle(this)">
-                                  <label for="habitableModulesCheckbox">Для обитаемых</label>
-                                </div>
-                                <div class="slope-option">
-                                  <input type="checkbox" id="technicalModulesCheckbox" data-layer="greenLayer" onchange="updateOptionStyle(this)">
-                                  <label for="technicalModulesCheckbox">Для технологических</label>
-                                </div>
-                              </div>
-                            </div>
-                        </div>
-                        <div class="zones-panel">
-                            <div class="slope-control">
-                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
-                                <span class="slope-title">Предпочтительные места</span>
-                                <span class="slope-arrow">▼</span>
-                              </div>
-                              <div class="slope-options">
-                                <div class="slope-option">
-                                  <input type="checkbox" id="malapertCheckbox" data-layer="malapertLayer" onchange="updateOptionStyle(this)">
-                                  <label for="malapertCheckbox">Малаперт</label>
-                                </div>
-                                <div class="slope-option">
-                                  <input type="checkbox" id="shackletonCheckbox" data-layer="shackletonLayer" onchange="updateOptionStyle(this)">
-                                  <label for="shackletonCheckbox">Шеклтон</label>
-                                </div>
-                                <div class="slope-option">
-                                    <input type="checkbox" id="haworthCheckbox" data-layer="haworthLayer" onchange="updateOptionStyle(this)">
-                                    <label for="haworthCheckbox">Хауорт</label>
-                                  </div>
-                              </div>
-                            </div>
-                        </div>
-                        <div class="zones-panel">
-                            <div class="slope-control">
-                              <div class="slope-toggle-btn" onclick="toggleSlopeOptions(this)">
-                                <span class="slope-title">Для расположения модуля</span>
-                                <span class="slope-arrow">▼</span>
-                              </div>
-                              <div class="slope-options" id="checkboxesModulesName">
-                              </div>
-                            </div>
-                        </div>      
-                        <div class="zones-panel">
-                            <div class="slope-control">
-                              <label class="slope-toggle-btn"> <!-- Обернули в <label>, чтобы клик по тексту тоже работал -->
-                                <span>Карта высот</span>
-                                <span class="slope-checkbox-label">
-                                  <input type="checkbox" id="heightMapToggle" class="slope-checkbox" onchange="updateOptionStyle(this)">
-                                  <span class="slope-checkbox-custom"></span>
-                                </span>
-                              </label>
-                            </div>
-                            
-                        </div>      
+                                        C26.18,21.891,26.141,21.891,26.105,21.891z"
+                    />
+                  </svg>
+                </button>
+                <span class="title-zones-checkboxes">Отображение зон</span>
+              </div>
+
+              <div class="zones-panel">
+                <div class="slope-control">
+                  <div
+                    class="slope-toggle-btn"
+                    onclick="toggleSlopeOptions(this)"
+                  >
+                    <span class="slope-title">Допустимые уклоны</span>
+                    <span class="slope-arrow">▼</span>
+                  </div>
+                  <div class="slope-options">
+                    <div class="slope-option">
+                      <input
+                        type="checkbox"
+                        id="habitableModulesCheckbox"
+                        data-layer="greenLayerInhabit"
+                        onchange="updateOptionStyle(this)"
+                      />
+                      <label for="habitableModulesCheckbox"
+                        >Для обитаемых</label
+                      >
                     </div>
-                </div>
-            </nav>
-            <div id="map">
-                <div id="scaleDisplayContainer">
-                  <div class="scale-line">
-                    <div class="scale-bar" style="width: 100px;"></div>
-                    <div class="scale-text">1 km</div>
-                  </div>                        
+                    <div class="slope-option">
+                      <input
+                        type="checkbox"
+                        id="technicalModulesCheckbox"
+                        data-layer="greenLayerTech"
+                        onchange="updateOptionStyle(this)"
+                      />
+                      <label for="technicalModulesCheckbox"
+                        >Для технологических</label
+                      >
+                    </div>
+                  </div>
                 </div>
               </div>
-            
+              <div class="zones-panel">
+                <div class="slope-control">
+                  <div
+                    class="slope-toggle-btn"
+                    onclick="toggleSlopeOptions(this)"
+                  >
+                    <span class="slope-title">Предпочтительные места</span>
+                    <span class="slope-arrow">▼</span>
+                  </div>
+                  <div class="slope-options">
+                    <div class="slope-option">
+                      <input
+                        type="checkbox"
+                        id="malapertCheckbox"
+                        data-layer="malapertLayer"
+                        onchange="updateOptionStyle(this)"
+                      />
+                      <label for="malapertCheckbox">Малаперт</label>
+                    </div>
+                    <div class="slope-option">
+                      <input
+                        type="checkbox"
+                        id="shackletonCheckbox"
+                        data-layer="shackletonLayer"
+                        onchange="updateOptionStyle(this)"
+                      />
+                      <label for="shackletonCheckbox">Шеклтон</label>
+                    </div>
+                    <div class="slope-option">
+                      <input
+                        type="checkbox"
+                        id="haworthCheckbox"
+                        data-layer="haworthLayer"
+                        onchange="updateOptionStyle(this)"
+                      />
+                      <label for="haworthCheckbox">Хауорт</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="zones-panel">
+                <div class="slope-control">
+                  <div
+                    class="slope-toggle-btn"
+                    onclick="toggleSlopeOptions(this)"
+                  >
+                    <span class="slope-title">Для расположения модуля</span>
+                    <span class="slope-arrow">▼</span>
+                  </div>
+                  <div class="slope-options" id="checkboxesModulesName"></div>
+                </div>
+              </div>
+              <div class="zones-panel">
+                <div class="slope-control">
+                  <label class="slope-toggle-btn">
+                    <!-- Обернули в <label>, чтобы клик по тексту тоже работал -->
+                    <span>Карта высот</span>
+                    <span class="slope-checkbox-label">
+                      <input
+                        type="checkbox"
+                        id="heightMapToggle"
+                        class="slope-checkbox"
+                        onchange="updateOptionStyle(this)"
+                      />
+                      <span class="slope-checkbox-custom"></span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <div id="map">
+          <div id="scaleDisplayContainer">
+            <div class="scale-line">
+              <div class="scale-bar" style="width: 100px"></div>
+              <div class="scale-text">1 km</div>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="module-info-toggle">
+        <label>
+          <input type="checkbox" checked="checked" id="bboxVisibilityModulesInfo"/>
+          <span>Всплывающая информация о модулях</span>
+        </label>
+      </div>
     </main>
     <aside class="modules-sidebar" id="modulesSidebar">
-        <div class="sidebar-header">
-            <h2 id="typeModulesTitle">Выбор модулей</h2>
-            <button class="close-modal-button" onclick="closeAside()">
-                &#x2715;
-            </button>
+      <div class="sidebar-header">
+        <h2 id="typeModulesTitle">Выбор модулей</h2>
+        <button class="close-modal-button" onclick="closeAside()">
+          &#x2715;
+        </button>
+      </div>
+      <div class="modules-choice-type" id="modulesChoiceType">
+        <div
+          class="module-card inhabited-modules"
+          onclick="openInhabitedModules()"
+        >
+          <p class="modules-sidebar-title">Обитаемые модули</p>
         </div>
-        <div class="modules-choice-type" id="modulesChoiceType">
-            <div class="module-card inhabited-modules" onclick="openInhabitedModules()">
-                <p class="modules-sidebar-title">Обитаемые модули</p>
-            </div>
-            <div class="module-card technological-modules" onclick="openTechnologicalModules()">
-                <p class="modules-sidebar-title">Технологические объекты</p>
-            </div>
+        <div
+          class="module-card technological-modules"
+          onclick="openTechnologicalModules()"
+        >
+          <p class="modules-sidebar-title">Технологические объекты</p>
         </div>
-        <div class="modules-container" id="modulesContainerInhabited" style="display: none;">
-            <div class="modules-back-button" onclick="backToTypes()">
-                ← Назад к выбору типа
-            </div>
-            <div class="modules-list" id="modulesList" >
-                <div class="item-module" draggable="false" data-name-en-db="living_module">
-                    <img class="photo-item-module" src="/static/style/photos/living_module.png" alt="">
-                    <p class="name-module">Жилой модуль</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="sport_module">
-                    <img class="photo-item-module" src="/static/style/photos/sport_module.png" alt="">
-                    <p class="name-module">Спортивный модуль</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="administrative_module">
-                    <img class="photo-item-module" src="/static/style/photos/administrative_module.png" alt="">
-                    <p class="name-module">Административный модуль</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="medical_module">
-                    <img class="photo-item-module" src="/static/style/photos/medical_module.png" alt="">
-                    <p class="name-module">Медицинский модуль</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="research_module">
-                    <img class="photo-item-module" src="/static/style/photos/research_module.png" alt="">
-                    <p class="name-module">Исследовательский модуль</p>
-                </div>
-            </div>
+      </div>
+      <div
+        class="modules-container"
+        id="modulesContainerInhabited"
+        style="display: none"
+      >
+        <div class="modules-back-button" onclick="backToTypes()">
+          ← Назад к выбору типа
+        </div>
+        <div class="modules-list" id="modulesList">
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="living_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/living_module.png"
+              alt=""
+            />
+            <p class="name-module">Жилой модуль</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="sport_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/sport_module.png"
+              alt=""
+            />
+            <p class="name-module">Спортивный модуль</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="administrative_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/administrative_module.png"
+              alt=""
+            />
+            <p class="name-module">Административный модуль</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="medical_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/medical_module.png"
+              alt=""
+            />
+            <p class="name-module">Медицинский модуль</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="research_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/research_module.png"
+              alt=""
+            />
+            <p class="name-module">Исследовательский модуль</p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="modules-container"
+        id="modulesContainerTechnological"
+        style="display: none"
+      >
+        <div class="modules-back-button" onclick="backToTypes()">
+          ← Назад к выбору типа
+        </div>
+        <div class="modules-list" id="modulesList">
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="repair_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/repair_module.png"
+              alt=""
+            />
+            <p class="name-module">Ремонтный модуль</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="spaceport_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/spaceport_module.png"
+              alt=""
+            />
+            <p class="name-module">Космодром</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="communication_tower_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/communication_tower_module.png"
+              alt=""
+            />
+            <p class="name-module">Вышка связи</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="plantation_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/plantation_module.png"
+              alt=""
+            />
+            <p class="name-module">Плантация</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="landfill_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/landfill_module.png"
+              alt=""
+            />
+            <p class="name-module">Мусорный полигон</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="production_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/production_module.png"
+              alt=""
+            />
+            <p class="name-module">Производство</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="astro_site_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/astro_site_module.png"
+              alt=""
+            />
+            <p class="name-module">Астроплощадка</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="solar_power_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/solar_power_module.png"
+              alt=""
+            />
+            <p class="name-module">Солнечная ЭС</p>
+          </div>
+          <div
+            class="item-module"
+            draggable="false"
+            data-name-en-db="mine_module"
+          >
+            <img
+              class="photo-item-module"
+              src="/static/style/photos/mine_module.png"
+              alt=""
+            />
+            <p class="name-module">Шахта</p>
+          </div>
+        </div>
+      </div>
+      <div
+        class="modules-container"
+        id="notificationsContainer"
+        style="display: none"
+      >
+        <div class="notification-item">
+          <div class="notification-header">
+            <p class="notification-title">Обновление статуса проекта</p>
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 30 30"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5"
+                stroke="#1E1E1E"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <p class="notification-text">
+            Работы по установке солнечных электростанций на лунной базе успешно
+            завершены.
+            <br />
+            Пожалуйста, следите за дальнейшими обновлениями!
+          </p>
+
+          <p></p>
         </div>
 
-        <div class="modules-container" id="modulesContainerTechnological" style="display: none;">
-            <div class="modules-back-button" onclick="backToTypes()">
-                ← Назад к выбору типа
-            </div>
-            <div class="modules-list" id="modulesList">
-                <div class="item-module" draggable="false" data-name-en-db="repair_module">
-                    <img class="photo-item-module" src="/static/style/photos/repair_module.png" alt="">
-                    <p class="name-module">Ремонтный модуль</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="spaceport_module">
-                    <img class="photo-item-module" src="/static/style/photos/spaceport_module.png" alt="">
-                    <p class="name-module">Космодром</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="communication_tower_module">
-                    <img class="photo-item-module" src="/static/style/photos/communication_tower_module.png" alt="">
-                    <p class="name-module">Вышка связи</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="plantation_module">
-                    <img class="photo-item-module" src="/static/style/photos/plantation_module.png" alt="">
-                    <p class="name-module">Плантация</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="landfill_module">
-                    <img class="photo-item-module" src="/static/style/photos/landfill_module.png" alt="">
-                    <p class="name-module">Мусорный полигон</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="production_module">
-                    <img class="photo-item-module" src="/static/style/photos/production_module.png" alt="">
-                    <p class="name-module">Производство</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="astro_site_module">
-                    <img class="photo-item-module" src="/static/style/photos/astro_site_module.png" alt="">
-                    <p class="name-module">Астроплощадка</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="solar_power_module">
-                    <img class="photo-item-module" src="/static/style/photos/solar_power_module.png" alt="">
-                    <p class="name-module">Солнечная ЭС</p>
-                </div>
-                <div class="item-module" draggable="false" data-name-en-db="mine_module">
-                    <img class="photo-item-module" src="/static/style/photos/mine_module.png" alt="">
-                    <p class="name-module">Шахта</p>
-                </div>
-            </div>
+        <div class="notification-item">
+          <div class="notification-header">
+            <p class="notification-title">Обновление статуса проекта</p>
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 30 30"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5"
+                stroke="#1E1E1E"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <p class="notification-text">
+            Работы по установке солнечных электростанций на лунной базе успешно
+            завершены.
+            <br />
+            Пожалуйста, следите за дальнейшими обновлениями!
+          </p>
+
+          <p></p>
         </div>
-        <div class="modules-container" id="notificationsContainer" style="display: none;">
-                <div class="notification-item">
-                    <div class="notification-header">
-                        <p class="notification-title">Обновление статуса проекта</p>
-                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены. 
-                        <br>
-                        Пожалуйста, следите за дальнейшими обновлениями!
-                    <p>
-                </div>
-                <div class="notification-item">
-                    <div class="notification-header">
-                        <p class="notification-title">Обновление статуса проекта</p>
-                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены. 
-                        <br>
-                        Пожалуйста, следите за дальнейшими обновлениями!
-                    <p>
-                </div>
-                <div class="notification-item">
-                    <div class="notification-header">
-                        <p class="notification-title">Обновление статуса проекта</p>
-                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <p class="notification-text">Работы по установке солнечных электростанций на лунной базе успешно завершены. 
-                        <br>
-                        Пожалуйста, следите за дальнейшими обновлениями!
-                    <p>
-                </div>
+
+        <div class="notification-item">
+          <div class="notification-header">
+            <p class="notification-title">Обновление статуса проекта</p>
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 30 30"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5"
+                stroke="#1E1E1E"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <p class="notification-text">
+            Работы по установке солнечных электростанций на лунной базе успешно
+            завершены.
+            <br />
+            Пожалуйста, следите за дальнейшими обновлениями!
+          </p>
+
+          <p></p>
         </div>
+      </div>
     </aside>
-    
 
     <dialog class="confirm-dialog" id="confirmDialog">
-        <div class="content-confirm-dialog">
-            <div class="header-form">
-                <button class="close-modal-button" onclick="closeConfirmDialog()" style="display: block;">
-                    &#x2715;
-                </button>
-                <p id="titleDialog">Вы уверены что хотите выйти?</p>
-            </div>
-            <span>Текущие изменения сохранены</span>
-            <div class="confirm-dialog-btns btns">
-                <button id="cancelBtn" onclick="closeConfirmDialog()">Отмена</button>
-                <button id="confirmBtn">Выйти</button>
-            </div>
+      <div class="content-confirm-dialog">
+        <div class="header-form">
+          <button
+            class="close-modal-button"
+            onclick="closeConfirmDialog()"
+            style="display: block"
+          >
+            &#x2715;
+          </button>
+          <p id="titleDialog">Вы уверены что хотите выйти?</p>
         </div>
+        <span>Текущие изменения сохранены</span>
+        <div class="confirm-dialog-btns btns">
+          <button id="cancelBtn" onclick="closeConfirmDialog()">Отмена</button>
+          <button id="confirmBtn">Выйти</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog class="confirm-dialog" id="deleteModuleDialog">
+      <div class="content-confirm-dialog">
+        <div class="header-form">
+          <button
+            class="close-modal-button"
+            onclick="closeDeleteModuleDialog()"
+            style="display: block"
+          >
+            &#x2715;
+          </button>
+          <p id="titleDeleteDialog">Вы уверены, что хотите удалить модуль?</p>
+        </div>
+        <span id="moduleDeleteMessage">Это действие нельзя отменить</span>
+        <div class="confirm-dialog-btns btns">
+          <button id="cancelDeleteBtn" onclick="closeDeleteModuleDialog()">
+            Отмена
+          </button>
+          <button id="confirmDeleteBtn">Удалить</button>
+        </div>
+      </div>
     </dialog>
     <dialog class="confirm-dialog" id="saveDialog">
-        <div class="content-confirm-dialog">
-            <div class="header-form">
-                <button class="close-modal-button" onclick="closeSaveDialog()" style="display: block;">
-                    &#x2715;
-                </button>
-                <p>Выберите формат</p>
-            </div>
-            <div class="formats-files">
-                <button class="format-file-btn png-btn" onclick="showParametrsPNG()"></button>
-                <button class="format-file-btn json-btn" onclick="selectJSON()"></button>
-                <button class="format-file-btn pdf-btn" onclick="showParametrsPDF()"></button>
-            </div>
-            <div class="parametrs-to-export" style="display: none;" id="parametrsToExportPNG">
-                <p>Карта будет сохранена по крайним точкам модулей</p>
-                <div class="checkbox-user-bbox">
-                    <input type="checkbox" name="" id="bboxUserMapExport" class="user-bbox">
-                    <label for="bboxUserMapExport">Использовать свои границы</label>
-                </div>
-                <div id="customBboxInputs" style="display: none; margin-top: 15px;">
-                    <div class="save-inputs-group">
-                        <label>Координаты X</label>
-                        <div class="bbox-inputs-row">
-                            <div class="input-wrapper">
-                                <input type="number" id="x1Input" name="x1" placeholder="X1">
-                            </div>
-                            <div class="input-wrapper">
-                                <input type="number" id="x2Input" name="x2" placeholder="X2">
-                            </div>
-                        </div>
-                    </div>
-                
-                    <div class="save-inputs-group">
-                        <label>Координаты Y</label>
-                        <div class="bbox-inputs-row">
-                            <div class="input-wrapper">
-                                <input type="number" id="y1Input" name="y1" placeholder="Y1">
-                            </div>
-                            <div class="input-wrapper">
-                                <input type="number" id="y2Input" name="y2" placeholder="Y2">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; cursor: pointer; justify-content: center; margin-bottom: 10px;" id="toggleExtentButton">
-                    <p style="margin: 0;">Вы можете настроить отступ до края изображения</p>
-                    <span class="toggle-extent-arrow"></span>
-                </div>
-            
-                    <div id="customExtentInputs" style="display: none; margin-top: 15px;">
-                        <div class="save-inputs-group">
-                            <div class="extent-inputs-row">
-                                <div class="label-value">
-                                    <span class="extent-label-text">Отступ сверху:</span>
-                                    <span class="percent-value" id="topVal">5.0</span>
-                                    <span>%</span>
-                                </div>
-                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginTop">
-                            </div>
-                        
-                            <div class="extent-inputs-row">
-                                <div class="label-value">
-                                    <span class="extent-label-text">Отступ снизу:</span>
-                                    <span class="percent-value" id="bottomVal">5.0</span>
-                                    <span>%</span>
-                                </div>
-                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginBottom">
-                            </div>
-                        </div>
-                    
-                        <div class="save-inputs-group">
-                            <div class="extent-inputs-row">
-                                <div class="label-value">
-                                    <span class="extent-label-text">Отступ справа:</span>
-                                    <span class="percent-value" id="rightVal">5.0</span>
-                                    <span>%</span>
-                                </div>
-                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginRight">
-                            </div>
-                            <div class="extent-inputs-row">
-                                <div class="label-value">
-                                    <span class="extent-label-text">Отступ слева:</span>
-                                    <span class="percent-value" id="leftVal">5.0</span>
-                                    <span>%</span>
-                                </div>
-                                <input type="range" min="0" max="50" value="5.0" step="0.1" id="marginLeft">
-                            </div>
-                        </div>
-                    </div>
-            </div>       
-            <div class="confirm-dialog-btns btns">
-                <button id="cancelSaveBtn" onclick="closeSaveDialog()">Отмена</button>
-                <button id="saveBtn" onclick="exportMapToSelectedFormat()">Сохранить</button>
-            </div>
+      <div class="content-confirm-dialog">
+        <div class="header-form">
+          <button
+            class="close-modal-button"
+            onclick="closeSaveDialog()"
+            style="display: block"
+          >
+            &#x2715;
+          </button>
+          <p>Выберите формат</p>
         </div>
+        <div class="formats-files">
+          <button
+            class="format-file-btn png-btn"
+            onclick="showParametrsPNG()"
+          ></button>
+          <button
+            class="format-file-btn json-btn"
+            onclick="selectJSON()"
+          ></button>
+          <button
+            class="format-file-btn pdf-btn"
+            onclick="showParametrsPDF()"
+          ></button>
+        </div>
+        <div
+          class="parametrs-to-export"
+          style="display: none"
+          id="parametrsToExportPNG"
+        >
+          <p>Карта будет сохранена с 5% отступом от модулей</p>
+          <div class="checkbox-user-bbox">
+            <input
+              type="checkbox"
+              name=""
+              id="bboxUserMapExport"
+              class="user-bbox"
+            />
+            <label for="bboxUserMapExport">Использовать свои границы</label>
+          </div>
+          <div id="customBboxInputs" style="display: none; margin-top: 15px">
+            <div class="save-inputs-group">
+              <label>Координаты X</label>
+              <div class="bbox-inputs-row">
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="x1Input"
+                    name="x1"
+                    placeholder="X1"
+                  />
+                </div>
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="x2Input"
+                    name="x2"
+                    placeholder="X2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="save-inputs-group">
+              <label>Координаты Y</label>
+              <div class="bbox-inputs-row">
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="y1Input"
+                    name="y1"
+                    placeholder="Y1"
+                  />
+                </div>
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="y2Input"
+                    name="y2"
+                    placeholder="Y2"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              cursor: pointer;
+              justify-content: center;
+              margin-bottom: 10px;
+            "
+            id="toggleExtentButton"
+          >
+            <p style="margin: 0">
+              Вы можете настроить отступ до края изображения
+            </p>
+            <span class="toggle-extent-arrow"></span>
+          </div>
+
+          <div id="customExtentInputs" style="display: none; margin-top: 15px">
+            <div class="save-inputs-group">
+              <div class="extent-inputs-row">
+                <div class="label-value">
+                  <span class="extent-label-text">Отступ сверху:</span>
+                  <span class="percent-value" id="topVal">5.0</span>
+                  <span class="percent">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value="5.0"
+                  step="0.1"
+                  id="marginTop"
+                />
+              </div>
+
+              <div class="extent-inputs-row">
+                <div class="label-value">
+                  <span class="extent-label-text">Отступ снизу:</span>
+                  <span class="percent-value" id="bottomVal">5.0</span>
+                  <span class="percent">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value="5.0"
+                  step="0.1"
+                  id="marginBottom"
+                />
+              </div>
+            </div>
+
+            <div class="save-inputs-group">
+              <div class="extent-inputs-row">
+                <div class="label-value">
+                  <span class="extent-label-text">Отступ справа:</span>
+                  <span class="percent-value" id="rightVal">5.0</span>
+                  <span class="percent">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value="5.0"
+                  step="0.1"
+                  id="marginRight"
+                />
+              </div>
+              <div class="extent-inputs-row">
+                <div class="label-value">
+                  <span class="extent-label-text">Отступ слева:</span>
+                  <span class="percent-value" id="leftVal">5.0</span>
+                  <span class="percent">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value="5.0"
+                  step="0.1"
+                  id="marginLeft"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="confirm-dialog-btns btns">
+          <button id="cancelSaveBtn" onclick="closeSaveDialog()">Отмена</button>
+          <button id="saveBtn" onclick="exportMapToSelectedFormat()">
+            Сохранить
+          </button>
+        </div>
+      </div>
     </dialog>
-    <div class="custom-notification" id="customNotification">
+    <div class="custom-notification" id="customNotification"></div>
+    <div id="loadingSpinner" class="satellite-spinner hidden">
+      <div class="satellite-spinner-overlay"></div>
+      <div class="satellite-spinner-content">
+        <img
+          src="/static/style/logo/satellite.png"
+          alt="Спутник"
+          class="spinner-satellite-icon"
+        />
+        <div class="spinner-text">Загрузка...</div>
+      </div>
     </div>
     <!-- Подключение библиотек -->
     <script src="https://cdn.jsdelivr.net/npm/proj4@2.7.5/dist/proj4.js"></script>
@@ -408,5 +842,5 @@
     <script src="/static/script/popup.js"></script>
     <script src="/static/script/handlersZones.js"></script>
     <script src="/static/script/exportMap.js"></script>
-</body>
+  </body>
 </html>
