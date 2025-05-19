@@ -13,6 +13,7 @@ let currentSafeZone = null;
 
 let onlyGreenInZone = false;
 let abortController = null;
+let isClippedLayerLoading = false;
 
 // Функция загрузки модулей с сервера
 function loadModules() {
@@ -546,6 +547,10 @@ modules.forEach(module => {
     
       // Очистка при отпускании кнопки мыши
       function onMouseUp(e) {
+        if (isClippedLayerLoading) {
+          sendNotification("Слой еще загружается", 0);
+          return;
+        }
         // Удаляем старые clipped layers
         map.getLayers().getArray().forEach(layer => {
           if (layer && layer.get && layer.get('isClippedLayer')) {
@@ -1528,6 +1533,7 @@ function processCoordinates(zone, ctx, projectFn) {
   }
 }
 async function updateClippedLayer(options = {}) {
+  isClippedLayerLoading = true;
   // Удаляем старые clipped layers
   map.getLayers().getArray().forEach(layer => {
     if (layer && layer.get && layer.get('isClippedLayer')) {
@@ -1562,8 +1568,10 @@ async function updateClippedLayer(options = {}) {
       throw new DOMException('Aborted', 'AbortError');
   }
 
-  // Добавляем слой напрямую здесь
-  map.addLayer(clippedLayer);
+  if (!options.signal?.aborted) {
+    map.addLayer(clippedLayer);
+  }
+  isClippedLayerLoading = false;
   hideSatelliteSpinner();
 }
 function toggleSlopeOptions(header) {
