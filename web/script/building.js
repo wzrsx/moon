@@ -15,6 +15,99 @@ let onlyGreenInZone = false;
 let abortController = null;
 let isClippedLayerLoading = false;
 
+let _countNotifications = 0;
+
+// обработчик изменения countNotifications
+const notificationState = {
+  get countNotifications() {
+    return _countNotifications;
+  },
+  set countNotifications(value) {
+    const oldValue = _countNotifications;
+    _countNotifications = value;
+    console.log(`countNotifications изменилось: ${oldValue} → ${value}`);
+    
+    // Вы можете вызвать любую функцию при изменении
+    updateNotificationCount(value);
+  }
+};
+
+// Для прихода уведомлений
+const notificationsContainer = document.getElementById("notificationsContainer");
+const notificationsBadge = document.getElementById('notificationsBadge');
+
+//подсчет нотификаций
+function updateNotificationCount(count) {
+  if (count > 0) {
+    notificationsBadge.textContent = count;
+    notificationsBadge.style.display = 'flex';
+  } else {
+    notificationsBadge.style.display = 'none';
+  }
+}
+
+// Создание уведов
+function addNotification(title, text, type = "info") {
+  notificationState.countNotifications++;
+
+  // Создаем элемент уведомления
+  const notificationItem = document.createElement("div");
+  notificationItem.className = `notification-item ${type}`;
+
+  // Создаем SVG-иконку закрытия
+  const closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  closeBtn.setAttribute("class", "close-notification-btn");
+  closeBtn.setAttribute("width", "30");
+  closeBtn.setAttribute("height", "30");
+  closeBtn.setAttribute("viewBox", "0 0 30 30");
+  closeBtn.setAttribute("fill", "none");
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5");
+  path.setAttribute("stroke", "#1E1E1E");
+  path.setAttribute("stroke-width", "4");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+
+  closeBtn.appendChild(path);
+
+  // Создаем заголовок и тело уведомления
+  const header = document.createElement("div");
+  header.className = "notification-header";
+
+  const titleEl = document.createElement("p");
+  titleEl.className = "notification-title";
+  titleEl.textContent = title;
+
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+
+  const textEl = document.createElement("p");
+  textEl.className = "notification-text";
+  textEl.innerHTML = text;
+
+  notificationItem.appendChild(header);
+  notificationItem.appendChild(textEl);
+
+  // Добавляем в контейнер
+  notificationsContainer.prepend(notificationItem);
+
+  // Анимация появления
+  setTimeout(() => {
+    notificationItem.style.opacity = "1";
+    notificationItem.style.transform = "translateY(0)";
+  }, 50);
+
+  // --- Привязываем обработчик непосредственно к кнопке ---
+  closeBtn.addEventListener("click", function () {
+    notificationItem.remove();
+    console.log("Уведомление удалено");
+  });
+}
+
+
+
+
 // Функция загрузки модулей с сервера
 function loadModules() {
   fetch("http://localhost:5050/maps/redactor/page/take_modules")
@@ -198,7 +291,14 @@ function addModuleToMap(moduleData) {
   });
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
-
+  const { lat, lon } = getGeographicCoordinates(moduleData.points);
+  const formattedLat = lat.toFixed(6);
+  const formattedLon = lon.toFixed(6);
+  addNotification(
+  "Добавление модуля",
+  `Модуль "${moduleData.module_type}" добавлен в точку: Широта ${formattedLat}, Долгота ${formattedLon}`,
+  "info"
+);
   sendNotification(`Модуль "${moduleData.module_type}" добавлен`, true);
 }
 
@@ -240,7 +340,6 @@ const modulesContainerTechnological = document.getElementById('modulesContainerT
 const modulesList = document.getElementById("modulesList");
 const modules = document.querySelectorAll('.item-module');
 const typeModulesTitle = document.getElementById("typeModulesTitle");
-const notificationsContainer = document.getElementById("notificationsContainer");
 
 const checkboxDropMenu = document.getElementById('burger-checkbox');
 //уведы всплывающие
@@ -298,6 +397,8 @@ notificationsBtn.addEventListener('click', (e) => {
   notificationsContainer.style.display = 'block';
   sidebar.classList.add('visible');
   isOpenAside = true;
+  notificationState.countNotifications = 0;
+  
 });
 saveProjectBtn.addEventListener('click', (e) => {
   e.preventDefault();
@@ -606,6 +707,12 @@ modules.forEach(module => {
         else if(currentModuleType === 'technological'){
           checkAreaAllOnes("cmps_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
           .then(async result => {
+            if (moduleRequirements.module_type === 'repair_module' ) {
+              if (!await isInSafeZone(coordinates)) { // аналогично
+                sendNotification(`${moduleRequirements.module_name} должен располагаться в зеленой зоне`, 0);
+                return;
+              }
+            }
             if (!result) {
               sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
               return;
@@ -614,12 +721,7 @@ modules.forEach(module => {
               sendNotification("Запрещенная зона!", 0);
               return;
             }
-            if (moduleRequirements.module_type === 'repair_module' ) {
-              if (!await isInSafeZone(coordinates)) { // аналогично
-                sendNotification(`${moduleRequirements.module_name} должен располагаться в зеленой зоне`, 0);
-                return;
-              }
-            }
+            
             saveModule(moduleData);
           })
           .catch(error => {
@@ -764,7 +866,7 @@ greenLayerInhabit.set('name', 'greenLayerInhabit');
 map.on('moveend', async function() {
   if (isDragging) {
     showSatelliteSpinner("Обновляем зоны...");
-    await updateClippedLayer();
+    debouncedUpdateClippedLayer({ signal: abortController.signal });
   }
 });
 /*зоны предпочтительных мест*/
@@ -1062,7 +1164,7 @@ const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
 function updateElevationText(coordinate, elevationText) {
    try {
     // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
-    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    const {lat,lon} =getGeographicCoordinates(coordinate);
     // Форматируем вывод
     mousePositionElement.innerHTML = `
       Широта: ${Math.abs(lat).toFixed(6)}° <br>
@@ -1077,12 +1179,32 @@ function updateElevationText(coordinate, elevationText) {
 }
 
 
+function getGeographicCoordinates(coordinate) {
+  try {
+
+    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    return {
+      lat,
+      lon
+    };
+  } catch (error) {
+    console.error("Ошибка преобразования координат:", error);
+    throw error;
+  }
+}
 
 // Функция для обновления позиции и содержимого координат
-function updateMousePosition(coordinate, pixel, clientX, clientY) {
+function updateMousePosition(coordinate, pixel = null, clientX = 0, clientY = 0) {
   try {
-    // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
-    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    // Получаем широту и долготу
+    const { lat, lon } = getGeographicCoordinates(coordinate);
+
+    // Форматируем вывод
+    mousePositionElement.innerHTML = `
+      Широта: ${Math.abs(lat).toFixed(6)}° <br>
+      Долгота: ${lon.toFixed(6)}° <br>
+      Высота над уровнем моря: загрузка...
+    `;
 
     // Обновляем позицию элемента
     if (pixel) {
@@ -1093,12 +1215,6 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
       mousePositionElement.style.top = (clientY + 10) + 'px';
     }
 
-    // Форматируем вывод
-    mousePositionElement.innerHTML = `
-      Широта: ${Math.abs(lat).toFixed(6)}° <br>
-      Долгота: ${lon.toFixed(6)}° <br>
-      Высота над уровнем моря: загрузка...
-    `;
     mousePositionElement.style.display = 'block';
 
     // Запрашиваем высоту с debounce и кэшированием
@@ -1106,8 +1222,8 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
     fetchElevationDebounced(coordinate, viewResolution);
 
   } catch (error) {
-    console.error("Ошибка преобразования координат:", error);
-    mousePositionElement.style.display = 'none'; // или показать сообщение об ошибке
+    console.error("Не удалось получить географические координаты:", error);
+    mousePositionElement.style.display = 'none';
   }
 }
 // Функция debounce для ограничения частоты вызовов
@@ -1276,6 +1392,8 @@ function disableExclusionZones() {
       map.removeLayer(layer);
     }
   });
+
+
   
   // Очищаем массив слоев
   exclusionRadiusLayers.length = 0;
@@ -1568,6 +1686,28 @@ function processCoordinates(zone, ctx, projectFn) {
     ctx.closePath();
   }
 }
+
+let updateClippedLayerTimeout = null;
+function debouncedUpdateClippedLayer(options = {}, delay = 200) {
+  // Очищаем предыдущий таймер
+  if (updateClippedLayerTimeout) {
+    clearTimeout(updateClippedLayerTimeout);
+  }
+
+  // Устанавливаем новый с задержкой
+  updateClippedLayerTimeout = setTimeout(() => {
+    // Запускаем только если нет активной загрузки
+    if (!isClippedLayerLoading) {
+      showSatelliteSpinner("Почти все...");
+      updateClippedLayer(options);
+    } else {
+      // Если загрузка идёт — переносим вызов на потом
+      console.log("Загрузка в процессе, переносим...");
+      debouncedUpdateClippedLayer(options, 50); // рекурсивно пробуем снова
+    }
+  }, delay);
+}
+
 async function updateClippedLayer(options = {}) {
   isClippedLayerLoading = true;
   // Удаляем старые clipped layers

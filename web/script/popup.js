@@ -3,6 +3,9 @@ let currentPopupFeature = null;
 let currentModuleInfo = null;
 let visibilityModulesInfo = bboxVisibilityModulesInfo.checked;
 let isDraggingMove = false; // Флаг перемещения
+  
+const closeButtons = document.querySelectorAll('.close-notification-btn');
+
 const popup = new ol.Overlay({
     element: document.createElement('div'),
     positioning: 'bottom-center',
@@ -17,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
 });
+
 map.on('pointerdrag', function() {
     isDraggingMove = true;
 });
@@ -280,6 +284,16 @@ function confirmModuleDeletion() {
     if (!currentModuleInfo || !currentPopupFeature) return;
     moduleLayers[0].getSource().removeFeature(currentPopupFeature);
     let idModule = currentPopupFeature.get('id');
+
+    const deletedModule = cachedModules.find(m => m.id_module === idModule);
+    const { lat, lon } = getGeographicCoordinates(deletedModule.points);
+    const formattedLat = lat.toFixed(6);
+    const formattedLon = lon.toFixed(6);
+    addNotification(
+        "удаление модуля",
+        `Модуль "${deletedModule.module_type}" удален в точке: Широта ${formattedLat}, Долгота ${formattedLon}`,
+        "info"
+    );
     cachedModules = cachedModules.filter(m => m.id_module !== idModule);
     
     const popupElement = popup.getElement();
@@ -290,6 +304,7 @@ function confirmModuleDeletion() {
     // Сбрасываем текущие данные
     currentModuleInfo = null;
     currentPopupFeature = null;
+    
     
     // Закрываем диалог
     closeDeleteModuleDialog();
@@ -327,3 +342,4 @@ async function deleteModuleFromDB(id) {
         throw error;
     }
 }
+
