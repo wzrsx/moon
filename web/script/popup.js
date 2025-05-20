@@ -285,7 +285,7 @@ function confirmModuleDeletion() {
     moduleLayers[0].getSource().removeFeature(currentPopupFeature);
     let idModule = currentPopupFeature.get('id');
 
-    const deletedModule = cachedModules.find(m => m.id === idModule);
+    const deletedModule = cachedModules.find(m => m.id_module === idModule);
     const { lat, lon } = getGeographicCoordinates(deletedModule.points);
     const formattedLat = lat.toFixed(6);
     const formattedLon = lon.toFixed(6);
@@ -294,7 +294,7 @@ function confirmModuleDeletion() {
         `Модуль "${deletedModule.module_type}" удален в точке: Широта ${formattedLat}, Долгота ${formattedLon}`,
         "info"
     );
-    cachedModules = cachedModules.filter(m => m.id !== idModule);
+    cachedModules = cachedModules.filter(m => m.id_module !== idModule);
     
     const popupElement = popup.getElement();
     popupElement.style.display = 'none';
