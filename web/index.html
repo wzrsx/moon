@@ -7,28 +7,26 @@
     <link rel="stylesheet" href="/static/style/style.css">
     <link rel="stylesheet" href="/static/style/media-requests.css">
     <link rel="stylesheet" href="/static/style/media-requests-sections.css">
-    <link rel="icon" href="style/logo/full-moon-symbol.svg" type="image/svg+xml">
+    <link rel="icon" href="/static/style/logo/full-moon-symbol.svg" type="image/svg+xml">
     <title>LunaX</title>
 </head>
 <body>
     <div id="blurDiv"></div>
-    <header id="mainHeader"> 
-        <ul class="header-menu">
-            <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
-                {{if .Username}}
-                    <!-- Показываем если пользователь авторизован -->
-                    <div class="user-auth-container">
-                        <span class="username">{{.Username}}</span>
-                        <li class="nav-item exit" id="logoutBtn" onclick="logoutBtn()">Выйти</li>
-                    </div>
-                {{else}}
-                    <!-- Показываем если пользователь не авторизован -->
-                    <li class="nav-item" id="authBtn" onclick="openSignInDialogBtn()">Вход/Регистрация</li>
-                {{end}}
-        </ul>
-    </header>
     <div class="scroll-container">
         <main id="mainSection" class="scroll-section main-page">
+            <ul class="header-menu">
+                <li class="nav-item" id="buildingPageBtn" onclick="selectProject()" >Режим строительства</li>
+                    {{if .Username}}
+                        <!-- Показываем если пользователь авторизован -->
+                        <div class="user-auth-container">
+                            <span class="username">{{.Username}}</span>
+                            <li class="nav-item exit" id="logoutBtn" onclick="logoutBtn()">Выйти</li>
+                        </div>
+                    {{else}}
+                        <!-- Показываем если пользователь не авторизован -->
+                        <li class="nav-item" id="authBtn" onclick="openSignInDialogBtn()">Вход/Регистрация</li>
+                    {{end}}
+            </ul>
             <h1>
                 Откройте новые горизонты: 
             </h1>
@@ -37,6 +35,7 @@
                 колонизация Луны начинается здесь!
             </h2>
             <button class="next-section" id="nextAboutSection">&#8595;</button>
+            <div class="custom-notification" id="customNotification"></div>
         </main>
     
         <section id="aboutSection" class="scroll-section" >

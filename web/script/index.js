@@ -661,8 +661,8 @@ function resetInputStyles(inputs) {
   codeForgetPassError.style.display = "none";
 }
 
-function selectProject() {
-  if (!checkAuthStatus()) {
+async function selectProject() {
+  if (!await checkAuthStatus()) {
     sendNotification("Ошибка: пользователь не авторизован.", false);
     return;
   }

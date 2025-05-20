@@ -394,6 +394,8 @@ body{
     padding-top: 30px;
     width: 95%;
     margin: 0 auto;
+    position: absolute;
+    top: 0;
 }
 .nav-item {
     position: relative;

@@ -637,7 +637,7 @@ async function mergeModuleData() {
 async function exportMapToPDF() {
   try {
       // 1. Получаем изображение карты
-      const mapCanvas = await exportMapToPNGAndGetCanvas(); // см. ниже
+      const mapCanvas = await exportMapToPNG(); // см. ниже
       if (!mapCanvas) throw new Error("Не удалось получить изображение карты");
 
       // 2. Инициализируем jsPDF
