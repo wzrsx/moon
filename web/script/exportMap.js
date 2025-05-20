@@ -598,18 +598,22 @@ async function mergeModuleData() {
         console.warn(`Нет информации для module_type: ${module.module_type}`);
         return null;
       }
-
+      const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, module.points);
       return {
         module_type: module.module_type,
         habitation_type: module.habitation_type,
-        points: module.points,
+        points_in_proj: module.points,
+        points_in_selenographic: {
+          latitude: `Широта: ${Math.abs(lat).toFixed(6)}°`, 
+          longitude: `Долгота: ${lon.toFixed(6)}°`
+        },
         module_name: info.module_name,
         description: info.description,
         length_meters: info.length_meters,
         width_meters: info.width_meters,
         max_slope_degrees: info.max_slope_degrees
       };
-    }).filter(Boolean); // Убираем null
+      }).filter(Boolean); // Убираем null
 
     // Возвращаем результат
     return {
@@ -627,6 +631,87 @@ async function mergeModuleData() {
   }
 }
 // ==== Конец функции mergeModuleData ====
+
+async function exportMapToPDF() {
+  try {
+      // 1. Получаем изображение карты
+      const mapCanvas = await exportMapToPNGAndGetCanvas(); // см. ниже
+      if (!mapCanvas) throw new Error("Не удалось получить изображение карты");
+
+      // 2. Инициализируем jsPDF
+      const { jsPDF } = window.jspdf;
+      const imgData = mapCanvas.toDataURL('image/png');
+
+      // Определяем ориентацию по соотношению сторон
+      const landscape = mapCanvas.width > mapCanvas.height;
+      const doc = new jsPDF({
+          orientation: landscape ? 'landscape' : 'portrait',
+          unit: 'mm',
+          format: 'a4'
+      });
+
+      // 3. Добавляем первую страницу с картой
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const widthRatio = pageWidth / mapCanvas.width;
+      const heightRatio = pageHeight / mapCanvas.height;
+      const ratio = Math.min(widthRatio, heightRatio);
+
+      const imgWidth = mapCanvas.width * ratio;
+      const imgHeight = mapCanvas.height * ratio;
+
+      doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      doc.addPage();
+
+      // 4. Добавляем данные по модулям
+      const moduleDataList = await mergeModuleData(); // получаем JSON
+      const modules = moduleDataList.modules || [];
+
+      let yPos = 20;
+
+      for (const module of modules) {
+          // Проверяем, есть ли изображение для этого типа модуля
+          const iconSrc = getIconForModule(module.module_type); // напишите свою функцию
+          if (!iconSrc) continue;
+
+          const img = await loadImageAsync(iconSrc);
+          const imgBase64 = await imageToBase64(img);
+
+          // Добавляем изображение модуля
+          doc.setFontSize(12);
+          doc.text(`Модуль: ${module.module_name}`, 10, yPos);
+          yPos += 10;
+
+          doc.addImage(imgBase64, 'PNG', 10, yPos, 40, 40);
+
+          // Добавляем текст справа от изображения
+          doc.setFontSize(10);
+          doc.text([
+              `Тип: ${module.module_type}`,
+              `Жилое: ${module.habitation_type}`,
+              `Широта: ${module.points_in_selenographic.latitude}`,
+              `Долгота: ${module.points_in_selenographic.longitude}`,
+              `Длина: ${module.length_meters} м`,
+              `Ширина: ${module.width_meters} м`,
+              `Макс. уклон: ${module.max_slope_degrees}°`
+          ], 60, yPos + 10);
+
+          yPos += 50;
+
+          // Если место заканчивается — новая страница
+          if (yPos > 250) {
+              doc.addPage();
+              yPos = 20;
+          }
+      }
+
+      // Сохраняем PDF
+      doc.save("export_modules_map.pdf");
+  } catch (err) {
+      console.error("Ошибка при экспорте в PDF:", err);
+      alert("Произошла ошибка при экспорте в PDF");
+  }
+}
 
 // Функции для выбора формата
 function selectJSON() {
