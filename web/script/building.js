@@ -198,7 +198,14 @@ function addModuleToMap(moduleData) {
   });
   // Добавляем точку в векторный источник
   vectorSource.addFeature(feature);
-
+  const { lat, lon } = getGeographicCoordinates(moduleData.points);
+  const formattedLat = lat.toFixed(6);
+  const formattedLon = lon.toFixed(6);
+  addNotification(
+  "Добавление модуля",
+  `Модуль "${moduleData.module_type}" добавлен в точку: Широта ${formattedLat}, Долгота ${formattedLon}`,
+  "info"
+);
   sendNotification(`Модуль "${moduleData.module_type}" добавлен`, true);
 }
 
@@ -1062,7 +1069,7 @@ const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
 function updateElevationText(coordinate, elevationText) {
    try {
     // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
-    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    const [lat,lon] =getGeographicCoordinates(coordinate);
     // Форматируем вывод
     mousePositionElement.innerHTML = `
       Широта: ${Math.abs(lat).toFixed(6)}° <br>
@@ -1077,12 +1084,35 @@ function updateElevationText(coordinate, elevationText) {
 }
 
 
+function getGeographicCoordinates(coordinate) {
+  try {
+    // Пример используемой проекции (предположим, что они уже определены)
+    const stereMoonSouth = 'EPSG:100000';
+    const geodeticLunar = 'EPSG:100001'; // или другая геодетическая проекция
+
+    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    return {
+      lat,
+      lon
+    };
+  } catch (error) {
+    console.error("Ошибка преобразования координат:", error);
+    throw error;
+  }
+}
 
 // Функция для обновления позиции и содержимого координат
-function updateMousePosition(coordinate, pixel, clientX, clientY) {
+function updateMousePositionUI(coordinate, pixel = null, clientX = 0, clientY = 0) {
   try {
-    // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
-    const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
+    // Получаем широту и долготу
+    const { lat, lon } = getGeographicCoordinates(coordinate);
+
+    // Форматируем вывод
+    mousePositionElement.innerHTML = `
+      Широта: ${Math.abs(lat).toFixed(6)}° <br>
+      Долгота: ${lon.toFixed(6)}° <br>
+      Высота над уровнем моря: загрузка...
+    `;
 
     // Обновляем позицию элемента
     if (pixel) {
@@ -1093,12 +1123,6 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
       mousePositionElement.style.top = (clientY + 10) + 'px';
     }
 
-    // Форматируем вывод
-    mousePositionElement.innerHTML = `
-      Широта: ${Math.abs(lat).toFixed(6)}° <br>
-      Долгота: ${lon.toFixed(6)}° <br>
-      Высота над уровнем моря: загрузка...
-    `;
     mousePositionElement.style.display = 'block';
 
     // Запрашиваем высоту с debounce и кэшированием
@@ -1106,8 +1130,8 @@ function updateMousePosition(coordinate, pixel, clientX, clientY) {
     fetchElevationDebounced(coordinate, viewResolution);
 
   } catch (error) {
-    console.error("Ошибка преобразования координат:", error);
-    mousePositionElement.style.display = 'none'; // или показать сообщение об ошибке
+    console.error("Не удалось получить географические координаты:", error);
+    mousePositionElement.style.display = 'none';
   }
 }
 // Функция debounce для ограничения частоты вызовов
@@ -1276,6 +1300,44 @@ function disableExclusionZones() {
       map.removeLayer(layer);
     }
   });
+
+function addNotification(title, text, type = "info") {
+  const container = document.getElementById("notificationsContainer");
+
+  // Создаем элемент уведомления
+  const notificationItem = document.createElement("div");
+  notificationItem.className = `notification-item ${type}`;
+
+  // Создаем содержимое
+  notificationItem.innerHTML = `
+    <div class="notification-header">
+      <p class="notification-title">${title}</p>
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5"
+          stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <p class="notification-text">${text}</p>
+  `;
+
+  // Добавляем в контейнер
+  container.appendChild(notificationItem);
+
+  // Анимация появления
+  setTimeout(() => {
+    notificationItem.style.opacity = "1";
+    notificationItem.style.transform = "translateY(0)";
+  }, 50);
+
+  // Автоматическое исчезновение через 5 секунд
+  setTimeout(() => {
+    notificationItem.style.opacity = "0";
+    notificationItem.style.transform = "translateY(20px)";
+    setTimeout(() => {
+      notificationItem.remove();
+    }, 400);
+  }, 5000); // Через 5 секунд удаляем
+}
   
   // Очищаем массив слоев
   exclusionRadiusLayers.length = 0;

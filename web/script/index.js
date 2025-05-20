@@ -782,9 +782,9 @@ function showCreateProjectForm() {
   if (viewportHeight < 700) {
     dialogHeight = "50%";
   } else if (viewportHeight < 800) {
-    dialogHeight = "40%";
+    dialogHeight = "50%";
   } else {
-    dialogHeight = "35%";
+    dialogHeight = "40%";
   }
 
   // Применяем изменения
@@ -1046,15 +1046,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   scrollContainer.addEventListener("scroll", function () {
       const scrollTop = scrollContainer.scrollTop;
-
-      if (scrollTop > lastScrollTop) {
-          // Прокрутка вниз — скрываем хедер
-          header.classList.add("hide");
-      } else {
-          // Прокрутка вверх — показываем хедер
-          header.classList.remove("hide");
-      }
-
       lastScrollTop = scrollTop;
   }); 
   let nextSection = null;
