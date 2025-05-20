@@ -1684,6 +1684,9 @@ h3{
     width: 15%;
     animation: spinSlow 6s linear infinite;
     transition: transform 0.3s ease;
+    user-select: none; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
 }
 .spinner-text.long-wait {
     animation: pulse 2s ease-in-out infinite;
