@@ -1069,7 +1069,7 @@ checkboxDropMenu.addEventListener('click', (e) => {
 // Обработчик движения курсора по карте
 map.on('pointermove', function (evt) {
   const popupElement = popup.getElement();
-  if (isOpenAside || (popupElement && popupElement.style.display === 'block' && popupElement.contains(evt.originalEvent.target))) {
+  if (isOpenAside || (popupElement && popupElement.style.display === 'block' && popupElement.contains(evt.originalEvent.target)) || dropdownMenu.contains(evt.originalEvent.target)) {
     mousePositionElement.style.display = 'none';
     return;
   }
@@ -1171,7 +1171,6 @@ function updateElevationText(coordinate, elevationText) {
       Долгота: ${lon.toFixed(6)}° <br>
       Высота над уровнем моря: ${elevationText}
     `;
-    mousePositionElement.style.display = 'block';
   } catch (error) {
     console.error("Ошибка преобразования координат:", error);
     mousePositionElement.style.display = 'none'; // или показать сообщение об ошибке
@@ -1181,7 +1180,6 @@ function updateElevationText(coordinate, elevationText) {
 
 function getGeographicCoordinates(coordinate) {
   try {
-
     const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
     return {
       lat,
@@ -1392,9 +1390,6 @@ function disableExclusionZones() {
       map.removeLayer(layer);
     }
   });
-
-
-  
   // Очищаем массив слоев
   exclusionRadiusLayers.length = 0;
   
