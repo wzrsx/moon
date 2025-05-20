@@ -1,7 +1,7 @@
 let loadedImagesCache = {};
 let extent;
 let selectedFormat;
-async function exportMapToPNG() {
+async function exportMapToPNG(needDownload = true) {
   extent = map.getView().get('extent');
   // Проверяем, есть ли модули
   if (!cachedModules || cachedModules.length === 0) {
@@ -76,14 +76,16 @@ async function exportMapToPNG() {
       } else {
         console.log('Нет модулей в указанном охвате — слой модулей не рисуется');
       }
-  
+      if(needDownload){
       // Скачиваем результат
       const link = document.createElement('a');
       link.href = resultCanvas.toDataURL('image/png');
       link.download = 'modules_export.png';
-      link.click();
-  
+      link.click();  
       console.log("Экспорт успешен");
+      }else{
+        return resultCanvas;
+      }
     } catch (err) {
       console.error("Ошибка при экспорте:", err);
       alert('Произошла ошибка при экспорте');
@@ -718,6 +720,68 @@ function selectJSON() {
   document.getElementById('parametrsToExportPNG').style.display = 'none';
   selectedFormat = 'json';
 }
+//Экспорт PDF
+async function exportMapToPDF(imgData, modulesData) {
+  const { jsPDF } = window.jspdf;
+  
+  const imgWidth = imgData.width;
+  const imgHeight = imgData.height;
+
+  const isLandscape = imgWidth > imgHeight;
+  const orientation = isLandscape ? 'landscape' : 'portrait';
+  const doc = new jsPDF({
+    orientation: orientation, 
+    unit: 'mm',
+    format: 'a4'
+  });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  // Вычисляем коэффициент масштабирования, чтобы изображение поместилось на страницу
+  const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+  const scaledWidth = imgWidth * ratio;
+  const scaledHeight = imgHeight * ratio;
+
+  // Центрируем изображение по центру страницы
+  const xOffset = (pageWidth - scaledWidth) / 2;
+  const yOffset = (pageHeight - scaledHeight) / 2;
+  // Добавляем изображение как первую страницу
+  doc.addImage(imgData, 'PNG', xOffset, yOffset, scaledWidth, scaledHeight);
+  doc.addPage();
+
+  // Добавляем заголовок
+  doc.setFontSize(16);
+  doc.text("Описание модулей", 10, 10);
+
+  // Добавляем данные модулей
+  doc.setFontSize(12);
+  let y = 20;
+
+  modulesData.modules.forEach(module => {
+      const textLines = [
+          `Название: ${module.module_name}`,
+          `Координаты: ${module.points}`,
+          `Тип: ${module.module_type}`,
+          `Обитаемость: ${module.habitation_type}`,
+          `Длина: ${module.length_meters} м`,
+          `Ширина: ${module.width_meters} м`,
+          `Макс. уклон: ${module.max_slope_degrees}°`,
+          `Описание: ${module.description}`,
+          ''
+      ];
+      console.log(textLines);
+      doc.text(textLines, 10, y);
+      y += 40; // отступ между блоками
+
+      // Если место заканчивается — добавляем новую страницу
+      if (y > 280) {
+          doc.addPage();
+          y = 20;
+      }
+  });
+
+  // Сохраняем PDF
+  doc.save('модули_экспорт.pdf');
+}
 //to do
 function showParametrsPDF() {
   document.getElementById('parametrsToExportPNG').style.display = 'none';
@@ -727,7 +791,7 @@ function showParametrsPNG(){
     selectedFormat = 'png';
     document.getElementById('parametrsToExportPNG').style.display = 'block';
 }
-function exportMapToSelectedFormat(){
+async function exportMapToSelectedFormat(){
   if (!selectedFormat) {
     alert('Пожалуйста, выберите формат для экспорта');
     return;
@@ -741,7 +805,7 @@ function exportMapToSelectedFormat(){
           exportMapToJSON();
           break;
       case 'pdf':
-          exportMapToPDF();
+          exportMapToPDF(await exportMapToPNG(false), mergeModuleData());
           break;
       default:
           alert('Выбран неизвестный формат');
