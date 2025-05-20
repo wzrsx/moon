@@ -2,6 +2,7 @@ let loadedImagesCache = {};
 let extent;
 let selectedFormat;
 async function exportMapToPNG(needDownload = true) {
+  showSatelliteSpinnerInDialog("Создание PNG...");
   extent = map.getView().get('extent');
   // Проверяем, есть ли модули
   if (!cachedModules || cachedModules.length === 0) {
@@ -87,6 +88,8 @@ async function exportMapToPNG(needDownload = true) {
     } catch (err) {
       console.error("Ошибка при экспорте:", err);
       alert('Произошла ошибка при экспорте');
+    }finally {
+      hideSatelliteSpinnerInDialog();
     }
 }
 function combineImages(baseImage, hillshadeImage, ldsmImage, width, height) {
@@ -564,6 +567,7 @@ function calculateExtentWithMargins(minX, minY, maxX, maxY) {
 //для JSON экспорта
 async function exportMapToJSON() {
   try {
+    showSatelliteSpinnerInDialog("Создание JSON...");
     const result = await mergeModuleData();
 
     const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
@@ -576,11 +580,14 @@ async function exportMapToJSON() {
   } catch (err) {
     console.error('Ошибка экспорта:', err);
     alert('Не удалось экспортировать данные');
+  }finally {
+    hideSatelliteSpinnerInDialog();
   }
 }
 // ==== Функция mergeModuleData ====
 async function mergeModuleData() {
   try {
+    showSatelliteSpinnerInDialog("Загрузка данных модулей...");
     // Запрашиваем имя карты с сервера
     const response = await fetch("http://localhost:5050/maps/get_map_name", {
       method: "GET",
@@ -638,6 +645,8 @@ async function mergeModuleData() {
       name_map: "Безымянная_карта",
       modules: []
     };
+  }finally {
+    hideSatelliteSpinnerInDialog();
   }
 }
 // ==== Конец функции mergeModuleData ====
@@ -650,7 +659,9 @@ function selectJSON() {
 }
 //Экспорт PDF
 async function exportMapToPDF(imgData, modulesData) {
-  const imgWidth = imgData.width;
+  try{
+    showSatelliteSpinnerInDialog("Генерация PDF...");
+    const imgWidth = imgData.width;
   const imgHeight = imgData.height;
 
   const isLandscape = imgWidth > imgHeight;
@@ -769,10 +780,15 @@ async function exportMapToPDF(imgData, modulesData) {
       } else {
           console.warn(`Изображение для модуля "${module.module_name}" не найдено`);
       }
-  }
-
-  // Сохраняем PDF
-  doc.save(`${modulesData.name_map}_export.pdf`);
+    }
+    doc.save(`${modulesData.name_map}_export.pdf`);
+  } 
+  catch (error) {
+    console.error('Ошибка создания PDF:', error);
+    alert('Не удалось создать PDF-файл');
+  } finally {
+    hideSatelliteSpinnerInDialog();
+  }  
 }
 
 function showParametrsPDF() {
@@ -788,19 +804,78 @@ async function exportMapToSelectedFormat(){
     alert('Пожалуйста, выберите формат для экспорта');
     return;
   }
-
+  showSatelliteSpinnerInDialog("Подготовка...");
   switch(selectedFormat) {
-      case 'png':
-          exportMapToPNG();
-          break;
-      case 'json':
-          exportMapToJSON();
-          break;
-      case 'pdf':
-          exportMapToPDF(await exportMapToPNG(false), await mergeModuleData());
-          break;
-      default:
-          alert('Выбран неизвестный формат');
+    case 'png':
+      try {
+        await exportMapToPNG();
+      } finally {
+        hideSatelliteSpinnerInDialog(); 
+      }
+      break;
+    case 'json':
+      try {
+        await exportMapToJSON();
+      } finally {
+        hideSatelliteSpinnerInDialog();
+      }
+      break;
+    case 'pdf':
+      try {
+        const imgData = await exportMapToPNG(false);
+        const modulesData = await mergeModuleData();
+        await exportMapToPDF(imgData, modulesData);
+      } finally {
+        hideSatelliteSpinnerInDialog();
+      }
+      break;
+    default:
+      alert('Выбран неизвестный формат');
+      hideSatelliteSpinnerInDialog();
   }
 }
+/*управление спиннером*/
+let dialogSpinnerTimeoutId = null;
 
+function showSatelliteSpinnerInDialog(message = "Загрузка...") {
+  const spinner = document.getElementById('dialogLoadingSpinner');
+  const textElement = spinner?.querySelector('.spinner-text');
+
+  if (textElement) {
+    textElement.textContent = message;
+    textElement.classList.remove('long-wait'); // Сброс, если был
+  }
+
+  if (spinner) {
+    spinner.classList.remove('hidden');
+  }
+
+  // Очищаем предыдущий таймер, если был
+  if (dialogSpinnerTimeoutId) {
+    clearTimeout(dialogSpinnerTimeoutId);
+  }
+
+  // Устанавливаем новый таймер на 1.5 секунды
+  dialogSpinnerTimeoutId = setTimeout(() => {
+    const updatedTextElement = document.getElementById('dialogLoadingSpinner')?.querySelector('.spinner-text');
+    if (updatedTextElement) {
+      updatedTextElement.textContent = "Еще чуть-чуть...";
+      updatedTextElement.classList.add('long-wait');
+    }
+  }, 1500);
+}
+
+// Функция для скрытия спиннера в диалоге
+function hideSatelliteSpinnerInDialog() {
+  const spinner = document.getElementById('dialogLoadingSpinner');
+
+  if (spinner) {
+    spinner.classList.add('hidden');
+  }
+
+  // Очищаем таймер
+  if (dialogSpinnerTimeoutId) {
+    clearTimeout(dialogSpinnerTimeoutId);
+    dialogSpinnerTimeoutId = null;
+  }
+}

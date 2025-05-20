@@ -589,6 +589,18 @@
       </div>
     </dialog>
     <dialog class="confirm-dialog" id="saveDialog">
+       <!-- Спиннер внутри dialog -->
+      <div id="dialogLoadingSpinner" class="satellite-spinner hidden">
+        <div class="satellite-spinner-overlay"></div>
+        <div class="satellite-spinner-content">
+          <img
+            src="/static/style/logo/satellite.png"
+            alt="Спутник"
+            class="spinner-satellite-icon"
+          />
+          <div class="spinner-text">Загрузка...</div>
+        </div>
+      </div>
       <div class="content-confirm-dialog">
         <div class="header-form">
           <button
