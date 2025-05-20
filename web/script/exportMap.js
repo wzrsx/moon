@@ -24,24 +24,22 @@ async function exportMapToPNG(needDownload = true) {
   if (checkboxBbox && checkboxBbox.checked) {
       extent = getUserBboxValues();
   } 
-  // 2. Отступы в процентах
-  else if (inputsExtent && inputsExtent.style.display === 'block') {
-      extent = calculateExtentWithMargins(minX, minY, maxX, maxY);
-  } 
-  // 3. Стандарт (5%)
   else {
       extent = calculateExtentWithMargins(minX, minY, maxX, maxY);
   }
 
   // Вычисляем размеры изображения
   const width = 2000;
-  const height = Math.round(width * (extent[3] - extent[1]) / (extent[2] - extent[0]));
+  let height;
+
+  
+  height = Math.round(width * (extent[3] - extent[1]) / (extent[2] - extent[0]));
+
     try {
       // Загружаем слои как изображения
       const ldem_img = await getImageMap('ldem-83s', extent);
       const hill_img = await getImageMap('ldem-hill', extent);
       const ldsm_img = await getImageMap('ldsm-83s', extent);
-  
       // Создаём canvas и комбинируем изображения
       const resultCanvas = combineImages(ldem_img, hill_img, ldsm_img, width, height);
       
@@ -531,26 +529,36 @@ function calculateExtentWithMargins(minX, minY, maxX, maxY) {
   const right = parseFloat(document.getElementById('marginRight').value);
   const bottom = parseFloat(document.getElementById('marginBottom').value);
   const left = parseFloat(document.getElementById('marginLeft').value);
-
+  let newMinX;
+  let newMinY;
+  let newMaxX;
+  let newMaxY;
   // Вычисляем размеры исходного прямоугольника
   const width = maxX - minX;
   const height = maxY - minY;
-
-  // Применяем отступы
-  const newMinX = minX - (width * left / 100);
-  const newMinY = minY - (height * bottom / 100);
-  const newMaxX = maxX + (width * right / 100);
-  const newMaxY = maxY + (height * top / 100);
-
-  // Ограничиваем полученные значения
-  const clampedExtent = [
-      Math.max(extent[0], newMinX),
-      Math.max(extent[1], newMinY),
-      Math.min(extent[2], newMaxX),
-      Math.min(extent[3], newMaxY)
+  if (width === 0 && height === 0) {
+    const padding = 500;
+    // Расширяем границы
+    newMinX = minX - padding; 
+    newMinY = minY - padding; 
+    newMaxX = maxX + padding; 
+    newMaxY = maxY + padding; 
+    sendNotification("У вас 1 модуль, охват зоны вокруг увеличен на 500м", 1);
+  }
+  else{
+    newMaxY = maxY + (height * top / 100);
+    newMinX = minX - (width * left / 100);
+    newMinY = minY - (height * bottom / 100);
+    newMaxX = maxX + (width * right / 100);
+  }
+  // Ограничиваем значения
+  extent = [
+    Math.max(extent[0], newMinX),
+    Math.max(extent[1], newMinY),
+    Math.min(extent[2], newMaxX),
+    Math.min(extent[3], newMaxY)
   ];
-
-  return clampedExtent;
+  return extent;
 }
 
 //для JSON экспорта
@@ -562,7 +570,7 @@ async function exportMapToJSON() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${result.name_map}.json`;
+    link.download = `${result.name_map}_export.json`;
     link.click();
     URL.revokeObjectURL(url);
   } catch (err) {
@@ -634,86 +642,6 @@ async function mergeModuleData() {
 }
 // ==== Конец функции mergeModuleData ====
 
-async function exportMapToPDF() {
-  try {
-      // 1. Получаем изображение карты
-      const mapCanvas = await exportMapToPNG(); // см. ниже
-      if (!mapCanvas) throw new Error("Не удалось получить изображение карты");
-
-      // 2. Инициализируем jsPDF
-      const { jsPDF } = window.jspdf;
-      const imgData = mapCanvas.toDataURL('image/png');
-
-      // Определяем ориентацию по соотношению сторон
-      const landscape = mapCanvas.width > mapCanvas.height;
-      const doc = new jsPDF({
-          orientation: landscape ? 'landscape' : 'portrait',
-          unit: 'mm',
-          format: 'a4'
-      });
-
-      // 3. Добавляем первую страницу с картой
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const widthRatio = pageWidth / mapCanvas.width;
-      const heightRatio = pageHeight / mapCanvas.height;
-      const ratio = Math.min(widthRatio, heightRatio);
-
-      const imgWidth = mapCanvas.width * ratio;
-      const imgHeight = mapCanvas.height * ratio;
-
-      doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      doc.addPage();
-
-      // 4. Добавляем данные по модулям
-      const moduleDataList = await mergeModuleData(); // получаем JSON
-      const modules = moduleDataList.modules || [];
-
-      let yPos = 20;
-
-      for (const module of modules) {
-          // Проверяем, есть ли изображение для этого типа модуля
-          const iconSrc = getIconForModule(module.module_type); // напишите свою функцию
-          if (!iconSrc) continue;
-
-          const img = await loadImageAsync(iconSrc);
-          const imgBase64 = await imageToBase64(img);
-
-          // Добавляем изображение модуля
-          doc.setFontSize(12);
-          doc.text(`Модуль: ${module.module_name}`, 10, yPos);
-          yPos += 10;
-
-          doc.addImage(imgBase64, 'PNG', 10, yPos, 40, 40);
-
-          // Добавляем текст справа от изображения
-          doc.setFontSize(10);
-          doc.text([
-              `Тип: ${module.module_type}`,
-              `Жилое: ${module.habitation_type}`,
-              `Широта: ${module.points_in_selenographic.latitude}`,
-              `Долгота: ${module.points_in_selenographic.longitude}`,
-              `Длина: ${module.length_meters} м`,
-              `Ширина: ${module.width_meters} м`,
-              `Макс. уклон: ${module.max_slope_degrees}°`
-          ], 60, yPos + 10);
-
-          yPos += 50;
-
-          // Если место заканчивается — новая страница
-          if (yPos > 250) {
-              doc.addPage();
-              yPos = 20;
-          }
-      }
-
-      // Сохраняем PDF
-      doc.save("export_modules_map.pdf");
-  } catch (err) {
-      console.error("Ошибка при экспорте в PDF:", err);
-      alert("Произошла ошибка при экспорте в PDF");
-  }
-}
 
 // Функции для выбора формата
 function selectJSON() {
@@ -722,21 +650,22 @@ function selectJSON() {
 }
 //Экспорт PDF
 async function exportMapToPDF(imgData, modulesData) {
-  const { jsPDF } = window.jspdf;
-  
   const imgWidth = imgData.width;
   const imgHeight = imgData.height;
 
   const isLandscape = imgWidth > imgHeight;
   const orientation = isLandscape ? 'landscape' : 'portrait';
-  const doc = new jsPDF({
-    orientation: orientation, 
+  const doc = new window.jspdf.jsPDF({
+    orientation: orientation,
     unit: 'mm',
     format: 'a4'
   });
+  doc.addFont("ofont.ru_Roboto-normal.ttf", "ofont.ru_Roboto", "normal");
+  doc.setFont("ofont.ru_Roboto");
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  // Вычисляем коэффициент масштабирования, чтобы изображение поместилось на страницу
+
+  // Вычисляем коэффициент масштабирования для первой страницы
   const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
   const scaledWidth = imgWidth * ratio;
   const scaledHeight = imgHeight * ratio;
@@ -748,41 +677,104 @@ async function exportMapToPDF(imgData, modulesData) {
   doc.addImage(imgData, 'PNG', xOffset, yOffset, scaledWidth, scaledHeight);
   doc.addPage();
 
-  // Добавляем заголовок
   doc.setFontSize(16);
-  doc.text("Описание модулей", 10, 10);
+  doc.text(`Проект: ${modulesData.name_map}`, 10, 10);
+  doc.setFontSize(14);
+  doc.text("Описание модулей: ", 10, 20);
 
-  // Добавляем данные модулей
   doc.setFontSize(12);
-  let y = 20;
+  let y = 30; 
 
-  modulesData.modules.forEach(module => {
-      const textLines = [
-          `Название: ${module.module_name}`,
-          `Координаты: ${module.points}`,
-          `Тип: ${module.module_type}`,
-          `Обитаемость: ${module.habitation_type}`,
-          `Длина: ${module.length_meters} м`,
-          `Ширина: ${module.width_meters} м`,
-          `Макс. уклон: ${module.max_slope_degrees}°`,
-          `Описание: ${module.description}`,
-          ''
-      ];
-      console.log(textLines);
-      doc.text(textLines, 10, y);
-      y += 40; // отступ между блоками
-
-      // Если место заканчивается — добавляем новую страницу
-      if (y > 280) {
-          doc.addPage();
-          y = 20;
+  // Функция для загрузки изображения и преобразования его в Base64
+  async function loadImageAsBase64(url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to load image from ${url}`);
       }
-  });
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  // Проходим по каждому модулю
+  for (const module of modulesData.modules) {
+      // Путь к изображению модуля
+      const moduleImagePath = `/static/style/photos/modules_compressed/${module.module_type}.png`;
+
+      // Загружаем изображение модуля
+      const moduleImageBase64 = await loadImageAsBase64(moduleImagePath);
+
+      if (moduleImageBase64) {
+          // Размеры изображения модуля
+          const moduleImgWidth = 50; // Ширина изображения модуля в мм
+          const moduleImgHeight = 50; // Высота изображения модуля в мм
+
+          // Добавляем изображение модуля
+          doc.addImage(moduleImageBase64, 'PNG', 10, y, moduleImgWidth, moduleImgHeight);
+
+          // Текст будет начинаться после изображения
+          const textXOffset = 10 + moduleImgWidth + 5; // Отступ между изображением и текстом
+
+          const textLines = [
+              `Название: ${module.module_name}`,
+              `Координаты (проекция): ${module.points_in_proj}`,
+              `Координаты (широта/долгота): ${module.points_in_selenographic.latitude}  ${module.points_in_selenographic.longitude}`,
+              `Тип: ${module.module_type}`,
+              `Обитаемый: ${module.habitation_type?.toLowerCase().includes('inhabited') ? 'Да' : 'Нет'}`,
+              `Длина: ${module.length_meters} м`,
+              `Ширина: ${module.width_meters} м`,
+              `Макс. уклон: ${module.max_slope_degrees}°`,
+              `Описание: ${module.description}`
+          ];
+
+          // Разбиваем текст на строки, чтобы он поместился в рамки страницы
+          const maxTextWidth = pageWidth - textXOffset - 10; // Оставшееся пространство для текста
+          let linesDrawn = 0; // Счетчик выведенных строк
+
+          // Выводим текст
+          textLines.forEach(line => {
+              const splitText = doc.splitTextToSize(line, maxTextWidth); // Автоматический перенос строк
+              splitText.forEach((textPart, index) => {
+                  doc.text(textPart, textXOffset, y + index * 4); // Каждая строка с отступом 4 мм
+                  linesDrawn += 1; // Увеличиваем счетчик выведенных строк
+              });
+              y += splitText.length * 4 + 5; // Добавляем отступ между блоками
+          });
+
+          // Проверяем, достаточно ли места для линии
+          if (y + 10 > pageHeight - 20) { // Оставляем 20 мм свободного пространства
+              doc.addPage(); // Переходим на новую страницу
+              y = 20; // Стартовая позиция на новой странице
+          }
+
+          // Рисуем линию по всей ширине страницы
+          doc.setLineWidth(0.5); // Толщина линии
+          doc.line(10, y, pageWidth - 10, y); // Линия от левого края до правого края
+          y += 10; // Дополнительный отступ после линии
+
+          // Проверяем, достаточно ли места для следующего модуля
+          if (y > pageHeight - 20) { // Оставляем 20 мм свободного пространства
+              doc.addPage(); // Переходим на новую страницу
+              y = 20; // Стартовая позиция на новой странице
+          }
+      } else {
+          console.warn(`Изображение для модуля "${module.module_name}" не найдено`);
+      }
+  }
 
   // Сохраняем PDF
-  doc.save('модули_экспорт.pdf');
+  doc.save(`${modulesData.name_map}_export.pdf`);
 }
-//to do
+
 function showParametrsPDF() {
   document.getElementById('parametrsToExportPNG').style.display = 'none';
   selectedFormat = 'pdf';
@@ -805,7 +797,7 @@ async function exportMapToSelectedFormat(){
           exportMapToJSON();
           break;
       case 'pdf':
-          exportMapToPDF(await exportMapToPNG(false), mergeModuleData());
+          exportMapToPDF(await exportMapToPNG(false), await mergeModuleData());
           break;
       default:
           alert('Выбран неизвестный формат');
