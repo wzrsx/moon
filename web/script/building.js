@@ -866,7 +866,7 @@ greenLayerInhabit.set('name', 'greenLayerInhabit');
 map.on('moveend', async function() {
   if (isDragging) {
     showSatelliteSpinner("Обновляем зоны...");
-    await updateClippedLayer();
+    debouncedUpdateClippedLayer({ signal: abortController.signal });
   }
 });
 /*зоны предпочтительных мест*/
@@ -1686,6 +1686,28 @@ function processCoordinates(zone, ctx, projectFn) {
     ctx.closePath();
   }
 }
+
+let updateClippedLayerTimeout = null;
+function debouncedUpdateClippedLayer(options = {}, delay = 200) {
+  // Очищаем предыдущий таймер
+  if (updateClippedLayerTimeout) {
+    clearTimeout(updateClippedLayerTimeout);
+  }
+
+  // Устанавливаем новый с задержкой
+  updateClippedLayerTimeout = setTimeout(() => {
+    // Запускаем только если нет активной загрузки
+    if (!isClippedLayerLoading) {
+      showSatelliteSpinner("Почти все...");
+      updateClippedLayer(options);
+    } else {
+      // Если загрузка идёт — переносим вызов на потом
+      console.log("Загрузка в процессе, переносим...");
+      debouncedUpdateClippedLayer(options, 50); // рекурсивно пробуем снова
+    }
+  }, delay);
+}
+
 async function updateClippedLayer(options = {}) {
   isClippedLayerLoading = true;
   // Удаляем старые clipped layers
