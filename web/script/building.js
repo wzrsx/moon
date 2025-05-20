@@ -707,6 +707,12 @@ modules.forEach(module => {
         else if(currentModuleType === 'technological'){
           checkAreaAllOnes("cmps_5deg", coordinates[0], coordinates[1], moduleRequirements.width_meters, moduleRequirements.length_meters)
           .then(async result => {
+            if (moduleRequirements.module_type === 'repair_module' ) {
+              if (!await isInSafeZone(coordinates)) { // аналогично
+                sendNotification(`${moduleRequirements.module_name} должен располагаться в зеленой зоне`, 0);
+                return;
+              }
+            }
             if (!result) {
               sendNotification("В области есть несоответствие уклона - размещение запрещено!", 0);
               return;
@@ -715,12 +721,7 @@ modules.forEach(module => {
               sendNotification("Запрещенная зона!", 0);
               return;
             }
-            if (moduleRequirements.module_type === 'repair_module' ) {
-              if (!await isInSafeZone(coordinates)) { // аналогично
-                sendNotification(`${moduleRequirements.module_name} должен располагаться в зеленой зоне`, 0);
-                return;
-              }
-            }
+            
             saveModule(moduleData);
           })
           .catch(error => {
