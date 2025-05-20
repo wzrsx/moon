@@ -15,6 +15,99 @@ let onlyGreenInZone = false;
 let abortController = null;
 let isClippedLayerLoading = false;
 
+let _countNotifications = 0;
+
+// обработчик изменения countNotifications
+const notificationState = {
+  get countNotifications() {
+    return _countNotifications;
+  },
+  set countNotifications(value) {
+    const oldValue = _countNotifications;
+    _countNotifications = value;
+    console.log(`countNotifications изменилось: ${oldValue} → ${value}`);
+    
+    // Вы можете вызвать любую функцию при изменении
+    updateNotificationCount(value);
+  }
+};
+
+// Для прихода уведомлений
+const notificationsContainer = document.getElementById("notificationsContainer");
+const notificationsBadge = document.getElementById('notificationsBadge');
+
+//подсчет нотификаций
+function updateNotificationCount(count) {
+  if (count > 0) {
+    notificationsBadge.textContent = count;
+    notificationsBadge.style.display = 'flex';
+  } else {
+    notificationsBadge.style.display = 'none';
+  }
+}
+
+// Создание уведов
+function addNotification(title, text, type = "info") {
+  notificationState.countNotifications++;
+
+  // Создаем элемент уведомления
+  const notificationItem = document.createElement("div");
+  notificationItem.className = `notification-item ${type}`;
+
+  // Создаем SVG-иконку закрытия
+  const closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  closeBtn.setAttribute("class", "close-notification-btn");
+  closeBtn.setAttribute("width", "30");
+  closeBtn.setAttribute("height", "30");
+  closeBtn.setAttribute("viewBox", "0 0 30 30");
+  closeBtn.setAttribute("fill", "none");
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5");
+  path.setAttribute("stroke", "#1E1E1E");
+  path.setAttribute("stroke-width", "4");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+
+  closeBtn.appendChild(path);
+
+  // Создаем заголовок и тело уведомления
+  const header = document.createElement("div");
+  header.className = "notification-header";
+
+  const titleEl = document.createElement("p");
+  titleEl.className = "notification-title";
+  titleEl.textContent = title;
+
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+
+  const textEl = document.createElement("p");
+  textEl.className = "notification-text";
+  textEl.innerHTML = text;
+
+  notificationItem.appendChild(header);
+  notificationItem.appendChild(textEl);
+
+  // Добавляем в контейнер
+  notificationsContainer.prepend(notificationItem);
+
+  // Анимация появления
+  setTimeout(() => {
+    notificationItem.style.opacity = "1";
+    notificationItem.style.transform = "translateY(0)";
+  }, 50);
+
+  // --- Привязываем обработчик непосредственно к кнопке ---
+  closeBtn.addEventListener("click", function () {
+    notificationItem.remove();
+    console.log("Уведомление удалено");
+  });
+}
+
+
+
+
 // Функция загрузки модулей с сервера
 function loadModules() {
   fetch("http://localhost:5050/maps/redactor/page/take_modules")
@@ -247,7 +340,6 @@ const modulesContainerTechnological = document.getElementById('modulesContainerT
 const modulesList = document.getElementById("modulesList");
 const modules = document.querySelectorAll('.item-module');
 const typeModulesTitle = document.getElementById("typeModulesTitle");
-const notificationsContainer = document.getElementById("notificationsContainer");
 
 const checkboxDropMenu = document.getElementById('burger-checkbox');
 //уведы всплывающие
@@ -305,6 +397,8 @@ notificationsBtn.addEventListener('click', (e) => {
   notificationsContainer.style.display = 'block';
   sidebar.classList.add('visible');
   isOpenAside = true;
+  notificationState.countNotifications = 0;
+  
 });
 saveProjectBtn.addEventListener('click', (e) => {
   e.preventDefault();
@@ -1069,7 +1163,7 @@ const fetchElevationDebounced = debounce((coordinate, viewResolution) => {
 function updateElevationText(coordinate, elevationText) {
    try {
     // Преобразуем координаты из стереографической проекции Луны в географические (широта/долгота)
-    const [lat,lon] =getGeographicCoordinates(coordinate);
+    const {lat,lon} =getGeographicCoordinates(coordinate);
     // Форматируем вывод
     mousePositionElement.innerHTML = `
       Широта: ${Math.abs(lat).toFixed(6)}° <br>
@@ -1086,9 +1180,6 @@ function updateElevationText(coordinate, elevationText) {
 
 function getGeographicCoordinates(coordinate) {
   try {
-    // Пример используемой проекции (предположим, что они уже определены)
-    const stereMoonSouth = 'EPSG:100000';
-    const geodeticLunar = 'EPSG:100001'; // или другая геодетическая проекция
 
     const [lon, lat] = proj4(stereMoonSouth, geodeticLunar, coordinate);
     return {
@@ -1102,7 +1193,7 @@ function getGeographicCoordinates(coordinate) {
 }
 
 // Функция для обновления позиции и содержимого координат
-function updateMousePositionUI(coordinate, pixel = null, clientX = 0, clientY = 0) {
+function updateMousePosition(coordinate, pixel = null, clientX = 0, clientY = 0) {
   try {
     // Получаем широту и долготу
     const { lat, lon } = getGeographicCoordinates(coordinate);
@@ -1301,43 +1392,7 @@ function disableExclusionZones() {
     }
   });
 
-function addNotification(title, text, type = "info") {
-  const container = document.getElementById("notificationsContainer");
 
-  // Создаем элемент уведомления
-  const notificationItem = document.createElement("div");
-  notificationItem.className = `notification-item ${type}`;
-
-  // Создаем содержимое
-  notificationItem.innerHTML = `
-    <div class="notification-header">
-      <p class="notification-title">${title}</p>
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3.75 7.5H6.25M6.25 7.5H26.25M6.25 7.5V25C6.25 25.663 6.51339 26.2989 6.98223 26.7678C7.45107 27.2366 8.08696 27.5 8.75 27.5H21.25C21.913 27.5 22.5489 27.2366 23.0178 26.7678C23.4866 26.2989 23.75 25.663 23.75 25V7.5M10 7.5V5C10 4.33696 10.2634 3.70107 10.7322 3.23223C11.2011 2.76339 11.837 2.5 12.5 2.5H17.5C18.163 2.5 18.7989 2.76339 19.2678 3.23223C19.7366 3.70107 20 4.33696 20 5V7.5"
-          stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <p class="notification-text">${text}</p>
-  `;
-
-  // Добавляем в контейнер
-  container.appendChild(notificationItem);
-
-  // Анимация появления
-  setTimeout(() => {
-    notificationItem.style.opacity = "1";
-    notificationItem.style.transform = "translateY(0)";
-  }, 50);
-
-  // Автоматическое исчезновение через 5 секунд
-  setTimeout(() => {
-    notificationItem.style.opacity = "0";
-    notificationItem.style.transform = "translateY(20px)";
-    setTimeout(() => {
-      notificationItem.remove();
-    }, 400);
-  }, 5000); // Через 5 секунд удаляем
-}
   
   // Очищаем массив слоев
   exclusionRadiusLayers.length = 0;
