@@ -16,11 +16,12 @@
 1. **Клонируйте репозиторий**:
    ```bash
    git clone https://github.com/wzrsx/moon.git
-2. **Скачайте карты**
-     
-3. **Перейдите в директорию проекта**:
+2. **Перейдите в директорию проекта**:
    ```bash
    cd moon
+3. **Скачайте карты**
+   ссылка на google-диск: https://drive.google.com/drive/folders/1RyDzR9-5bYSUd9_WIYSpEVA-J8JjTGjt
+   Папку /moon/maps переместите в корень проекта.
 4. **Скачайте Docker, если у вас его нет**
    - **Docker Desktop**: Вы можете скачать Docker Desktop, если вы работаете на Windows или WSL.
    - **Установка Docker через терминал**: скачайте Docker с помощью команд
