@@ -25,17 +25,16 @@
    - **Docker Desktop**: Вы можете скачать Docker Desktop, если вы работаете на Windows или WSL.
    - **Установка Docker через терминал**: скачайте Docker с помощью команды
    ```bash
-# sudo apt-get update
-# sudo apt install -y docker.io
-# sudo systemctl enable docker --now
-# sudo usermod -aG docker $USER
-#  sudo curl -L "https://github.com/docker/compose/releases/download/1.28.2/d... -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-# sudo chmod +x /usr/local/bin/docker-compose
+   sudo apt-get update
+   sudo apt install -y docker.io
+   sudo systemctl enable docker --now
+   sudo usermod -aG docker $USER
+   sudo curl -L "https://github.com/docker/compose/releases/download/1.28.2/d... -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
 
-# Для проверки используем команды
-# docker --version
-# docker-compose --version
-
+   # Для проверки используем команды
+   docker --version
+   docker-compose --version
 5. **Запуск Docker-контейнера**
    - **Выполните команду**:
    ```bash
