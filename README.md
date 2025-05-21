@@ -23,7 +23,7 @@
    cd moon
 4. **Скачайте Docker, если у вас его нет**
    - **Docker Desktop**: Вы можете скачать Docker Desktop, если вы работаете на Windows или WSL.
-   - **Установка Docker через терминал**: скачайте Docker с помощью команды
+   - **Установка Docker через терминал**: скачайте Docker с помощью команд
    ```bash
    sudo apt-get update
    sudo apt install -y docker.io
