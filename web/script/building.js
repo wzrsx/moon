@@ -284,7 +284,7 @@ function addModuleToMap(moduleData) {
   });
   //сохраняем в кэш
   cachedModules.push({
-    id: moduleData.id_module,
+    id_module: moduleData.id_module,
     points: moduleData.points,
     module_type: moduleData.module_type,
     habitation_type: moduleData.habitation_type,

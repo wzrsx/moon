@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	jwt_logic "loonar_mod/backend/JWT_logic"
 	"loonar_mod/backend/config_db"
 	"loonar_mod/backend/repository/queries_maps"
@@ -287,7 +286,6 @@ func (a *MapsHandlers) TakeModulesDistance(rw http.ResponseWriter, r *http.Reque
 		})
 		return
 	}
-	log.Println(distances)
 
 	// Отправляем успешный ответ
 	respondWithJSON(rw, http.StatusOK, map[string]interface{}{

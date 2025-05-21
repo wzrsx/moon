@@ -11,6 +11,7 @@ import (
 	"loonar_mod/backend/authorization/config_auth"
 	"loonar_mod/backend/repository/queries_auth"
 	"net/http"
+	"net/smtp"
 	"sync"
 	"time"
 
@@ -116,7 +117,7 @@ func (a *AuthHandlers) RecoverHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg bool, rw http.ResponseWriter) {
 
-	// auth := smtp.PlainAuth("", a.ConfigAuth.Sender, a.ConfigAuth.SenderPassword, a.ConfigAuth.SMTP_Host)
+	auth := smtp.PlainAuth("", a.ConfigAuth.Sender, a.ConfigAuth.SenderPassword, a.ConfigAuth.SMTP_Host)
 
 	confirmationCode := genConfirmCode()
 
@@ -162,20 +163,20 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 		message += "\r\n" + body
 
 		// Отправка письма
-		// err := smtp.SendMail(
-		// 	a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
-		// 	auth,
-		// 	a.ConfigAuth.Sender,
-		// 	[]string{email},
-		// 	[]byte(message),
-		// )
-		// if err != nil {
-		// 	a.Logger.Sugar().Errorf("Error sending email: %v", err)
-		// 	respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-		// 		"error": fmt.Sprintf("Error sending email: %v", err),
-		// 	})
-		// 	return
-		// }
+		err := smtp.SendMail(
+			a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
+			auth,
+			a.ConfigAuth.Sender,
+			[]string{email},
+			[]byte(message),
+		)
+		if err != nil {
+			a.Logger.Sugar().Errorf("Error sending email: %v", err)
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("Error sending email: %v", err),
+			})
+			return
+		}
 
 		// Устанавливаем код в слайс
 		setCode(confirmationCode, email, username, password)
@@ -222,28 +223,27 @@ func (a *AuthHandlers) sendWelcomeEmail(email, username, password string, isReg 
 		message += "\r\n" + body
 
 		// Отправка письма
-		// err := smtp.SendMail(
-		// 	a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
-		// 	auth,
-		// 	a.ConfigAuth.Sender,
-		// 	[]string{email},
-		// 	[]byte(message),
-		// )
-		// if err != nil {
-		// 	a.Logger.Sugar().Errorf("Error sending email: %v", err)
-		// 	respondWithJSON(rw, http.StatusBadRequest, map[string]string{
-		// 		"error": fmt.Sprintf("Error sending email: %v", err),
-		// 	})
-		// 	return
-		// }
+		err := smtp.SendMail(
+			a.ConfigAuth.SMTP_Host+":"+a.ConfigAuth.SMTP_Port,
+			auth,
+			a.ConfigAuth.Sender,
+			[]string{email},
+			[]byte(message),
+		)
+		if err != nil {
+			a.Logger.Sugar().Errorf("Error sending email: %v", err)
+			respondWithJSON(rw, http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("Error sending email: %v", err),
+			})
+			return
+		}
 
 		// Устанавливаем код в слайс
 		setRecoverCode(confirmationCode, email, password)
-		log.Println("установлен")
 		respondWithJSON(rw, http.StatusOK, map[string]string{
 			"message": "Recover successful. Please check your email",
 			"next":    "codeDialog",
-			"code":    confirmationCode, // Отправляем код и в ответе (для удобства тестирования)
+			// "code":    confirmationCode, // Отправляем код и в ответе (для удобства тестирования)
 		})
 	}
 

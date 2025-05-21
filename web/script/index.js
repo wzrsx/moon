@@ -320,7 +320,6 @@ registrateBtn.addEventListener("click", (e) => {
         }
         return Promise.reject(data);
       }
-      console.log(data.code); // TEST
       isReg = true;
       e.preventDefault();
       isSwitching = true;
