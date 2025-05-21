@@ -180,9 +180,17 @@ function createPopupContent(moduleInfo, habitationType) {
 }
   // Добавляем обработчик клика по карте
     map.on('click', function(evt) {
-        const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-            return feature;
-        });
+        const feature = map.forEachFeatureAtPixel(
+            evt.pixel,
+            function(feature) {
+                return feature;
+            },
+            {
+                layerFilter: function(layer) {
+                    return layer.get('name') === 'modules_layer';
+                }
+            }
+        );
         
         const popupElement = popup.getElement();
         if (popupElement.contains(evt.originalEvent.target)) {
@@ -203,9 +211,17 @@ function createPopupContent(moduleInfo, habitationType) {
     });
   // Добавляем обработчик движения курсора
 map.on('pointermove', function(evt) {
-    const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-        return feature;
-    });
+    const feature = map.forEachFeatureAtPixel(
+        evt.pixel,
+        function(feature) {
+            return feature;
+        },
+        {
+            layerFilter: function(layer) {
+                return layer.get('name') === 'modules_layer';
+            }
+        }
+    );
     
     const popupElement = popup.getElement();
     const mapTarget = map.getTargetElement();
