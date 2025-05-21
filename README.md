@@ -19,7 +19,7 @@
 2. **Перейдите в директорию проекта**:
    ```bash
    cd moon
-3. **Скачайте карты**
+3. **❗️Скачайте карты❗️**
    - Cсылка на google-диск: https://drive.google.com/drive/folders/1RyDzR9-5bYSUd9_WIYSpEVA-J8JjTGjt
    - Папку /moon/maps переместите в корень проекта.
 4. **Скачайте Docker, если у вас его нет**
