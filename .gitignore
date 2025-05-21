@@ -1,4 +1,6 @@
 /maps/*
 /bin/
+/bin/*
 /.vscode/
+/.vscode/*
 /.idea/
