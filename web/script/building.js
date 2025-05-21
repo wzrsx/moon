@@ -1022,16 +1022,19 @@ function showPlacesZone(zoneName) {
     case 'malapert':
       malapertLayer.setOpacity(1);
       centerCoords = [malapertCenter[0], malapertCenter[1] - 3000]; //чтобы сверху карта полностью помещалась
+      document.getElementById('malapertCheckbox').checked = true;
       break;
     case 'shackleton':
       shackletonLayer.setOpacity(1);
       centerCoords = shackletonCenter;
       targetZoom = 12;
+      document.getElementById('shackletonCheckbox').checked = true;
       break;
     case 'haworth':
       haworthLayer.setOpacity(1);
       centerCoords = haworthCenter;
       targetZoom = 11;
+      document.getElementById('haworthCheckbox').checked = true;
       break;
     default:
       console.warn(`Unknown zone name: ${zoneName}`);
