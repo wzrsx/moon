@@ -267,7 +267,7 @@ function addModuleToMap(moduleData) {
       },
       zIndex: 5
     });
-    vectorLayer.set('type', 'moduleLayer');
+    vectorLayer.set('name', 'modules_layer');
     map.addLayer(vectorLayer);
     moduleLayers.push(vectorLayer);
   }
